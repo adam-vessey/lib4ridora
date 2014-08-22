@@ -23,6 +23,3 @@ Install as usual, see [this](https://drupal.org/documentation/install/modules-th
 Current maintainers:
 
 * [discoverygarden Inc.](http://github.com/discoverygarden)
-
-This project has been sponsored by:
-
