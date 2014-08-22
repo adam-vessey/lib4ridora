@@ -26,5 +26,3 @@ Current maintainers:
 
 This project has been sponsored by:
 
-* Some really awesome sponsor
-A description of this really awesome sponsor
