@@ -21,7 +21,7 @@ function lib4ridora_datastream_select_form($form, &$form_state) {
   }
   $step_storage['options'] = $file_options;
 
-  reset($main_options);
+  reset($file_options);
   $form['info'] = array(
     '#type' => 'item',
     '#title' => t('Select the primary datastream'),
