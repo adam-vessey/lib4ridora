@@ -49,7 +49,7 @@ function lib4ridora_upload_form($form, &$form_state) {
     '#suffix' => '</div>',
     'upload' => array(
       // XXX: Need to explicitly specify the ID to work around a bug in the
-      // Drupal "plupload" module (plupload chops of the suffix added to make
+      // Drupal "plupload" module: plupload chops of the suffix added to make
       // IDs unique across AJAX requests, which then break how it pulls out the
       // files.
       '#id' => 'edit-wrapper-upload',
