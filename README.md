@@ -1,18 +1,30 @@
-lib4ridora
-==========
 
-SUMMARY
--------
 
-This Module contains customizations for Lib4Ri.
+# Lib4ridora Example Module
 
-REQUIREMENTS
-------------
+## Introduction
 
-  * Islandora
-  * Islandora Plupload
+A module for specific customizations for the Library for the Research Institutes.
 
-INSTALLATION
-------------
+## Requirements
 
-Enable the Lib4Ridora module.
+This module requires the following modules/libraries:
+
+* [Islandora](https://github.com/islandora/islandora)
+* [Islandora Scholar](https://github.com/islandora/islandora_scholar)
+* [Islandora Plupload](https://github.com/discoverygarden/islandora_plupload)
+
+## Installation
+
+Install as usual, see [this](https://drupal.org/documentation/install/modules-themes/modules-7) for further information.
+
+## Maintainers/Sponsors
+
+Current maintainers:
+
+* [discoverygarden Inc.](http://github.com/discoverygarden)
+
+This project has been sponsored by:
+
+* Some really awesome sponsor
+A description of this really awesome sponsor
