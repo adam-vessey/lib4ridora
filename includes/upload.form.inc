@@ -48,6 +48,10 @@ function lib4ridora_upload_form($form, &$form_state) {
     '#prefix' => '<div id="lib4ridora-ingest-datastream-upload-wrapper">',
     '#suffix' => '</div>',
     'upload' => array(
+      // XXX: Need to explicitly specify the ID to work around a bug in the
+      // Drupal "plupload" module (plupload chops of the suffix added to make
+      // IDs unique across AJAX requests, which then break how it pulls out the
+      // files.
       '#id' => 'edit-wrapper-upload',
       '#type' => 'plupload',
       '#title' => t('Upload files'),
@@ -63,6 +67,8 @@ function lib4ridora_upload_form($form, &$form_state) {
       '#submit_element' => '#edit-wrapper-submitter',
     ),
     'submitter' => array(
+      // XXX: ID specified for convenience, so it can be specified in the
+      // "#submit_element" bit on the "plupload" element.
       '#id' => 'edit-wrapper-submitter',
       '#type' => 'button',
       '#value' => t('Hidden submit'),
