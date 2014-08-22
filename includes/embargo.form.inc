@@ -59,7 +59,7 @@ function lib4ridora_multi_embargo_form($form, &$form_state, AbstractObject $obje
         '#title_display' => 'invisible',
         '#states' => array(
           'visible' => array(
-            'fieldset#edit-' . strtolower($datastream->id) . '-fieldset select.lib4ridora-embargo-select' => array(
+            'fieldset#edit-datastreams-' . strtolower($datastream->id) . ' select.lib4ridora-embargo-select' => array(
               'value' => 'date',
             ),
           ),
@@ -77,7 +77,7 @@ function lib4ridora_multi_embargo_form($form, &$form_state, AbstractObject $obje
       ),
       'use_permission' => array(
         '#type' => 'select',
-        '#title' => t('User Permission'),
+        '#title' => t('Use Permission'),
         '#options' => array(
           'contact-publisher' => t('Contact Publisher (I do not hold copyright)'),
           'contact-author' => t('Contact Author (I hold copyright)'),
