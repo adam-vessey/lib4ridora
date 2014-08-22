@@ -1,0 +1,7 @@
+name = Lib4Ridora
+description = Custom Islandora functionality for Lib4Ri.
+core = 7.x
+dependencies[] = islandora
+dependencies[] = islandora_scholar
+dependencies[] = islandora_plupload
+package = Islandora
