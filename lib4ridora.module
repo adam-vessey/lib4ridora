@@ -1,0 +1,43 @@
+<?php
+/**
+ * @file
+ * Lib4Ri specific Islandora functionality.
+ */
+
+/**
+ * Implements hook_islandora_ingest_steps_alter().
+ */
+function lib4ridora_ir_citationCModel_islandora_ingest_steps_alter(array &$steps, array &$form_state) {
+  unset($steps['islandora_scholar_file_upload']);
+}
+
+/**
+ * Implements hook_islandora_ingest_steps().
+ */
+function lib4ridora_islandora_ingest_steps(array $form_state) {
+  $models = array(
+    'ir:citationCModel',
+  );
+
+  $steps = array();
+  $shared_storage = islandora_ingest_form_get_shared_storage($form_state);
+
+  if (array_intersect($models, $shared_storage['models'])) {
+    $steps['lib4ridora_multi_pdf_upload'] = array(
+      'weight' => 8,
+      'type' => 'form',
+      'form_id' => 'lib4ridora_upload_form',
+      'module' => 'lib4ridora',
+      'file' => 'includes/upload.form.inc',
+    );
+    $steps['lib4ridora_datastream_select'] = array(
+      'weight' => 12,
+      'type' => 'form',
+      'form_id' => 'lib4ridora_datastream_select_form',
+      'module' => 'lib4ridora',
+      'file' => 'includes/datastream_select.form.inc',
+    );
+  }
+
+  return $steps;
+}
