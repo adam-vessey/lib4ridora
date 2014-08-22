@@ -1,5 +1,3 @@
-
-
 # Lib4ridora Example Module
 
 ## Introduction
