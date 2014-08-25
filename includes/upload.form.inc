@@ -30,6 +30,14 @@ function lib4ridora_upload_form($form, &$form_state) {
     $files = array_values(array_diff_key($files, $selected));
   }
 
+  if (($form_state['values']['form_step_id'] == 'lib4ridora_multi_pdf_upload' && $form_state['values']['next'] == t('Ingest') && !empty($files)) ||
+    ($form_state['values']['form_step_id'] == 'lib4ridora_multi_pdf_upload' && $form_state['values']['next'] == t('Next') && empty($files))) {
+
+    // Reload the Ingest steps so that the form alters by either adding a next
+    // button or reseting it to ingest.
+    drupal_static_reset('islandora_ingest_form_get_steps');
+  }
+
   $step_storage['files'] = array();
   foreach ($files as $file) {
     $step_storage['files'][$file->filename] = $file;
@@ -42,7 +50,8 @@ function lib4ridora_upload_form($form, &$form_state) {
   $object = islandora_ingest_form_get_object($form_state);
   $uploadable = explode(' ', variable_get('lib4ridora_uploadable_extensions', 'pdf'));
   $uploadable = array_unique($uploadable);
-
+  $form['#prefix'] = '<div id="lib4ridora-ingest-form-wrapper">';
+  $form['#suffix'] = '</div>';
   $form['wrapper'] = array(
     '#type' => 'fieldset',
     '#prefix' => '<div id="lib4ridora-ingest-datastream-upload-wrapper">',
@@ -74,7 +83,7 @@ function lib4ridora_upload_form($form, &$form_state) {
       '#value' => t('Hidden submit'),
       '#ajax' => array(
         'callback' => 'lib4ridora_upload_ajax_submit_callback',
-        'wrapper' => 'lib4ridora-ingest-datastream-upload-wrapper',
+        'wrapper' => 'lib4ridora-ingest-form-wrapper',
         'event' => 'click',
       ),
       '#prefix' => '<div style="display: none;">',
@@ -94,28 +103,20 @@ function lib4ridora_upload_form($form, &$form_state) {
         '#type' => 'button',
         '#value' => t('Remove selected'),
         '#ajax' => array(
-          'callback' => 'lib4ridora_upload_ajax_refresh_callback',
-          'wrapper' => 'edit-wrapper-table-wrapper-file',
+          'callback' => 'lib4ridora_upload_ajax_submit_callback',
+          'wrapper' => 'lib4ridora-ingest-form-wrapper',
         ),
       ),
     ),
   );
-
   return $form;
 }
 
 /**
- * AJAX callback for hidden submit button.
+ * AJAX callback for buttons.
  */
 function lib4ridora_upload_ajax_submit_callback($form, $form_state) {
-  return $form['wrapper'];
-}
-
-/**
- * AJAX callback for "remove" button.
- */
-function lib4ridora_upload_ajax_refresh_callback($form, $form_state) {
-  return $form['wrapper']['table_wrapper'];
+  return $form;
 }
 
 /**
