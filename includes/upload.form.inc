@@ -16,10 +16,6 @@ function lib4ridora_upload_form($form, &$form_state) {
     ),
   );
 
-  // Reload the Ingest steps so that the form alters by either adding a next
-  // button or reseting it to ingest.
-  drupal_static_reset('islandora_ingest_form_get_steps');
-
   $step_storage =& islandora_ingest_form_get_step_storage($form_state);
   $files = isset($step_storage['files']) ?
     $step_storage['files'] :
@@ -32,6 +28,14 @@ function lib4ridora_upload_form($form, &$form_state) {
   if ($button == 'remove') {
     $selected = array_filter($form_state['values']['wrapper']['table_wrapper']['files']);
     $files = array_values(array_diff_key($files, $selected));
+  }
+
+  if (($form_state['values']['form_step_id'] == 'lib4ridora_multi_pdf_upload' && $form_state['values']['next'] == t('Ingest') && !empty($files)) ||
+    ($form_state['values']['form_step_id'] == 'lib4ridora_multi_pdf_upload' && $form_state['values']['next'] == t('Next') && empty($files))) {
+
+    // Reload the Ingest steps so that the form alters by either adding a next
+    // button or reseting it to ingest.
+    drupal_static_reset('islandora_ingest_form_get_steps');
   }
 
   $step_storage['files'] = array();
@@ -99,7 +103,7 @@ function lib4ridora_upload_form($form, &$form_state) {
         '#type' => 'button',
         '#value' => t('Remove selected'),
         '#ajax' => array(
-          'callback' => 'lib4ridora_upload_ajax_refresh_callback',
+          'callback' => 'lib4ridora_upload_ajax_submit_callback',
           'wrapper' => 'lib4ridora-ingest-form-wrapper',
         ),
       ),
@@ -109,16 +113,9 @@ function lib4ridora_upload_form($form, &$form_state) {
 }
 
 /**
- * AJAX callback for hidden submit button.
+ * AJAX callback for buttons.
  */
 function lib4ridora_upload_ajax_submit_callback($form, $form_state) {
-  return $form;
-}
-
-/**
- * AJAX callback for "remove" button.
- */
-function lib4ridora_upload_ajax_refresh_callback($form, $form_state) {
   return $form;
 }
 
