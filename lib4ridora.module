@@ -28,7 +28,7 @@ function lib4ridora_ir_citationCModel_islandora_ingest_steps(array $form_state) 
   // Only continue with more steps if there are files being ingested,
   // otherwise it should be ingested right away.
   $upload_step_storage =& islandora_ingest_form_get_step_storage($form_state, 'lib4ridora_multi_pdf_upload');
-  if ($upload_step_storage['files']) {
+  if (isset($upload_step_storage['files']) && $upload_step_storage['files']) {
     $steps['lib4ridora_datastream_select'] = array(
       'weight' => 12,
       'type' => 'form',
