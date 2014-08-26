@@ -36,6 +36,13 @@ function lib4ridora_ir_citationCModel_islandora_ingest_steps(array $form_state) 
       'module' => 'lib4ridora',
       'file' => 'includes/datastream_select.form.inc',
     );
+    $steps['lib4ridora_pdf_embargo'] = array(
+      'weight' => 16,
+      'type' => 'form',
+      'form_id' => 'lib4ridora_multi_embargo_form',
+      'module' => 'lib4ridora',
+      'file' => 'includes/embargo.form.inc',
+    );
   }
   return $steps;
 }
