@@ -14,7 +14,12 @@ function lib4ridora_upload_form($form, &$form_state) {
       'type' => 'file',
       'scope' => 'footer',
     ),
+    drupal_get_path('module', 'lib4ridora') . '/js/lib4ridora.js' => array(
+      'type' => 'file',
+      'scope' => 'footer',
+    ),
   );
+  $form['#attributes'] = array('id' => 'lib4ridora_upload_form');
 
   $step_storage =& islandora_ingest_form_get_step_storage($form_state);
   $files = isset($step_storage['files']) ?
