@@ -9,7 +9,6 @@
             // Before file is uploaded disable the Ingest or next button so the
             // user cannot submit until all files are uploaded.
             $('form').find('.plupload-element').each( function(index){
-                var element = $(this);
                 var uploader = $(this).pluploadQueue();
                 uploader.bind('BeforeUpload', function(up, file) {
                     // Called right before the upload for a given file starts.

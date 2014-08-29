@@ -14,7 +14,7 @@ function lib4ridora_upload_form($form, &$form_state) {
       'type' => 'file',
       'scope' => 'footer',
     ),
-    drupal_get_path('module', 'lib4ridora') . '/lib4ridora.js' => array(
+    drupal_get_path('module', 'lib4ridora') . '/js/lib4ridora.js' => array(
       'type' => 'file',
       'scope' => 'footer',
     ),
