@@ -4,6 +4,8 @@
  * Lib4Ri specific Islandora functionality.
  */
 
+define('LIB4RIDORA_ADMINISTRATOR_PERMISSION', 'administer lib4ridora objects');
+
 /**
  * Implements hook_islandora_ingest_steps_alter().
  */
@@ -91,9 +93,13 @@ function lib4ridora_islandora_datastream_access($op, AbstractDatastream $datastr
   if ($availability) {
     $availability = $availability['object']['value'];
 
-    if ($datastream->parent->owner == $user->name || isset($user->roles[variable_get('user_admin_role', 3)])) {
+    if ($datastream->parent->owner == $user->name || user_access(LIB4RIDORA_ADMINISTRATOR_PERMISSION, $user)) {
       // Allow owner or admins.
       $result['lib4ridora_admin_or_owner'] = TRUE;
+    }
+    elseif ($availability == 'private') {
+      // Private and previous admin/owner check failed; deny access.
+      $result['lib4ridora_private'] = FALSE;
     }
     elseif ($availability == 'intranet') {
       $result['lib4ridora_intranet'] = lib4ridora_check_ip(ip_address());
@@ -147,4 +153,68 @@ function lib4ridora_check_ip($ip_address) {
     }
   }
   return $ip_result;
+}
+
+/**
+ * Implements hook_menu_alter().
+ */
+function lib4ridora_menu_alter(&$items) {
+  // Nuke old "Document" tab.
+  unset($items['islandora/object/%islandora_object/islandora_scholar_upload']);
+}
+
+/**
+ * Implements hook_menu().
+ */
+function lib4ridora_menu() {
+  $items = array();
+
+  $items['islandora/object/%islandora_object/lib4ridora_pdf_management'] = array(
+    'title' => 'PDF Management',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('lib4ridora_multi_embargo_form', 2),
+    'access callback' => 'lib4ridora_citation_access',
+    'access arguments' => array(LIB4RIDORA_ADMINISTRATOR_PERMISSION, 2),
+    'type' => MENU_LOCAL_TASK,
+    'file' => 'includes/embargo.form.inc',
+  );
+  $items['islandora/object/%islandora_object/lib4ridora_pdf_list'] = array(
+    'title' => 'PDF List',
+    'page callback' => 'lib4ridora_list_pdfs',
+    'page arguments' => array(2),
+    'access callback' => 'lib4ridora_citation_access',
+    'access arguments' => array(ISLANDORA_VIEW_OBJECTS, 2),
+    'type' => MENU_LOCAL_TASK,
+    'file' => 'includes/pdf_list.inc',
+  );
+
+  return $items;
+}
+
+/**
+ * Implements hook_permission().
+ */
+function lib4ridora_permission() {
+  $perms = array();
+
+  $perms[LIB4RIDORA_ADMINISTRATOR_PERMISSION] = array(
+    'title' => t('Administer Lib4Ri Objects'),
+    'description' => t('Permit access and management of datastream.'),
+  );
+
+  return $perms;
+}
+
+/**
+ * Access callback wrapper.
+ *
+ * Only allow when we're on a citation object with PDFs.
+ */
+function lib4ridora_citation_access($op, $object) {
+  $has_pdf = function (AbstractObject $object) {
+    module_load_include('inc', 'lib4ridora', 'includes/embargo.form');
+    $pdf_datastreams = array_filter(iterator_to_array($object), 'lib4ridora_multi_embargo_pdf_filter');
+    return !empty($pdf_datastreams);
+  };
+  return $object instanceof AbstractObject && in_array('ir:citationCModel', $object->models) && islandora_object_access($op, $object) && $has_pdf($object);
 }
