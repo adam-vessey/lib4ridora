@@ -46,3 +46,105 @@ function lib4ridora_ir_citationCModel_islandora_ingest_steps(array $form_state) 
   }
   return $steps;
 }
+
+/**
+ * Implements hook_islandora_datastream_access().
+ */
+function lib4ridora_islandora_datastream_access($op, AbstractDatastream $datastream, $user) {
+  $models = array(
+    'ir:citationCModel',
+  );
+
+  if (!array_intersect($datastream->parent->models, $models)) {
+    // Not a model we're interested in...
+    return;
+  }
+
+  $result = array();
+
+  module_load_include('inc', 'islandora', 'includes/derivatives');
+  $options = array(
+    'destination_dsid' => $datastream->id,
+  );
+  $hooks = islandora_invoke_hook_list(ISLANDORA_DERVIATIVE_CREATION_HOOK, $datastream->parent->models, array($datastream->parent));
+  uasort($hooks, 'drupal_sort_weight');
+  $hooks = islandora_filter_derivatives($hooks, $options, $datastream->parent);
+  $map_source = function ($hook) {
+    return isset($hook['source_dsid']) ?
+      $hook['source_dsid'] :
+      NULL;
+  };
+  $load_datastream = function ($datastream_id) use ($datastream) {
+    return ($datastream_id != $datastream->id && isset($datastream->parent[$datastream_id])) ?
+      $datastream->parent[$datastream_id] :
+      NULL;
+  };
+  $sources = array_filter(array_map($map_source, $hooks));
+  $datastreams = array_filter(array_map($load_datastream, $sources));
+  foreach ($datastreams as $source_datastream) {
+    $result["lib4ridora_source_datastream_" . $source_datastream->id] = islandora_datastream_access($op, $source_datastream, $user);
+  }
+
+  module_load_include('inc', 'lib4ridora', 'includes/embargo.form');
+  $availability = $datastream->relationships->get(LIB4RIDORA_RELS_URI, lib4ridora_multi_embargo_build_predicate('availability'));
+  $availability = reset($availability);
+  if ($availability) {
+    $availability = $availability['object']['value'];
+
+    if ($datastream->parent->owner == $user->name || isset($user->roles[variable_get('user_admin_role', 3)])) {
+      // Allow owner or admins.
+      $result['lib4ridora_admin_or_owner'] = TRUE;
+    }
+    elseif ($availability == 'intranet') {
+      $result['lib4ridora_intranet'] = lib4ridora_check_ip(ip_address());
+    }
+    elseif ($availability == 'date') {
+      $embargo_date = $datastream->relationships->get(LIB4RIDORA_RELS_URI, lib4ridora_multi_embargo_build_predicate('embargo_date'));
+      $embargo_date = reset($embargo_date);
+      if ($embargo_date) {
+        $result['lib4ridora_embargo_date'] = REQUEST_TIME > strtotime($embargo_date['object']['value']);
+      }
+    }
+  }
+
+  return $result;
+}
+
+/**
+ * Check if a given IP is in one of our allowed ranges.
+ *
+ * @param string $ip_address
+ *   A dotted-decimal IPv4 address.
+ *
+ * @return bool
+ *   TRUE if the IP is in an allowed range; otherwise, FALSE.
+ */
+function lib4ridora_check_ip($ip_address) {
+  $cidr_ranges = array(
+    '129.129.0.0/16',
+    '152.88.0.0/16',
+    '192.33.118.0/24',
+    '193.134.200.0/21',
+    '195.176.244.0/23',
+  );
+
+  // Transform an IPv4 CIDR block to an array containing the first and last IPs
+  // in the block.
+  $cidr_range_to_points = function ($cidr_string) {
+    list($base, $bits) = explode('/', $cidr_string);
+    $mask = (2 ^ $bits - 1);
+    $start = ip2long($base) & ~$mask;
+    $end = $start | $mask;
+    return array($start, $end);
+  };
+  $client_ip = ip2long($ip_address);
+  $ip_result = FALSE;
+  foreach (array_map($cidr_range_to_points, $cidr_ranges) as $range) {
+    list($start, $end) = $range;
+    if ($start <= $client_ip && $end >= $client_ip) {
+      $ip_result = TRUE;
+      break;
+    }
+  }
+  return $ip_result;
+}
