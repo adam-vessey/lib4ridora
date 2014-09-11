@@ -6,8 +6,6 @@
  */
 
 define('LIB4RIDORA_RELS_URI', ISLANDORA_RELS_INT_URI);
-define('LIB4RIDORA_VERSION_PRED', 'lib4ridora-document-version');
-define('LIB4RIDORA_PERM_PRED', 'lib4ridora-use-permission');
 
 /**
  * Helper function to get the object during the form process.
@@ -64,6 +62,7 @@ function lib4ridora_multi_embargo_form($form, &$form_state) {
     '#type' => 'markup',
   );
 
+  $options = lib4ridora_multi_pdf_get_options();
   foreach ($pdf_datastreams as $datastream) {
     $defaults = lib4ridora_get_embargo_info($datastream);
     $form['datastreams'][$datastream->id] = array(
@@ -72,20 +71,22 @@ function lib4ridora_multi_embargo_form($form, &$form_state) {
         '@label' => $datastream->label,
         '@id' => $datastream->id,
       )),
-      'embargo' => array(
+      'document_version' => array(
         '#type' => 'select',
-        '#title' => t('Embargo'),
-        '#options' => array(
-          NULL => t('None'),
-          'indefinite' => t('Embargo indefinitely'),
-          'date' => t('Set the embargo date'),
-        ),
+        '#title' => t('Document Version'),
+        '#options' => $options['document_version'],
+        '#default_value' => $defaults['document_version'],
+      ),
+      'availability' => array(
+        '#type' => 'select',
+        '#title' => t('Document Availablility'),
+        '#options' => $options['availability'],
         '#attributes' => array(
           'class' => array(
             'lib4ridora-embargo-select',
           ),
         ),
-        '#default_value' => $defaults['embargo'],
+        '#default_value' => $defaults['availability'],
       ),
       'embargo_date' => array(
         '#type' => 'date',
@@ -100,25 +101,21 @@ function lib4ridora_multi_embargo_form($form, &$form_state) {
         ),
         '#default_value' => $defaults['embargo_date'],
       ),
-      'document_version' => array(
-        '#type' => 'select',
-        '#title' => t('Document Version'),
-        '#options' => array(
-          'pre-publication' => t('Pre-Publication'),
-          'published' => t('Published'),
-          'post-publication' => t('Post-Publication'),
-          'other' => t('Other'),
-        ),
-        '#default_value' => $defaults['document_version'],
-      ),
       'use_permission' => array(
         '#type' => 'select',
-        '#title' => t('Use Permission'),
-        '#options' => array(
-          'contact-publisher' => t('Contact Publisher (I do not hold copyright)'),
-          'contact-author' => t('Contact Author (I hold copyright)'),
-        ),
+        '#title' => t('Conditions for Reuse'),
+        '#options' => $options['use_permission'],
         '#default_value' => $defaults['use_permission'],
+      ),
+    );
+  }
+
+  if ($object instanceof FedoraObject) {
+    $form['actions'] = array(
+      '#type' => 'actions',
+      'submit' => array(
+        '#type' => 'submit',
+        '#value' => t('Update properties'),
       ),
     );
   }
@@ -131,49 +128,31 @@ function lib4ridora_multi_embargo_form($form, &$form_state) {
  *
  * @return array
  *   An associative array containing:
- *   - embargo: Indicate if/how the datastream is embargoed.
- *   - embargo_date: Only if "embargo" is "date". The ISO8601 timestamp.
+ *   - availability: Indicate if/how the datastream is available.
+ *   - embargo_date: Array containing the 'year', 'month' and 'day'.
  *   - document_version
  *   - use_permission
  */
 function lib4ridora_get_embargo_info(AbstractDatastream $datastream) {
   // Add in defaults.
-  $to_return = array(
-    'embargo' => NULL,
-    'embargo_date' => NULL,
-    'document_version' => 'pre-published',
-    'use_permission' => 'contact-publisher',
-  );
+  $to_return = lib4ridora_multi_pdf_defaults_properties();
 
-  $rels = $datastream->relationships;
-  $until = $rels->get(LIB4RIDORA_RELS_URI, ISLANDORA_SCHOLAR_EMBARGO_EXPIRY_PRED);
-  $until = reset($until);
-
-  if ($until) {
-    $value = $until['object']['value'];
-
-    $to_return['embargo'] = ($value == 'indefinite' ?
-      $value :
-      'date');
-    if ($value != 'indefinite') {
-      $to_return['embargo_date'] = array_intersect_key(date_parse($value), drupal_map_assoc(array(
-        'year',
-        'month',
-        'day',
-      )));
+  foreach ($to_return as $pred => $default) {
+    $value = $datastream->relationships->get(LIB4RIDORA_RELS_URI, lib4ridora_multi_embargo_build_predicate($pred));
+    // Should be at most on value... Just get it.
+    $value = reset($value);
+    if ($value) {
+      if ($pred == 'embargo_date') {
+        $to_return[$pred] = array_intersect_key(date_parse($value['object']['value']), drupal_map_assoc(array(
+          'year',
+          'month',
+          'day',
+        )));
+      }
+      else {
+        $to_return[$pred] = $value['object']['value'];
+      }
     }
-  }
-
-  $version = $rels->get(LIB4RIDORA_RELS_URI, LIB4RIDORA_VERSION_PRED);
-  $version = reset($version);
-  if ($version) {
-    $to_return['document_version'] = $version['object']['value'];
-  }
-
-  $perm = $rels->get(LIB4RIDORA_RELS_URI, LIB4RIDORA_PERM_PRED);
-  $perm = reset($perm);
-  if ($perm) {
-    $to_return['use_permission'] = $perm['object']['value'];
   }
 
   return $to_return;
@@ -185,15 +164,23 @@ function lib4ridora_get_embargo_info(AbstractDatastream $datastream) {
 function lib4ridora_multi_embargo_form_submit(&$form, &$form_state) {
   $object = lib4ridora_multi_embargo_get_object($form_state);
   foreach ($form_state['values']['datastreams'] as $dsid => $values) {
-    if ($values['embargo'] == 'indefinite') {
-      islandora_scholar_embargo_set_embargo($object, $dsid, 'indefinite');
+    $filtered = array_intersect_key($values, lib4ridora_multi_pdf_defaults_properties());
+    if (isset($filtered['embargo_date']) && $filtered['availability'] == 'date') {
+      $value = gmdate('Y-m-d\TH:i:s\Z', gmmktime(0, 0, 0, $filtered['embargo_date']['month'], $filtered['embargo_date']['day'], $filtered['embargo_date']['year']));
+      lib4ridora_set_relationships($object[$dsid]->relationships, LIB4RIDORA_RELS_URI, lib4ridora_multi_embargo_build_predicate('embargo_date'), $value, RELS_TYPE_DATETIME);
     }
-    elseif ($values['embargo'] == 'date') {
-      islandora_scholar_embargo_set_embargo($object, $dsid, gmdate("Y-m-d\TH:i:s\Z", gmmktime(0, 0, 0, $values['embargo_date']['month'], $values['embargo_date']['day'], $values['embargo_date']['year'])));
+    else {
+      $object[$dsid]->relationships->remove(LIB4RIDORA_RELS_URI, lib4ridora_multi_embargo_build_predicate('embargo_date'));
     }
-
-    lib4ridora_set_relationships($object[$dsid]->relationships, LIB4RIDORA_RELS_URI, LIB4RIDORA_VERSION_PRED, $values['document_version'], RELS_TYPE_PLAIN_LITERAL);
-    lib4ridora_set_relationships($object[$dsid]->relationships, LIB4RIDORA_RELS_URI, LIB4RIDORA_PERM_PRED, $values['use_permission'], RELS_TYPE_PLAIN_LITERAL);
+    unset($filtered['embargo_date']);
+    foreach ($filtered as $pred => $value) {
+      if (!empty($value)) {
+        lib4ridora_set_relationships($object[$dsid]->relationships, LIB4RIDORA_RELS_URI, lib4ridora_multi_embargo_build_predicate($pred), $value, RELS_TYPE_PLAIN_LITERAL);
+      }
+      else {
+        $object[$dsid]->relationships->remove(LIB4RIDORA_RELS_URI, lib4ridora_multi_embargo_build_predicate($pred));
+      }
+    }
   }
 }
 
@@ -207,9 +194,9 @@ function lib4ridora_multi_embargo_form_undo_submit(&$form, &$form_submit) {
   $datastreams = iterator_to_array($object);
   $pdf_datastreams = array_filter($datastreams, 'lib4ridora_multi_embargo_pdf_filter');
   foreach ($pdf_datastreams as $pdf) {
-    islandora_scholar_embargo_lift_embargo($object, $pdf->id);
-    $pdf->relationships->remove(LIB4RIDORA_RELS_URI, LIB4RIDORA_VERSION_PRED);
-    $pdf->relationships->remove(LIB4RIDORA_RELS_URI, LIB4RIDORA_PERM_PRED);
+    foreach (lib4ridora_multi_pdf_defaults_properties() as $pred => $default) {
+      $pdf->relationships->remove(LIB4RIDORA_RELS_URI, lib4ridora_multi_embargo_build_predicate($pred));
+    }
   }
 }
 
@@ -222,4 +209,66 @@ function lib4ridora_multi_embargo_form_undo_submit(&$form, &$form_submit) {
 function lib4ridora_set_relationships(FedoraRelationships $rels, $pred_uri, $pred, $object, $object_type = RELS_TYPE_URI) {
   $rels->remove($pred_uri, $pred);
   $rels->add($pred_uri, $pred, $object, $object_type);
+}
+
+/**
+ * Helper function to build up RDF predicates.
+ *
+ * @param string $base
+ *   The unique part of the predicate.
+ *
+ * @return string
+ *   A predicate which should be unique for our use.
+ */
+function lib4ridora_multi_embargo_build_predicate($base) {
+  return "lib4ridora-multi-embargo-$base";
+}
+
+/**
+ * Helper function, to enumerate the defaults.
+ *
+ * @return array
+ *   An array of defaults for multi-pdf settings.
+ */
+function lib4ridora_multi_pdf_defaults_properties() {
+  return array(
+    'availability' => NULL,
+    'embargo_date' => array_intersect_key(getdate(), drupal_map_assoc(array(
+      'year',
+      'month',
+      'day',
+    ))),
+    'document_version' => 'accepted version',
+    'use_permission' => NULL,
+  );
+}
+
+/**
+ * Helper function; mappings of "codes" to human-readable strings.
+ */
+function lib4ridora_multi_pdf_get_options() {
+  return array(
+    'availability' => array(
+      NULL => t('Public'),
+      'intranet' => t('Intranet'),
+      'date' => t('Embargo'),
+      'private' => t('Private'),
+    ),
+    'document_version' => array(
+      'accepted version' => t('Accepted Version'),
+      'published version' => t('Published Version'),
+      'updated version' => t('Updated Version'),
+      'supplemental material' => t('Supplemental Material'),
+      'unspecified' => t('Unspecified'),
+    ),
+    'use_permission' => array(
+      NULL => t('Unspecified'),
+      'CC BY' => t('Creative Commons: Attribution'),
+      'CC BY-SA' => t('Creative Commons: Attribution-ShareAlike'),
+      'CC BY-ND' => t('Creative Commons: Attribution-NoDerivs'),
+      'CC BY-NC' => t('Creative Commons: Attribution-NonCommercial'),
+      'CC BY-NC-SA' => t('Creative Commons: Attribution-NonCommercial-ShareAlike'),
+      'CC BY-NC-ND' => t('Creative Commons: Attribution-NonCommercial-NoDerivs'),
+    ),
+  );
 }
