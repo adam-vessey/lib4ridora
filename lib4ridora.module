@@ -138,7 +138,7 @@ function lib4ridora_check_ip($ip_address) {
   // in the block.
   $cidr_range_to_points = function ($cidr_string) {
     list($base, $bits) = explode('/', $cidr_string);
-    $mask = (2 ^ $bits - 1);
+    $mask = pow(2, 32 - $bits) - 1;
     $start = ip2long($base) & ~$mask;
     $end = $start | $mask;
     return array($start, $end);
