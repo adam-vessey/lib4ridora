@@ -5,6 +5,88 @@
  */
 
 define('LIB4RIDORA_ADMINISTRATOR_PERMISSION', 'administer lib4ridora objects');
+define('LIB4RIDORA_JOURNAL_CONTENT_MODEL', 'lib4ri:journalCModel');
+define('LIB4RIDORA_JOURNAL_COLLECTION', 'lib4ri:journalCollection');
+define('LIB4RIDORA_JOURNAL_FORM', 'Lib4ri Journal MODS Form');
+
+/**
+ * Implements hook_islandora_required_objects().
+ */
+function lib4ridora_islandora_required_objects(IslandoraTuque $connection) {
+  $module_path = drupal_get_path('module', 'lib4ridora');
+  // Journal content model.
+  $journal_content_model = $connection->repository->constructObject(LIB4RIDORA_JOURNAL_CONTENT_MODEL);
+  $journal_content_model->owner = 'fedoraAdmin';
+  $journal_content_model->label = 'Lib4ri Journal Content Model';
+  $journal_content_model->models = 'fedora-system:ContentModel-3.0';
+  // DS-COMPOSITE-MODEL Datastream.
+  $datastream = $journal_content_model->constructDatastream('DS-COMPOSITE-MODEL', 'X');
+  $datastream->label = 'DS-COMPOSITE-MODEL';
+  $datastream->mimetype = 'application/xml';
+  $datastream->setContentFromFile("$module_path/xml/journal_ds_composite.xml", FALSE);
+  $journal_content_model->ingestDatastream($datastream);
+
+  // Journal collection.
+  $journal_collection = $connection->repository->constructObject(LIB4RIDORA_JOURNAL_COLLECTION);
+  $journal_collection->owner = 'fedoraAdmin';
+  $journal_collection->label = 'Lib4ri Journal Collection';
+  $journal_collection->models = 'islandora:collectionCModel';
+  $journal_collection->relationships->add(
+    FEDORA_RELS_EXT_URI,
+    'isMemberOfCollection',
+    variable_get('islandora_repository_pid', 'islandora:root')
+  );
+  // Collection Policy Datastream.
+  $datastream = $journal_collection->constructDatastream('COLLECTION_POLICY', 'M');
+  $datastream->label = 'COLLECTION_POLICY';
+  $datastream->mimetype = 'application/xml';
+  $datastream->setContentFromFile("$module_path/xml/journal_collection_policy.xml", FALSE);
+  $journal_collection->ingestDatastream($datastream);
+  // TN Datastream.
+  $datastream = $journal_collection->constructDatastream('TN', 'M');
+  $datastream->label = 'TN';
+  $datastream->mimetype = 'image/png';
+  $islandora_module_path = drupal_get_path('module', 'islandora');
+  $datastream->setContentFromFile("$islandora_module_path/images/folder.png", FALSE);
+  $journal_collection->ingestDatastream($datastream);
+  return array(
+    'lib4ridora' => array(
+      'title' => 'Lib4ri',
+      'objects' => array(
+        $journal_content_model,
+        $journal_collection,
+      ),
+    ),
+  );
+}
+
+/**
+ * Implements hook_islandora_xml_form_builder_form_associations().
+ */
+function lib4ridora_islandora_xml_form_builder_form_associations() {
+  return array(
+    'lib4ridora_journal_mods_form' => array(
+      'content_model' => LIB4RIDORA_JOURNAL_CONTENT_MODEL,
+      'form_name' => LIB4RIDORA_JOURNAL_FORM,
+      'dsid' => MODS,
+      'title_field' => array('titleInfo', 'title'),
+      'transform' => 'mods_to_dc.xsl',
+      'template' => FALSE,
+    ),
+  );
+}
+
+/**
+ * Implements hook_islandora_xml_form_builder_forms().
+ */
+function lib4ridora_islandora_xml_form_builder_forms() {
+  $module_path = drupal_get_path('module', 'lib4ridora');
+  return array(
+    LIB4RIDORA_JOURNAL_FORM => array(
+      'form_file' => "$module_path/xml/journal_mods_form.xml",
+    ),
+  );
+}
 
 /**
  * Implements hook_islandora_ingest_steps_alter().
