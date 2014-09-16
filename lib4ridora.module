@@ -68,7 +68,7 @@ function lib4ridora_islandora_xml_form_builder_form_associations() {
     'lib4ridora_journal_mods_form' => array(
       'content_model' => LIB4RIDORA_JOURNAL_CONTENT_MODEL,
       'form_name' => LIB4RIDORA_JOURNAL_FORM,
-      'dsid' => MODS,
+      'dsid' => 'MODS',
       'title_field' => array('titleInfo', 'title'),
       'transform' => 'mods_to_dc.xsl',
       'template' => FALSE,
