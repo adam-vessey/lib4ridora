@@ -4,9 +4,14 @@
  * Lib4Ri specific Islandora functionality.
  */
 
+// Permissions.
 define('LIB4RIDORA_ADMINISTRATOR_PERMISSION', 'administer lib4ridora objects');
+define('LIB4RIDORA_JOURNAL_IMPACT_FACTOR_PERMISSION', 'import journal impact factors');
+
+// PIDS.
 define('LIB4RIDORA_JOURNAL_CONTENT_MODEL', 'lib4ri:journalCModel');
 define('LIB4RIDORA_JOURNAL_COLLECTION', 'lib4ri:journalCollection');
+
 define('LIB4RIDORA_JOURNAL_FORM', 'Lib4RI Journal MODS Form');
 
 /**
@@ -269,7 +274,23 @@ function lib4ridora_menu() {
     'type' => MENU_LOCAL_TASK,
     'file' => 'includes/pdf_list.inc',
   );
-
+  $items['journal-impact-factor'] = array(
+    'title' => 'Journal Impact Factor',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('lib4ridora_journal_impact_factor_form'),
+    'access arguments' => array(LIB4RIDORA_JOURNAL_IMPACT_FACTOR_PERMISSION),
+    'type' => MENU_NORMAL_ITEM,
+    'file' => 'includes/journal_impact.form.inc',
+  );
+  $items['admin/islandora/solution_pack_config/lib4ridora'] = array(
+    'title' => 'Lib4RI',
+    'description' => 'Configure lib4ridora.',
+    'page callback' => 'drupal_get_form',
+    'access arguments' => array('administer site configuration'),
+    'page arguments' => array('lib4ridora_admin'),
+    'file' => 'includes/admin.form.inc',
+    'type' => MENU_NORMAL_ITEM,
+  );
   return $items;
 }
 
@@ -282,6 +303,10 @@ function lib4ridora_permission() {
   $perms[LIB4RIDORA_ADMINISTRATOR_PERMISSION] = array(
     'title' => t('Administer Lib4Ri Objects'),
     'description' => t('Permit access and management of datastream.'),
+  );
+  $perms[LIB4RIDORA_JOURNAL_IMPACT_FACTOR_PERMISSION] = array(
+    'title' => t('Import Journal Impact Factor CSV'),
+    'description' => t('Permit importing of journal impact factor CSVs.'),
   );
 
   return $perms;

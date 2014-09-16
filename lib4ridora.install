@@ -20,4 +20,9 @@ function lib4ridora_install() {
 function lib4ridora_uninstall() {
   module_load_include('inc', 'islandora', 'includes/solution_packs');
   islandora_install_solution_pack('lib4ridora', 'uninstall');
+  $variables = array(
+    'lib4ridora_issn_solr_field',
+    'lib4ridora_e_issn_solr_field',
+  );
+  array_walk($variables, 'variable_del');
 }

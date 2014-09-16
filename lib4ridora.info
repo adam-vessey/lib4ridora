@@ -4,4 +4,5 @@ core = 7.x
 dependencies[] = islandora
 dependencies[] = islandora_scholar
 dependencies[] = islandora_plupload
-package = Islandora
+package = Islandora Solution Packs
+configure = admin/islandora/solution_pack_config/lib4ridora
