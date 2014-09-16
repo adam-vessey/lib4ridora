@@ -1,0 +1,23 @@
+<?php
+
+/**
+ * @file
+ * Install hooks for this module.
+ */
+
+
+/**
+ * Implements hook_install().
+ */
+function lib4ridora_install() {
+  module_load_include('inc', 'islandora', 'includes/solution_packs');
+  islandora_install_solution_pack('lib4ridora');
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function lib4ridora_uninstall() {
+  module_load_include('inc', 'islandora', 'includes/solution_packs');
+  islandora_install_solution_pack('lib4ridora', 'uninstall');
+}
