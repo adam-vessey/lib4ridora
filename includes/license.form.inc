@@ -9,7 +9,7 @@
  * License form.
  */
 function lib4ridora_license_form($form, &$form_state) {
-  $form['licnese'] = array(
+  $form['license'] = array(
     '#type' => 'item',
     '#title' => t('Repository Deposit License'),
     '#description' => t('Lorem ipsum dolor sit amet, consectetur adipisicing
