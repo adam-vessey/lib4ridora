@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Ingest step form for licencsing.
+ * Ingest step form for licensing.
  */
 
 /**
