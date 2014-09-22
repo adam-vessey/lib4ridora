@@ -12,6 +12,8 @@ define('LIB4RIDORA_JOURNAL_IMPACT_FACTOR_PERMISSION', 'import journal impact fac
 define('LIB4RIDORA_JOURNAL_CONTENT_MODEL', 'lib4ri:journalCModel');
 define('LIB4RIDORA_JOURNAL_COLLECTION', 'lib4ri:journalCollection');
 
+// Forms.
+define('LIB4RIDORA_CITATION_FORM', 'Lib4RI Citation MODS Form');
 define('LIB4RIDORA_JOURNAL_FORM', 'Lib4RI Journal MODS Form');
 
 /**
@@ -78,6 +80,14 @@ function lib4ridora_islandora_xml_form_builder_form_associations() {
       'transform' => 'mods_to_dc.xsl',
       'template' => FALSE,
     ),
+    'lib4ridora_citation_mods_form' => array(
+      'content_model' => 'ir:citationCModel',
+      'form_name' => LIB4RIDORA_CITATION_FORM,
+      'dsid' => 'MODS',
+      'title_field' => array('titleInfo', 'title'),
+      'transform' => 'mods_to_dc.xsl',
+      'template' => FALSE,
+    ),
   );
 }
 
@@ -89,6 +99,9 @@ function lib4ridora_islandora_xml_form_builder_forms() {
   return array(
     LIB4RIDORA_JOURNAL_FORM => array(
       'form_file' => "$module_path/xml/journal_mods_form.xml",
+    ),
+    LIB4RIDORA_CITATION_FORM => array(
+      'form_file' => "$module_path/xml/citation_mods_form.xml",
     ),
   );
 }
