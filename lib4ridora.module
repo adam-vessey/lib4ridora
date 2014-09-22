@@ -113,6 +113,13 @@ function lib4ridora_ir_citationCModel_islandora_ingest_steps(array $form_state) 
     'module' => 'lib4ridora',
     'file' => 'includes/upload.form.inc',
   );
+  $steps['lib4ridora_license'] = array(
+    'weight' => 49,
+    'type' => 'form',
+    'form_id' => 'lib4ridora_license_form',
+    'module' => 'lib4ridora',
+    'file' => 'includes/license.form.inc',
+  );
 
   // Only continue with more steps if there are files being ingested,
   // otherwise it should be ingested right away.
@@ -324,4 +331,13 @@ function lib4ridora_citation_access($op, $object) {
     return !empty($pdf_datastreams);
   };
   return $object instanceof AbstractObject && in_array('ir:citationCModel', $object->models) && islandora_object_access($op, $object) && $has_pdf($object);
+}
+
+/**
+ * Alter ingest form to change ingest button label for citations.
+ */
+function lib4ridora_form_islandora_ingest_form_alter(&$form, &$form_state) {
+  if ($form['form_step_id']['#value'] == 'lib4ridora_license') {
+    $form['next']['#value'] = t('I Agree');
+  }
 }
