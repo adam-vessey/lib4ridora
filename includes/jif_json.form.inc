@@ -18,7 +18,12 @@ function lib4ridora_jif_json_form($form, &$form_state, $object_id) {
   $form['#suffix'] = '</div>';
 
   if (!isset($form_state['factors'])) {
-    $form_state['factors'] = json_decode($object[LIB4RIDORA_FACTOR_DSID]->content, TRUE);
+    if (isset($object[LIB4RIDORA_FACTOR_DSID])) {
+      $form_state['factors'] = json_decode($object[LIB4RIDORA_FACTOR_DSID]->content, TRUE);
+    }
+    else {
+      $form_state['factors'] = array();
+    }
   }
   elseif (isset($form_state['triggering_element'])) {
     $year = drupal_array_get_nested_value($form_state['values'], array('input', 'year'));
@@ -157,11 +162,26 @@ function lib4ridora_jif_json_form_submit(&$form, &$form_state) {
   list($object_id) = $form_state['build_info']['args'];
 
   $object = islandora_object_load($object_id);
-  $object[LIB4RIDORA_FACTOR_DSID]->content = json_encode($form_state['factors']);
-  $form_state['redirect'] = "islandora/object/$object_id";
-  drupal_set_message(t('Updated impact factors in @journal_pid.', array(
-    '@journal_pid' => $object_id,
-  )));
+
+  $datastream = isset($object[LIB4RIDORA_FACTOR_DSID]) ?
+    $object[LIB4RIDORA_FACTOR_DSID] :
+    $object->constructDatastream(LIB4RIDORA_FACTOR_DSID, 'M');
+  if ($datastream->mimetype != 'application/json') {
+    $datastream->mimetype = 'application/json';
+  }
+  $datastream->content = json_encode($form_state['factors']);
+
+  if (isset($object[LIB4RIDORA_FACTOR_DSID])) {
+    drupal_set_message(t('Updated impact factors in @journal_pid.', array(
+      '@journal_pid' => $object_id,
+    )));
+  }
+  else {
+    $object->ingestDatastream($datastream);
+    drupal_set_message(t('Added impact factors to @journal_pid.', array(
+      '@journal_pid' => $object_id,
+    )));
+  }
 }
 
 /**

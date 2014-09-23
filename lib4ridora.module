@@ -315,12 +315,12 @@ function lib4ridora_menu() {
     'type' => MENU_NORMAL_ITEM,
   );
   $items['islandora/object/%/lib4ridora_edit_factors'] = array(
-    'title' => 'Edit Journal Impact Factors',
+    'title' => 'Impact Factors',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('lib4ridora_jif_json_form', 2),
-    'access callback' => 'lib4ridora_factor_edit_access',
+    'access callback' => 'lib4ridora_factor_management_access',
     'access arguments' => array(2),
-    'type' => MENU_CALLBACK,
+    'type' => MENU_LOCAL_TASK,
     'file' => 'includes/jif_json.form.inc',
   );
   return $items;
@@ -376,11 +376,15 @@ function lib4ridora_form_islandora_ingest_form_alter(&$form, &$form_state) {
  * @return bool
  *   TRUE if the user should have access; otherwise, FALSE.
  */
-function lib4ridora_factor_edit_access($object_id) {
+function lib4ridora_factor_management_access($object_id) {
   $object = islandora_object_load($object_id);
+
+  // Object loaded, has our model and has either an editable stream or no
+  // stream but we can ingest one.
   return $object &&
     in_array(LIB4RIDORA_JOURNAL_CONTENT_MODEL, $object->models) &&
-    islandora_datastream_access(ISLANDORA_METADATA_EDIT, $object[LIB4RIDORA_FACTOR_DSID]);
+    ((isset($object[LIB4RIDORA_FACTOR_DSID]) && islandora_datastream_access(ISLANDORA_METADATA_EDIT, $object[LIB4RIDORA_FACTOR_DSID])) ||
+    (!isset($object[LIB4RIDORA_FACTOR_DSID]) && islandora_object_access(ISLANDORA_INGEST, $object)));
 }
 
 /**
