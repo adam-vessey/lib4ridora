@@ -1949,7 +1949,7 @@
                   </user_data>
                   <actions>
                     <create>
-                      <path>self::node()</path>
+                      <path>self::node()/..</path>
                       <context>parent</context>
                       <schema/>
                       <type>element</type>
@@ -1957,7 +1957,7 @@
                       <value>identifier</value>
                     </create>
                     <read>
-                      <path>mods:identifier</path>
+                      <path>self::node()/../mods:identifier[not(@type)]</path>
                       <context>parent</context>
                     </read>
                     <update>
