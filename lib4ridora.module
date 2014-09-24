@@ -508,11 +508,24 @@ function lib4ridora_ir_citationcmodel_mods_islandora_datastream_alter(AbstractOb
   $journal_item = $journal_results->item(0);
   $journal = islandora_object_load($journal_item->nodeValue);
   $label_results = $mods_xpath->query('/mods:mods/mods:relatedItem[@type="host"]/mods:titleInfo/mods:title');
+
+  $journal_mods_doc = new DOMDocument();
+  // Assumes journal has MODS.
+  $journal_mods_doc->loadXML($journal['MODS']->content);
+  $journal_mods_xpath = new DOMXPath($journal_mods_doc);
+  $journal_mods_xpath->registerNamespace('mods', 'http://www.loc.gov/mods/v3');
+  $journal_label_results = $journal_mods_xpath->query('/mods:mods/mods:titleInfo/mods:title');
   // Destroy link if necessary.
-  if (!$label_results->length || $label_results->item(0)->nodeValue != $journal->label) {
+  if (!$label_results->length || !$journal_label_results->length ||
+      $label_results->item(0)->nodeValue != $journal_label_results->item(0)->nodeValue) {
     $journal_item->parentNode->removeChild($journal_item);
     $mods = $mods_doc->saveXML();
-    $datastream->content = $mods;
-    $context['params']['dsString'] = $mods;
+    if ($context['action'] == 'ingest') {
+      $datastream->content = $mods;
+    }
+    else {
+      // When object is ingested.
+      $context['params']['dsString'] = $mods;
+    }
   }
 }
