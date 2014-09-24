@@ -5,8 +5,6 @@
  * Utility functions for the module.
  */
 
-define('LIB4RIDORA_FACTOR_DSID', 'IMPACT-FACTORS');
-
 /**
  * Retrieve the journal identified via an ISSSN or EISSN.
  *
