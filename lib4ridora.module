@@ -438,8 +438,8 @@ function lib4ridora_islandora_solr_search_rss_item_alter(&$item, $doc) {
     }
 
     $dc_identifier_results = $dc_xpath->query('//dc:identifier');
-    if ($dc_identifier_results->length) {
-      $identifier = $dc_identifier_results->item(0)->nodeValue;
+    foreach ($dc_identifier_results as $identifier_node) {
+      $identifier = $identifier_node->nodeValue;
       if (strpos($identifier, 'doi:') === 0) {
         $item['items'][] = array(
           'value' => $identifier,
