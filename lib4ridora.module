@@ -511,7 +511,8 @@ function lib4ridora_ir_citationcmodel_mods_islandora_datastream_alter(AbstractOb
   // Destroy link if necessary.
   if (!$label_results->length || $label_results->item(0)->nodeValue != $journal->label) {
     $journal_item->parentNode->removeChild($journal_item);
-    $datastream->content = $mods_doc->saveXML();
-    $context['paras']['dsString'] = $mods_doc->saveXML();
+    $mods = $mods_doc->saveXML();
+    $datastream->content = $mods;
+    $context['params']['dsString'] = $mods;
   }
 }
