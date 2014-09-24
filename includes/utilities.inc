@@ -105,7 +105,7 @@ function lib4ridora_get_factor_with_fallback(AbstractObject $object, $issued_yea
   $issued_years_with_fallbacks = $issued_years;
   foreach ($issued_years as $year) {
     // They wish to fallback to trying to use values from a preceding year.
-    $issued_years_with_fallbacks = $year - 1;
+    $issued_years_with_fallbacks[] = $year - 1;
   }
   $issued_years_with_fallbacks = array_unique($issued_years_with_fallbacks, SORT_NUMERIC);
 

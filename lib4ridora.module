@@ -512,13 +512,14 @@ function lib4ridora_ir_citationcmodel_islandora_solr_object_result_alter(&$resul
 
   // Four sequential digits with no other digits touching is understood to be a
   // year.
-  $issued_years = preg_filter('/(?<!\d)(\d{4})(?!\d)/', '$1', $solr_doc[$date_issued_field]);
+  $issued_years = preg_filter('/^.*(?<!\d)(\d{4})(?!\d).*$/', '\1', (array) $solr_doc[$date_issued_field]);
   if (empty($issued_years)) {
     $solr_doc[$factor_pseudo_field] = t('N/A');
     return;
   }
 
   module_load_include('inc', 'islandora', 'includes/utilities');
+  module_load_include('inc', 'lib4ridora', 'includes/utilities');
   $valid_ids = array_filter((array) $solr_doc[$id_field], 'islandora_is_valid_pid');
   foreach ($valid_ids as $id) {
     $object = islandora_object_load($id);
