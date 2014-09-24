@@ -16,6 +16,9 @@ define('LIB4RIDORA_JOURNAL_COLLECTION', 'lib4ri:journalCollection');
 define('LIB4RIDORA_CITATION_FORM', 'Lib4RI Citation MODS Form');
 define('LIB4RIDORA_JOURNAL_FORM', 'Lib4RI Journal MODS Form');
 
+// Datastream ID.
+define('LIB4RIDORA_FACTOR_DSID', 'IMPACT-FACTORS');
+
 /**
  * Implements hook_islandora_required_objects().
  */
@@ -311,6 +314,15 @@ function lib4ridora_menu() {
     'file' => 'includes/admin.form.inc',
     'type' => MENU_NORMAL_ITEM,
   );
+  $items['islandora/object/%/lib4ridora_edit_factors'] = array(
+    'title' => 'Impact Factors',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('lib4ridora_jif_json_form', 2),
+    'access callback' => 'lib4ridora_factor_management_access',
+    'access arguments' => array(2),
+    'type' => MENU_LOCAL_TASK,
+    'file' => 'includes/jif_json.form.inc',
+  );
   return $items;
 }
 
@@ -353,4 +365,41 @@ function lib4ridora_form_islandora_ingest_form_alter(&$form, &$form_state) {
   if ($form['form_step_id']['#value'] == 'lib4ridora_license') {
     $form['next']['#value'] = t('I Agree');
   }
+}
+
+/**
+ * Check that the user has permission to edit the factors.
+ *
+ * @param string $object_id
+ *   The journal object in question.
+ *
+ * @return bool
+ *   TRUE if the user should have access; otherwise, FALSE.
+ */
+function lib4ridora_factor_management_access($object_id) {
+  $object = islandora_object_load($object_id);
+
+  // Object loaded, has our model and has either an editable stream or no
+  // stream but we can ingest one.
+  return $object &&
+    in_array(LIB4RIDORA_JOURNAL_CONTENT_MODEL, $object->models) &&
+    ((isset($object[LIB4RIDORA_FACTOR_DSID]) && islandora_datastream_access(ISLANDORA_METADATA_EDIT, $object[LIB4RIDORA_FACTOR_DSID])) ||
+    (!isset($object[LIB4RIDORA_FACTOR_DSID]) && islandora_object_access(ISLANDORA_INGEST, $object)));
+}
+
+/**
+ * Implements hook_islandora_edit_datastream_registry().
+ */
+function lib4ridora_islandora_edit_datastream_registry(AbstractObject $object, AbstractDatastream $datastream) {
+  $items = array();
+
+  if ($datastream->id == LIB4RIDORA_FACTOR_DSID && in_array(LIB4RIDORA_JOURNAL_CONTENT_MODEL, $object->models)) {
+    $items[] = array(
+      'name' => t('Edit Journal Factors'),
+      'url' => "islandora/object/{$object->id}/lib4ridora_edit_factors",
+      'weight' => 0,
+    );
+  }
+
+  return $items;
 }
