@@ -495,7 +495,13 @@ function lib4ridora_islandora_edit_datastream_registry(AbstractObject $object, A
  */
 function lib4ridora_ir_citationcmodel_mods_islandora_datastream_alter(AbstractObject $object, AbstractDatastream $datastream, array &$context) {
   $mods_doc = new DOMDocument();
-  $mods_doc->loadXML($datastream->content);
+  if ($context['action'] == 'ingest') {
+    $mods_doc->loadXML($datastream->content);
+  }
+  else {
+    // When object is in Fedora.
+    $mods_doc->loadXML($context['params']['dsString']);
+  }
   $mods_xpath = new DOMXPath($mods_doc);
   $mods_xpath->registerNamespace('mods', 'http://www.loc.gov/mods/v3');
 
@@ -507,7 +513,7 @@ function lib4ridora_ir_citationcmodel_mods_islandora_datastream_alter(AbstractOb
 
   $journal_item = $journal_results->item(0);
   $journal = islandora_object_load($journal_item->nodeValue);
-  $label_results = $mods_xpath->query('/mods:mods/mods:relatedItem[@type="host"]/mods:titleInfo/mods:title');
+  $label_results = $mods_xpath->query('/mods:mods/mods:relatedItem[@type="host"]/mods:titleInfo/mods:title[not(@type)]');
 
   $journal_mods_doc = new DOMDocument();
   // Assumes journal has MODS.
@@ -524,7 +530,7 @@ function lib4ridora_ir_citationcmodel_mods_islandora_datastream_alter(AbstractOb
       $datastream->content = $mods;
     }
     else {
-      // When object is ingested.
+      // When object is in Fedora.
       $context['params']['dsString'] = $mods;
     }
   }
