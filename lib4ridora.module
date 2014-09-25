@@ -484,3 +484,51 @@ function lib4ridora_islandora_edit_datastream_registry(AbstractObject $object, A
 
   return $items;
 }
+
+/**
+ * Implements hook_cmodel_pid_dsid_islandora_datastream_alter().
+ *
+ * Prevents out of date Journal PID links.
+ */
+function lib4ridora_ir_citationcmodel_mods_islandora_datastream_alter(AbstractObject $object, AbstractDatastream $datastream, array &$context) {
+  $mods_doc = new DOMDocument();
+  if ($context['action'] == 'ingest') {
+    $mods_doc->loadXML($datastream->content);
+  }
+  else {
+    // When object is in Fedora.
+    $mods_doc->loadXML($context['params']['dsString']);
+  }
+  $mods_xpath = new DOMXPath($mods_doc);
+  $mods_xpath->registerNamespace('mods', 'http://www.loc.gov/mods/v3');
+
+  $journal_results = $mods_xpath->query('/mods:mods/mods:relatedItem[@type="host"]/mods:identifier[not(@type)]');
+  // Bail out if no journal linked.
+  if (!$journal_results->length) {
+    return;
+  }
+
+  $journal_item = $journal_results->item(0);
+  $journal = islandora_object_load($journal_item->nodeValue);
+  $label_results = $mods_xpath->query('/mods:mods/mods:relatedItem[@type="host"]/mods:titleInfo/mods:title[not(@type)]');
+
+  $journal_mods_doc = new DOMDocument();
+  // Assumes journal has MODS.
+  $journal_mods_doc->loadXML($journal['MODS']->content);
+  $journal_mods_xpath = new DOMXPath($journal_mods_doc);
+  $journal_mods_xpath->registerNamespace('mods', 'http://www.loc.gov/mods/v3');
+  $journal_label_results = $journal_mods_xpath->query('/mods:mods/mods:titleInfo/mods:title');
+  // Destroy link if necessary.
+  if (!$label_results->length || !$journal_label_results->length ||
+      $label_results->item(0)->nodeValue != $journal_label_results->item(0)->nodeValue) {
+    $journal_item->parentNode->removeChild($journal_item);
+    $mods = $mods_doc->saveXML();
+    if ($context['action'] == 'ingest') {
+      $datastream->content = $mods;
+    }
+    else {
+      // When object is in Fedora.
+      $context['params']['dsString'] = $mods;
+    }
+  }
+}
