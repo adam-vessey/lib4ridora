@@ -509,6 +509,7 @@ function lib4ridora_ir_citationcmodel_islandora_solr_object_result_alter(&$resul
 
   // Four sequential digits with no other digits touching is understood to be a
   // year.
+  // XXX: Since things could be in wacky encodings, try to use all values.
   $issued_years = preg_filter('/^.*(?<!\d)(\d{4})(?!\d).*$/', '\1', (array) $solr_doc[$date_issued_field]);
   if (empty($issued_years)) {
     $solr_doc[$factor_pseudo_field] = t('N/A');

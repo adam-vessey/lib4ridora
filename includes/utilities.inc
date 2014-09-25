@@ -93,6 +93,8 @@ function lib4ridora_set_impact_factor(AbstractObject $journal, $year, $factor) {
  *   in which to test for impact factors. It was indicated that we should
  *   fallback to obtain factors for one year preceding, if a factor for the
  *   actual year could not be found.
+ *   Allowing an array is for convenience, as silly things could happen with
+ *   different date encodings we basing things on.
  *
  * @return string|bool
  *   If a factor could be found, the factor for the first year (in the order
