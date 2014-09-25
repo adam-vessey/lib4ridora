@@ -32,14 +32,14 @@ function lib4ridora_admin(array $form, array &$form_state) {
   $form['lib4ridora_solr_field_article_date_issued'] = array(
     '#type' => 'textfield',
     '#title' => t('Article Date Issued Solr Field'),
-    '#description' => t('A Solr field on articles containing the at least the year in which the article was issued. (used in CSV export)'),
+    '#description' => t('A Solr field on articles containing (at least) the year in which the article was issued. (used in CSV export)'),
     '#default_value' => variable_get('lib4ridora_solr_field_article_date_issued', 'mods_originInfo_dateIssued_ms'),
     '#required' => TRUE,
   );
   $form['lib4ridora_pseudo_solr_field_factor'] = array(
     '#type' => 'textfield',
     '#title' => t('Journal Impact Factor Pseudo-Solr Field'),
-    '#description' => t('A field we will inject into Solr documents during CSV exports. In restricting fields, ensure it is available.'),
+    '#description' => t('A field we will inject into Solr documents during CSV exports. If restricting fields, ensure it is available.'),
     '#default_value' => variable_get('lib4ridora_pseudo_solr_field_factor', 'journal_impact_factor'),
     '#required' => TRUE,
   );
