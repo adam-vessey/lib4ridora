@@ -93,14 +93,12 @@ function lib4ridora_set_impact_factor(AbstractObject $journal, $year, $factor) {
  *   in which to test for impact factors. It was indicated that we should
  *   fallback to obtain factors for one year preceding, if a factor for the
  *   actual year could not be found.
- * @param string $default
- *   A value to return if none is found. Defaults to NULL.
  *
- * @return string
- *   If a factor could be found, the factor; otherwise, the value provided in
- *   $default.
+ * @return string|bool
+ *   If a factor could be found, the factor for the first year (in the order
+ *   they were provided); otherwise, FALSE.
  */
-function lib4ridora_get_factor_with_fallback(AbstractObject $object, $issued_years, $default = NULL) {
+function lib4ridora_get_factor_with_fallback(AbstractObject $object, $issued_years) {
   $issued_years = (array) $issued_years;
   $issued_years_with_fallbacks = $issued_years;
   foreach ($issued_years as $year) {
@@ -116,9 +114,6 @@ function lib4ridora_get_factor_with_fallback(AbstractObject $object, $issued_yea
       break;
     }
   }
-  if ($factor !== FALSE) {
-    return $factor;
-  }
 
-  return $default;
+  return $factor;
 }

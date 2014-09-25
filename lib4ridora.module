@@ -524,8 +524,8 @@ function lib4ridora_ir_citationcmodel_islandora_solr_object_result_alter(&$resul
       continue;
     }
 
-    $factor = lib4ridora_get_factor_with_fallback($object, $issued_years, NULL);
-    if ($factor !== NULL) {
+    $factor = lib4ridora_get_factor_with_fallback($object, $issued_years);
+    if ($factor !== FALSE) {
       $solr_doc[$factor_pseudo_field] = $factor;
       return;
     }
