@@ -23,6 +23,9 @@ function lib4ridora_uninstall() {
   $variables = array(
     'lib4ridora_issn_solr_field',
     'lib4ridora_e_issn_solr_field',
+    'lib4ridora_solr_field_article_host_journal',
+    'lib4ridora_solr_field_article_date_issued',
+    'lib4ridora_pseudo_solr_field_factor',
   );
   array_walk($variables, 'variable_del');
 }
