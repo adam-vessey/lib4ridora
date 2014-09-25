@@ -89,7 +89,7 @@ function lib4ridora_set_impact_factor(AbstractObject $journal, $year, $factor) {
  * @param AbstractObject $object
  *   A journal object from which to attempt to fetch an impact factor.
  * @param array|string $issued_years
- *   Either string or an array of strings, each numerical, representing years to
+ *   Either a string or an array of strings, each numerical, representing years
  *   in which to test for impact factors. It was indicated that we should
  *   fallback to obtain factors for one year preceding, if a factor for the
  *   actual year could not be found.
