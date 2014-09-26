@@ -151,29 +151,29 @@ function lib4ridora_multi_embargo_form($form, &$form_state) {
     if ($outcome_results->length && $outcome_results->item(0)->nodeValue != 'failed') {
       $romeo_text_mappings = array(
         'can' => array(
-          'pre' => 'Author can archive pre-print (i.e. pre-refereeing)',
-          'post' => 'Author can archive post-print (i.e. final draft post-refereeing)',
-          'version' => "Author can archive publisher's version/PDF",
+          'pre' => t('Author can archive pre-print (i.e. pre-refereeing)'),
+          'post' => t('Author can archive post-print (i.e. final draft post-refereeing)'),
+          'version' => t("Author can archive publisher's version/PDF"),
         ),
         'cannot' => array(
-          'pre' => 'Author cannot archive pre-print (i.e. pre-refereeing)',
-          'post' => 'Author cannot archive post-print (i.e. final draft post-refereeing)',
-          'version' => "Author cannot archive publisher's version/PDF",
+          'pre' => t('Author cannot archive pre-print (i.e. pre-refereeing)'),
+          'post' => t('Author cannot archive post-print (i.e. final draft post-refereeing)'),
+          'version' => t("Author cannot archive publisher's version/PDF"),
         ),
         'restricted' => array(
-          'pre' => 'Subject to restrictions, author can archive pre-print (i.e. pre-refereeing)',
-          'post' => 'Subject to restrictions, author can archive post-print (i.e. final draft post-refereeing)',
-          'version' => "Subject to restrictions, author can archive publisher's version/PDF",
+          'pre' => t('Subject to restrictions, author can archive pre-print (i.e. pre-refereeing)'),
+          'post' => t('Subject to restrictions, author can archive post-print (i.e. final draft post-refereeing)'),
+          'version' => t("Subject to restrictions, author can archive publisher's version/PDF"),
         ),
         'unclear' => array(
-          'pre' => 'Archiving status unclear',
-          'post' => 'Archiving status unclear',
-          'version' => 'Archiving status unclear',
+          'pre' => t('Archiving status unclear'),
+          'post' => t('Archiving status unclear'),
+          'version' => t('Archiving status unclear'),
         ),
         'unknown' => array(
-          'pre' => 'No information',
-          'post' => 'No information',
-          'version' => 'No information',
+          'pre' => t('No information'),
+          'post' => t('No information'),
+          'version' => t('No information'),
         ),
       );
       // Everything always populated.
@@ -189,19 +189,34 @@ function lib4ridora_multi_embargo_form($form, &$form_state) {
           'definition_list' => array(
             '#prefix' => '<dl>',
             'journal' => array(
-              '#markup' => "<dt>Journal:</dt><dd>$journal_title</dd>",
+              '#markup' => t(
+                "<dt>Journal:</dt><dd>!journal_title</dd>",
+                array('!journal_title' => $journal_title)
+              ),
             ),
             'publisher' => array(
-              '#markup' => "<dt>Publisher:</dt><dd>$publisher</dd>",
+              '#markup' => t(
+                "<dt>Publisher:</dt><dd>!publisher</dd>",
+                array('!publisher' => $publisher)
+              ),
             ),
             "pre_print" => array(
-              '#markup' => "<dt>Author's Pre-print:</dt><dd>{$romeo_text_mappings[$pre_status]['pre']}</dd>",
+              '#markup' => t(
+                "<dt>Author's Pre-print:</dt><dd>!romeo</dd>",
+                array('!romeo' => $romeo_text_mappings[$pre_status]['pre'])
+              ),
             ),
             "post_print" => array(
-              '#markup' => "<dt>Author's Post-print:</dt><dd>{$romeo_text_mappings[$post_status]['post']}</dd>",
+              '#markup' => t(
+                "<dt>Author's Post-print:</dt><dd>!romeo</dd>",
+                array('!romeo' => $romeo_text_mappings[$post_status]['post'])
+              ),
             ),
             "version" => array(
-              '#markup' => "<dt>Publisher's Version/PDF:</dt><dd>{$romeo_text_mappings[$version_status]['version']}</dd>",
+              '#markup' => t(
+                "<dt>Publisher's Version/PDF:</dt><dd>!romeo</dd>",
+                array('!romeo' => $romeo_text_mappings[$version_status]['version'])
+              ),
             ),
             '#suffix' => '</dl>',
           ),
