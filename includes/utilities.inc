@@ -82,3 +82,40 @@ function lib4ridora_set_impact_factor(AbstractObject $journal, $year, $factor) {
   // Doesn't do anything if ingested already.
   $journal->ingestDatastream($factor_datastream);
 }
+
+/**
+ * Get factor with fallback to previous years.
+ *
+ * @param AbstractObject $object
+ *   A journal object from which to attempt to fetch an impact factor.
+ * @param array|string $issued_years
+ *   Either a string or an array of strings, each numerical, representing years
+ *   in which to test for impact factors. It was indicated that we should
+ *   fallback to obtain factors for one year preceding, if a factor for the
+ *   actual year could not be found.
+ *   Allowing an array is for convenience, as silly things could happen with
+ *   different date encodings we basing things on.
+ *
+ * @return string|bool
+ *   If a factor could be found, the factor for the first year (in the order
+ *   they were provided); otherwise, FALSE.
+ */
+function lib4ridora_get_factor_with_fallback(AbstractObject $object, $issued_years) {
+  $issued_years = (array) $issued_years;
+  $issued_years_with_fallbacks = $issued_years;
+  foreach ($issued_years as $year) {
+    // They wish to fallback to trying to use values from a preceding year.
+    $issued_years_with_fallbacks[] = $year - 1;
+  }
+  $issued_years_with_fallbacks = array_unique($issued_years_with_fallbacks, SORT_NUMERIC);
+
+  $factor = FALSE;
+  foreach ($issued_years_with_fallbacks as $year) {
+    $factor = lib4ridora_get_impact_factor($object, $year);
+    if ($factor !== FALSE) {
+      break;
+    }
+  }
+
+  return $factor;
+}
