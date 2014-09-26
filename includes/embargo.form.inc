@@ -120,6 +120,140 @@ function lib4ridora_multi_embargo_form($form, &$form_state) {
     );
   }
 
+  // SHERPA RoMEO.
+  if (isset($object['MODS'])) {
+    $mods_doc = DOMDocument::loadXML($object['MODS']->content);
+    $mods_xpath = new DOMXPath($mods_doc);
+    $mods_xpath->registerNamespace('mods', 'http://www.loc.gov/mods/v3');
+    $issn_results = $mods_xpath->query('/mods:mods/mods:identifier[@type="issn" and normalize-space(text())]');
+    if ($issn_results->length) {
+      $issn = $issn_results->item(0)->textContent;
+      if ($issn) {
+        $romeo_results = drupal_http_request(
+          url(
+            variable_get('islandora_scholar_romeo_url', 'http://www.sherpa.ac.uk/romeo/api29.php'),
+            array(
+              'query' => array(
+                'ak' => variable_get('islandora_scholar_romeo_key', ''),
+                'issn' => $issn,
+              ),
+            )
+          )
+        );
+      }
+    }
+  }
+  if (isset($romeo_results)) {
+    $romeo_doc = new DOMDocument();
+    $romeo_doc->loadXML($romeo_results->data);
+    $romeo_xpath = new DOMXPath($romeo_doc);
+    $outcome_results = $romeo_xpath->query('/romeoapi/header/outcome');
+    if ($outcome_results->length && $outcome_results->item(0)->nodeValue != 'failed') {
+      $romeo_text_mappings = array(
+        'can' => array(
+          'pre' => t('Author can archive pre-print (i.e. pre-refereeing)'),
+          'post' => t('Author can archive post-print (i.e. final draft post-refereeing)'),
+          'version' => t("Author can archive publisher's version/PDF"),
+        ),
+        'cannot' => array(
+          'pre' => t('Author cannot archive pre-print (i.e. pre-refereeing)'),
+          'post' => t('Author cannot archive post-print (i.e. final draft post-refereeing)'),
+          'version' => t("Author cannot archive publisher's version/PDF"),
+        ),
+        'restricted' => array(
+          'pre' => t('Subject to restrictions, author can archive pre-print (i.e. pre-refereeing)'),
+          'post' => t('Subject to restrictions, author can archive post-print (i.e. final draft post-refereeing)'),
+          'version' => t("Subject to restrictions, author can archive publisher's version/PDF"),
+        ),
+        'unclear' => array(
+          'pre' => t('Archiving status unclear'),
+          'post' => t('Archiving status unclear'),
+          'version' => t('Archiving status unclear'),
+        ),
+        'unknown' => array(
+          'pre' => t('No information'),
+          'post' => t('No information'),
+          'version' => t('No information'),
+        ),
+      );
+      // Everything always populated.
+      $pre_status = $romeo_xpath->query('/romeoapi/publishers/publisher/preprints/prearchiving')->item(0)->nodeValue;
+      $post_status = $romeo_xpath->query('/romeoapi/publishers/publisher/postprints/postarchiving')->item(0)->nodeValue;
+      $version_status = $romeo_xpath->query('/romeoapi/publishers/publisher/pdfversion/pdfarchiving')->item(0)->nodeValue;
+      $journal_title = $romeo_xpath->query('/romeoapi/journals/journal/jtitle')->item(0)->nodeValue;
+      $publisher = $romeo_xpath->query('/romeoapi/publishers/publisher/name')->item(0)->nodeValue;
+
+      $form['romeo_info'] = array(
+        'romeo_info' => array(
+          '#type' => 'item',
+          'definition_list' => array(
+            '#prefix' => '<dl>',
+            'journal' => array(
+              '#markup' => t(
+                "<dt>Journal:</dt><dd>!journal_title</dd>",
+                array('!journal_title' => $journal_title)
+              ),
+            ),
+            'publisher' => array(
+              '#markup' => t(
+                "<dt>Publisher:</dt><dd>!publisher</dd>",
+                array('!publisher' => $publisher)
+              ),
+            ),
+            "pre_print" => array(
+              '#markup' => t(
+                "<dt>Author's Pre-print:</dt><dd>!romeo</dd>",
+                array('!romeo' => $romeo_text_mappings[$pre_status]['pre'])
+              ),
+            ),
+            "post_print" => array(
+              '#markup' => t(
+                "<dt>Author's Post-print:</dt><dd>!romeo</dd>",
+                array('!romeo' => $romeo_text_mappings[$post_status]['post'])
+              ),
+            ),
+            "version" => array(
+              '#markup' => t(
+                "<dt>Publisher's Version/PDF:</dt><dd>!romeo</dd>",
+                array('!romeo' => $romeo_text_mappings[$version_status]['version'])
+              ),
+            ),
+            '#suffix' => '</dl>',
+          ),
+        ),
+        'details' => array(
+          '#type' => 'item',
+          '#markup' => t(
+            "Further details about your publisher's policy on depositing a
+              version of your article are available at !link",
+            array(
+              '!link' => l(
+                t('SHERPA/RoMEO'),
+                "http://www.sherpa.ac.uk/romeo/issn/$issn/"
+              ),
+            )
+          ),
+        ),
+        'logo' => array(
+          '#type' => 'item',
+          '#theme' => 'image',
+          '#path' => 'http://www.sherpa.ac.uk/images/romeosmall.jpg',
+        ),
+      );
+    }
+    else {
+      $no_romeo = TRUE;
+    }
+  }
+  else {
+    $no_romeo = TRUE;
+  }
+  if (isset($no_romeo)) {
+    $form['romeo'] = array(
+      '#type' => 'item',
+      '#markup' => t('No SHERPA/RoMEO data for this publication.'),
+    );
+  }
   return $form;
 }
 
