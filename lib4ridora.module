@@ -363,7 +363,7 @@ function lib4ridora_citation_access($op, $object) {
  */
 function lib4ridora_form_islandora_ingest_form_alter(&$form, &$form_state) {
   if ($form['form_step_id']['#value'] == 'lib4ridora_license') {
-    $form['next']['#value'] = t('I Agree');
+    $form['next']['#value'] = t('I accept the terms of this license');
   }
 }
 
