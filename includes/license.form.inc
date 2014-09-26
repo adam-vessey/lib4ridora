@@ -60,7 +60,7 @@ function lib4ridora_license_form($form, &$form_state) {
   $form['definition'] = array(
     '#type' => 'item',
     '#title' => t('Definition & terms'),
-    '#markup' => t('In this licence document ‘Work’ means the electronic version of the scientific publication being deposited including abstract, text, images and related data.')
+    '#markup' => t('In this licence document ‘Work’ means the electronic version of the scientific publication being deposited including abstract, text, images and related data.'),
   );
   return $form;
 }
