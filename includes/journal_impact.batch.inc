@@ -72,14 +72,7 @@ function lib4ridora_impact_factor_batch_process($year, $delimiter, $csv, &$conte
 
   // Set an error if there is no impact factor provided.
   if (empty($factor)) {
-    drupal_set_message(
-      t(
-        'No factor provided for identifier: @identifier.',
-        array('@identifier' => $identifier)
-      ),
-      'warning'
-    );
-    return;
+    $factor = "no value";
   }
 
   // Set an error if no journal found.
