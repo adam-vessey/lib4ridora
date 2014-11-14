@@ -72,6 +72,7 @@ function lib4ridora_set_impact_factor(AbstractObject $journal, $year, $factor) {
   }
   else {
     $factor_datastream = $journal->constructDatastream(LIB4RIDORA_FACTOR_DSID, 'M');
+    $factor_datastream->label = 'Journal Impact Factors';
     $factor_datastream->mimetype = 'application/json';
     $factors = array();
   }

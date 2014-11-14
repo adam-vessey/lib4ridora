@@ -169,6 +169,9 @@ function lib4ridora_jif_json_form_submit(&$form, &$form_state) {
   if ($datastream->mimetype != 'application/json') {
     $datastream->mimetype = 'application/json';
   }
+  if ($datastream->label != 'Journal Impact Factors') {
+    $datastream->label = 'Journal Impact Factors';
+  }
   $datastream->content = json_encode($form_state['factors']);
 
   if (isset($object[LIB4RIDORA_FACTOR_DSID])) {
