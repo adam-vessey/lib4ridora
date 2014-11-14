@@ -583,3 +583,16 @@ function lib4ridora_ir_citationcmodel_mods_islandora_datastream_alter(AbstractOb
     }
   }
 }
+
+/**
+ * Implements hook_theme().
+ *
+ * Used to overrider islandora-solr-wrapper and add citation=true to rss link.
+ */
+function lib4ridora_theme($existing, $type, $theme, $path) {
+  return array(
+    'islandora_solr_wrapper' => array(
+      'template' => 'theme/lib4ridora-solr-wrapper',
+    ),
+  );
+}
