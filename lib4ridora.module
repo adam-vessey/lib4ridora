@@ -594,5 +594,8 @@ function lib4ridora_theme($existing, $type, $theme, $path) {
     'islandora_solr_wrapper' => array(
       'template' => 'theme/lib4ridora-solr-wrapper',
     ),
+    'islandora_default' => array(
+      'template' => 'theme/lib4ridora-custom-object-view',
+    ),
   );
 }
