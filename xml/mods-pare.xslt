@@ -2,12 +2,17 @@
 <xsl:stylesheet version="1.0"
   xmlns:xsl="http://www.w3.org/1999/XSL/Transform"
   xmlns:mods="http://www.loc.gov/mods/v3">
+  <xsl:output method="xml" indent="yes"/>
 
   <xsl:template match="mods:mods">
-    <mods:mods>
+    <xsl:copy>
       <xsl:copy-of select="@*"/>
-      <xsl:apply-templates select="mods:titleInfo | mods:name | mods:originInfo | mods:relatedItem | mods:genre | mods:identifier"/>
-    </mods:mods>
+      <xsl:apply-templates select="mods:titleInfo[not(@type)] | mods:name | mods:originInfo | mods:relatedItem | mods:genre | mods:identifier"/>
+    </xsl:copy>
+  </xsl:template>
+
+  <xsl:template match="mods:mods/mods:identifier[@type='doi'] | mods:mods/mods:genre">
+    <xsl:call-template name="copy"/>
   </xsl:template>
 
   <xsl:template match="mods:titleInfo">
@@ -22,7 +27,7 @@
   </xsl:template>
   <xsl:template match="mods:mods/mods:relatedItem[@type='host']">
     <xsl:call-template name="copy">
-      <xsl:with-param name="select" select="mods:titleInfo"/>
+      <xsl:with-param name="select" select="mods:titleInfo[not(@type)]"/>
     </xsl:call-template>
   </xsl:template>
 
@@ -36,7 +41,7 @@
   </xsl:template>
 
   <xsl:template match="text()"/>
-  <xsl:template match="mods:genre | mods:identifier[@type='doi'] | mods:title | mods:namePart" mode="copied">
+  <xsl:template match="mods:titleInfo | mods:title | mods:namePart" mode="copied">
     <xsl:call-template name="copy"/>
   </xsl:template>
 </xsl:stylesheet>
