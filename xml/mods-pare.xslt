@@ -11,7 +11,7 @@
     </xsl:copy>
   </xsl:template>
 
-  <xsl:template match="mods:mods/mods:identifier[@type='doi'] | mods:mods/mods:genre">
+  <xsl:template match="mods:mods/mods:identifier[@type='doi'] | mods:mods/mods:genre | mods:mods/mods:originInfo">
     <xsl:call-template name="copy"/>
   </xsl:template>
 
@@ -41,7 +41,7 @@
   </xsl:template>
 
   <xsl:template match="text()"/>
-  <xsl:template match="mods:titleInfo | mods:title | mods:namePart" mode="copied">
+  <xsl:template match="mods:titleInfo | mods:title | mods:namePart | mods:dateIssued" mode="copied">
     <xsl:call-template name="copy"/>
   </xsl:template>
 </xsl:stylesheet>
