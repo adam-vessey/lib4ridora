@@ -41,6 +41,7 @@
   </xsl:template>
 
   <xsl:template match="text()"/>
+  <xsl:template match="*" mode="copied"/>
   <xsl:template match="mods:titleInfo | mods:title | mods:namePart | mods:dateIssued" mode="copied">
     <xsl:call-template name="copy"/>
   </xsl:template>
