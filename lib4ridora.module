@@ -378,6 +378,19 @@ function lib4ridora_islandora_solr_search_rss_item_alter(&$item, $doc) {
   if (isset($doc['content_models']) && in_array('info:fedora/ir:citationCModel', $doc['content_models'])) {
     $citation = islandora_object_load($doc['PID']);
     if (isset($citation['MODS'])) {
+      $items_to_set = array();
+      $items_to_set['pubDate'] = $citation->createdDate->format(DATETIME::RFC822);
+      foreach($items_to_set as $key => $value) {
+        foreach ($item['items'] as &$sub_item) {
+          if ($sub_item['key'] == $key) {
+            $sub_item['value'] = $value;
+            break;
+          }
+        }
+        unset($sub_item);
+      }
+
+
       $mods_content = $citation['MODS']->content;
       $item['description'] = citeproc_bibliography_from_mods(
         citeproc_default_style(),
@@ -399,6 +412,10 @@ function lib4ridora_islandora_solr_search_rss_item_alter(&$item, $doc) {
  * Implements hook_islandora_solr_config_rss_item_post_render_alter().
  */
 function lib4ridora_islandora_solr_config_rss_item_post_render_alter(&$rendered_item, $doc) {
+  // Bail out if citation isn't requested.
+  if (!isset($_GET['citation']) || $_GET['citation'] != 'true') {
+    return;
+  }
   if (isset($doc['content_models']) && in_array('info:fedora/ir:citationCModel', $doc['content_models'])) {
     $item = new DOMDocument();
     $item->preserveWhiteSpace = FALSE;
