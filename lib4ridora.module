@@ -380,7 +380,7 @@ function lib4ridora_islandora_solr_search_rss_item_alter(&$item, $doc) {
     if (isset($citation['MODS'])) {
       $items_to_set = array();
       $items_to_set['pubDate'] = $citation->createdDate->format(DATETIME::RFC822);
-      foreach($items_to_set as $key => $value) {
+      foreach ($items_to_set as $key => $value) {
         foreach ($item['items'] as &$sub_item) {
           if ($sub_item['key'] == $key) {
             $sub_item['value'] = $value;
@@ -389,7 +389,6 @@ function lib4ridora_islandora_solr_search_rss_item_alter(&$item, $doc) {
         }
         unset($sub_item);
       }
-
 
       $mods_content = $citation['MODS']->content;
       $item['description'] = citeproc_bibliography_from_mods(
