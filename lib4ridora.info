@@ -6,5 +6,6 @@ dependencies[] = citeproc
 dependencies[] = islandora_scholar
 dependencies[] = islandora_plupload
 dependencies[] = islandora_authority
+dependencies[] = xml_form_builder
 package = Islandora Solution Packs
 configure = admin/islandora/solution_pack_config/lib4ridora
