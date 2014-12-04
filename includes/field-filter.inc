@@ -54,10 +54,10 @@ function lib4ridora_filter_xml_form_access($element, &$parent = FALSE) {
       return array_intersect_key($input, array_flip(preg_grep($pattern, array_keys($input), $flags)));
     };
 
-    $roles = $preg_grep_keys('/lib4ridora_field_filter_role_.*/', $element['#user_data']);
-    $permissions = $preg_grep_keys('/lib4ridora_field_filter_permission_.*/', $element['#user_data']);
+    $roles = $preg_grep_keys('/^lib4ridora_field_filter_role(?:_.*)?$/', $element['#user_data']);
+    $permissions = $preg_grep_keys('/^lib4ridora_field_filter_permission(?:_.*)?$/', $element['#user_data']);
     return (empty($roles) && empty($permissions)) ||
-      array_intersect($roles, $user->roles)) ||
+      array_intersect($roles, $user->roles) ||
       array_filter($permissions, 'user_access');
   }
 
