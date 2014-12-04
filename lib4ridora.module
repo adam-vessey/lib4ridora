@@ -588,3 +588,11 @@ function lib4ridora_theme($existing, $type, $theme, $path) {
     ),
   );
 }
+
+/**
+ * Implements hook_xml_form_builder_get_form_modify_definition_alter().
+ */
+function lib4ridora_xml_form_builder_get_form_modify_definition_alter(&$form, &$form_alter) {
+  module_load_include('inc', 'lib4ridora', 'includes/field-filter');
+  lib4ridora_filter_xml_form_field($form);
+}
