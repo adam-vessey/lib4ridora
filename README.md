@@ -32,6 +32,9 @@ Role and permission restrictions may be combined in the same element.
 
 When restrictions are specified on an element, the element (and its children) will only be shown if the current user has one of the specified roles or one of the specified permissions.
 
+For example, if one wanted to allow access to an element to those with the "Replace datastreams" permission or the "metadata manager" or "repository administrator" roles, your configuration might look like:
+![Screenshot](http://puu.sh/dgOMH/ad3d3d7964.png)
+
 ## Maintainers/Sponsors
 
 Current maintainers:
