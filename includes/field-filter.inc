@@ -38,9 +38,9 @@ function lib4ridora_filter_xml_form_field(&$element, $parent_enabled_filtering =
  *   the role filtering in this tree.
  *
  * @return bool
- *   TRUE if either filtering has been enabled on this element (or a parent) and the
- *   user has one of the allowed roles on this element, or this element has no
- *   roles defined. FALSE if filtering is enabled, roles are specified and we
+ *   TRUE if either filtering has been enabled on this element (or a parent) and
+ *   the user has one of the allowed roles on this element, or this element has
+ *   no roles defined. FALSE if filtering is enabled, roles are specified and we
  *   do /not/ have an allowed role.
  */
 function lib4ridora_filter_xml_form_access($element, &$parent = FALSE) {
