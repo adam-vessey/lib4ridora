@@ -72,9 +72,9 @@ function lib4ridora_upload_form($form, &$form_state) {
       '#upload_validators' => array(
         'file_validate_extensions' => array(implode(' ', $uploadable)),
       ),
-      // "#autoupload", "#autosubmit" and the "#submit_element" values here
-      // combine to trigger AJAX to refresh the form, so as to populate the
-      // table rendered at the bottom.
+      // "#autoupload", "#submit_element" values here combined with the
+      // Drupal.pupload.uploadCompleteCallback callback to trigger AJAX to
+      // refresh the form, so as to populate the table rendered at the bottom.
       '#autoupload' => FALSE,
       '#autosubmit' => TRUE,
       '#submit_element' => '#edit-wrapper-submitter',
