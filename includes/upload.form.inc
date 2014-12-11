@@ -52,7 +52,6 @@ function lib4ridora_upload_form($form, &$form_state) {
   };
 
   $form['#tree'] = TRUE;
-  $object = islandora_ingest_form_get_object($form_state);
   $uploadable = explode(' ', variable_get('lib4ridora_uploadable_extensions', 'pdf'));
   $uploadable = array_unique($uploadable);
   $form['#prefix'] = '<div id="lib4ridora-ingest-form-wrapper">';
@@ -73,12 +72,17 @@ function lib4ridora_upload_form($form, &$form_state) {
       '#upload_validators' => array(
         'file_validate_extensions' => array(implode(' ', $uploadable)),
       ),
-      // "#autoupload", "#autosubmit" and the "#submit_element" values here
-      // combine to trigger AJAX to refresh the form, so as to populate the
-      // table rendered at the bottom.
-      '#autoupload' => TRUE,
+      // "#autoupload", "#submit_element" values here combined with the
+      // Drupal.pupload.uploadCompleteCallback callback to trigger AJAX to
+      // refresh the form, so as to populate the table rendered at the bottom.
+      '#autoupload' => FALSE,
       '#autosubmit' => TRUE,
       '#submit_element' => '#edit-wrapper-submitter',
+      '#plupload_settings' => array(
+        'init' => array(
+          'UploadComplete' => 'Drupal.plupload.uploadCompleteCallback',
+        ),
+      ),
     ),
     'submitter' => array(
       // XXX: ID specified for convenience, so it can be specified in the
