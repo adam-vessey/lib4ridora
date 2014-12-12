@@ -51,25 +51,22 @@ function lib4ridora_multi_embargo_pdf_filter(AbstractDatastream $datastream) {
  */
 function lib4ridora_multi_embargo_form($form, &$form_state) {
   form_load_include($form_state, 'inc', 'lib4ridora', 'includes/embargo.form');
-
+  module_load_include('inc', 'islandora', 'includes/ingest.form');
   $object = lib4ridora_multi_embargo_get_object($form_state);
-
-  $datastreams = iterator_to_array($object);
-  $pdf_datastreams = array_filter($datastreams, 'lib4ridora_multi_embargo_pdf_filter');
+  $step_storage = islandora_ingest_form_get_step_storage($form_state, 'lib4ridora_multi_pdf_upload');
 
   $form['#tree'] = TRUE;
-  $form['datastreams'] = array(
+  $form['files'] = array(
     '#type' => 'markup',
   );
 
   $options = lib4ridora_multi_pdf_get_options();
-  foreach ($pdf_datastreams as $datastream) {
-    $defaults = lib4ridora_get_embargo_info($datastream);
-    $form['datastreams'][$datastream->id] = array(
+  foreach ($step_storage['files'] as $file) {
+    $defaults = lib4ridora_multi_pdf_defaults_properties();
+    $form['files'][$file->uuid] = array(
       '#type' => 'fieldset',
-      '#title' => t('@label (@id)', array(
-        '@label' => $datastream->label,
-        '@id' => $datastream->id,
+      '#title' => t('@filename', array(
+        '@filename' => $file->filename,
       )),
       'document_version' => array(
         '#type' => 'select',
@@ -94,7 +91,7 @@ function lib4ridora_multi_embargo_form($form, &$form_state) {
         '#title_display' => 'invisible',
         '#states' => array(
           'visible' => array(
-            'fieldset#edit-datastreams-' . strtolower($datastream->id) . ' select.lib4ridora-embargo-select' => array(
+            'fieldset#edit-files-' . strtolower($file->uuid) . ' select.lib4ridora-embargo-select' => array(
               'value' => 'date',
             ),
           ),
@@ -122,7 +119,8 @@ function lib4ridora_multi_embargo_form($form, &$form_state) {
 
   // SHERPA RoMEO.
   if (isset($object['MODS'])) {
-    $mods_doc = DOMDocument::loadXML($object['MODS']->content);
+    $mods_doc = new DOMDocument();
+    $mods_doc->loadXML($object['MODS']->content);
     $mods_xpath = new DOMXPath($mods_doc);
     $mods_xpath->registerNamespace('mods', 'http://www.loc.gov/mods/v3');
     $issn_results = $mods_xpath->query('/mods:mods/mods:identifier[@type="issn" and normalize-space(text())]');
@@ -296,8 +294,45 @@ function lib4ridora_get_embargo_info(AbstractDatastream $datastream) {
  * Form submission handler; apply multi-PDF embargoes and properties.
  */
 function lib4ridora_multi_embargo_form_submit(&$form, &$form_state) {
+  module_load_include('inc', 'islandora', 'includes/ingest.form');
+  $step_storage = islandora_ingest_form_get_step_storage($form_state, 'lib4ridora_multi_pdf_upload');
   $object = lib4ridora_multi_embargo_get_object($form_state);
-  foreach ($form_state['values']['datastreams'] as $dsid => $values) {
+  $options = lib4ridora_multi_pdf_get_options(TRUE);
+  $primary_group = array_map(function () {
+    return FALSE;
+  }, $options['document_version']);
+  $file_info = $step_storage['files'];
+  foreach ($form_state['values']['files'] as $filename => $values) {
+    if (!$primary_group[$values['document_version']]) {
+      $primary_group[$values['document_version']] = $filename;
+    }
+  }
+  $primary_file = reset(array_filter($primary_group));
+  $index = 0;
+  foreach ($form_state['values']['files'] as $filename => $values) {
+    // Construct the datastreams.
+    if ($filename == $primary_file) {
+      $datastream = $object->constructDatastream('PDF', 'M');
+      $datastream->mimetype = $file_info[$filename]->filemime;
+      $datastream->label = $file_info[$filename]->filename;
+      $datastream->setContentFromFile($file_info[$filename]->uri, FALSE);
+      $object->ingestDatastream($datastream);
+      unset($file_info[$filename]);
+      $dsid = 'PDF';
+    }
+    else {
+      $dsid = format_string('@prefix@index', array(
+        '@prefix' => variable_get('lib4ridora_extra_pdf_datastream_prefix', 'PDF'),
+        '@index' => $index + 2,
+      ));
+      $datastream = $object->constructDatastream($dsid, 'M');
+      $datastream->mimetype = $file_info[$filename]->filemime;
+      $datastream->label = $file_info[$filename]->filename;
+      $datastream->setContentFromFile($file_info[$filename]->uri, FALSE);
+      $object->ingestDatastream($datastream);
+      $index++;
+    }
+
     $filtered = array_intersect_key($values, lib4ridora_multi_pdf_defaults_properties());
     if (isset($filtered['embargo_date']) && $filtered['availability'] == 'date') {
       $value = gmdate('Y-m-d\TH:i:s\Z', gmmktime(0, 0, 0, $filtered['embargo_date']['month'], $filtered['embargo_date']['day'], $filtered['embargo_date']['year']));
@@ -323,7 +358,7 @@ function lib4ridora_multi_embargo_form_submit(&$form, &$form_state) {
  *
  * Also, get rid of some associated properties.
  */
-function lib4ridora_multi_embargo_form_undo_submit(&$form, &$form_submit) {
+function lib4ridora_multi_embargo_form_undo_submit(&$form, &$form_state) {
   $object = lib4ridora_multi_embargo_get_object($form_state);
   $datastreams = iterator_to_array($object);
   $pdf_datastreams = array_filter($datastreams, 'lib4ridora_multi_embargo_pdf_filter');
@@ -331,6 +366,7 @@ function lib4ridora_multi_embargo_form_undo_submit(&$form, &$form_submit) {
     foreach (lib4ridora_multi_pdf_defaults_properties() as $pred => $default) {
       $pdf->relationships->remove(LIB4RIDORA_RELS_URI, lib4ridora_multi_embargo_build_predicate($pred));
     }
+    $object->purgeDatastream($pdf);
   }
 }
 
@@ -379,8 +415,29 @@ function lib4ridora_multi_pdf_defaults_properties() {
 
 /**
  * Helper function; mappings of "codes" to human-readable strings.
+ *
+ * @param bool $sort
+ *   Whether the document versions are to be weighted per LIB4RI's requirements.
  */
-function lib4ridora_multi_pdf_get_options() {
+function lib4ridora_multi_pdf_get_options($sort = FALSE) {
+  if ($sort) {
+    $document_versions = array(
+      'published version' => t('Published Version'),
+      'accepted version' => t('Accepted Version'),
+      'updated version' => t('Updated Version'),
+      'supplemental material' => t('Supplemental Material'),
+      'unspecified' => t('Unspecified'),
+    );
+  }
+  else {
+    $document_versions = array(
+      'accepted version' => t('Accepted Version'),
+      'published version' => t('Published Version'),
+      'updated version' => t('Updated Version'),
+      'supplemental material' => t('Supplemental Material'),
+      'unspecified' => t('Unspecified'),
+    );
+  }
   return array(
     'availability' => array(
       NULL => t('Public'),
@@ -388,13 +445,7 @@ function lib4ridora_multi_pdf_get_options() {
       'date' => t('Embargo'),
       'private' => t('Private'),
     ),
-    'document_version' => array(
-      'accepted version' => t('Accepted Version'),
-      'published version' => t('Published Version'),
-      'updated version' => t('Updated Version'),
-      'supplemental material' => t('Supplemental Material'),
-      'unspecified' => t('Unspecified'),
-    ),
+    'document_version' => $document_versions,
     'use_permission' => array(
       NULL => t('Unspecified'),
       'CC BY' => t('Creative Commons: Attribution'),
