@@ -34,9 +34,9 @@ function lib4ridora_upload_form($form, &$form_state) {
     $selected = array_filter($form_state['values']['wrapper']['table_wrapper']['files']);
     $files = array_values(array_diff_key($files, $selected));
   }
-
-  if (($form_state['values']['form_step_id'] == 'lib4ridora_multi_pdf_upload' && $form_state['values']['next'] == t('Ingest') && !empty($files)) ||
-    ($form_state['values']['form_step_id'] == 'lib4ridora_multi_pdf_upload' && $form_state['values']['next'] == t('Next') && empty($files))) {
+  $current_step = islandora_ingest_form_get_step($form_state);
+  if (($current_step == 'lib4ridora_multi_pdf_upload' && $form_state['values']['next'] == t('Ingest') && !empty($files)) ||
+    ($current_step == 'lib4ridora_multi_pdf_upload' && $form_state['values']['next'] == t('Next') && empty($files))) {
 
     // Reload the Ingest steps so that the form alters by either adding a next
     // button or reseting it to ingest.
