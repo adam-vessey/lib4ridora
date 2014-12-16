@@ -154,7 +154,6 @@ function lib4ridora_multi_embargo_form_submit(&$form, &$form_state) {
       $datastream->label = $mapped_files[$filename]->filename;
       $datastream->setContentFromFile($mapped_files[$filename]->uri, FALSE);
       $object->ingestDatastream($datastream);
-      unset($mapped_files[$filename]);
       $dsid = 'PDF';
     }
     else {
@@ -244,7 +243,6 @@ function lib4ridora_multi_embargo_edit_form_submit(&$form, &$form_state) {
         $datastream->label = $mapped_files[$filename]['label'];
         $datastream->setContentFromFile($mapped_files[$filename]['content'], FALSE);
         $non_cached_object->ingestDatastream($datastream);
-        unset($mapped_files[$filename]);
         $dsid = 'PDF';
       }
       else {
@@ -259,6 +257,7 @@ function lib4ridora_multi_embargo_edit_form_submit(&$form, &$form_state) {
         $non_cached_object->ingestDatastream($datastream);
         $index++;
       }
+      file_unmanaged_delete($mapped_files['content']);
       lib4ridora_update_datastream_relationships($non_cached_object[$dsid], $values);
     }
   }
