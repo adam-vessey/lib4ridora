@@ -257,7 +257,7 @@ function lib4ridora_multi_embargo_edit_form_submit(&$form, &$form_state) {
         $non_cached_object->ingestDatastream($datastream);
         $index++;
       }
-      file_unmanaged_delete($mapped_files['content']);
+      file_unmanaged_delete($mapped_files[$filename]['content']);
       lib4ridora_update_datastream_relationships($non_cached_object[$dsid], $values);
     }
   }
