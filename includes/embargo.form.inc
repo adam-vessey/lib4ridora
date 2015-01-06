@@ -448,7 +448,7 @@ function lib4ridora_append_romeo_information(&$form) {
     $mods_doc->loadXML($object['MODS']->content);
     $mods_xpath = new DOMXPath($mods_doc);
     $mods_xpath->registerNamespace('mods', 'http://www.loc.gov/mods/v3');
-    $issn_results = $mods_xpath->query('/mods:mods/mods:identifier[@type="issn" and normalize-space(text())]');
+    $issn_results = $mods_xpath->query('//mods:identifier[@type="issn" and normalize-space(text())]');
     if ($issn_results->length) {
       $issn = $issn_results->item(0)->textContent;
       if ($issn) {
