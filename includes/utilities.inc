@@ -112,12 +112,14 @@ function lib4ridora_get_factor_with_fallback(AbstractObject $object, $issued_yea
   $issued_years_with_fallbacks = array_unique($issued_years_with_fallbacks, SORT_NUMERIC);
 
   $factor = FALSE;
+  $factor_year = FALSE;
   foreach ($issued_years_with_fallbacks as $year) {
     $factor = lib4ridora_get_impact_factor($object, $year);
     if ($factor !== FALSE) {
+      $factor_year = $year;
       break;
     }
   }
 
-  return $factor !== FALSE ? array($factor, $year) : FALSE;
+  return $factor !== FALSE ? array($factor, $factor_year) : FALSE;
 }
