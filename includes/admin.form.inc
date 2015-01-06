@@ -43,6 +43,13 @@ function lib4ridora_admin(array $form, array &$form_state) {
     '#default_value' => variable_get('lib4ridora_pseudo_solr_field_factor', 'journal_impact_factor'),
     '#required' => TRUE,
   );
+  $form['lib4ridora_pseudo_solr_field_year'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Journal Impact Factor Year Pseudo-Solr Field'),
+    '#description' => t('A field we will inject into Solr documents during CSV exports. If restricting fields, ensure it is available.'),
+    '#default_value' => variable_get('lib4ridora_pseudo_solr_field_year', 'journal_impact_factor_year'),
+    '#required' => TRUE,
+  );
 
   return system_settings_form($form);
 }
