@@ -59,7 +59,7 @@ function lib4ridora_multi_embargo_form($form, &$form_state) {
     '#type' => 'markup',
   );
   lib4ridora_append_document_information($step_storage['files'], $form);
-  lib4ridora_append_romeo_information($form);
+  lib4ridora_append_romeo_information($form, $form_state);
   return $form;
 }
 
@@ -83,7 +83,7 @@ function lib4ridora_multi_embargo_edit_form($form, &$form_state) {
   $datastreams = iterator_to_array($object);
   $pdf_datastreams = array_filter($datastreams, 'lib4ridora_multi_embargo_pdf_filter');
   lib4ridora_append_document_information($pdf_datastreams, $form);
-  lib4ridora_append_romeo_information($form);
+  lib4ridora_append_romeo_information($form, $form_state);
   $form['actions'] = array(
     '#type' => 'actions',
     'submit' => array(
@@ -441,14 +441,15 @@ function lib4ridora_append_document_information($files, &$form) {
  * @return array
  *   An array representing the form to be rendered.
  */
-function lib4ridora_append_romeo_information(&$form) {
+function lib4ridora_append_romeo_information(&$form, &$form_state) {
+  $object = lib4ridora_multi_embargo_get_object($form_state);
   // SHERPA RoMEO.
   if (isset($object['MODS'])) {
     $mods_doc = new DOMDocument();
     $mods_doc->loadXML($object['MODS']->content);
     $mods_xpath = new DOMXPath($mods_doc);
     $mods_xpath->registerNamespace('mods', 'http://www.loc.gov/mods/v3');
-    $issn_results = $mods_xpath->query('/mods:mods/mods:identifier[@type="issn" and normalize-space(text())]');
+    $issn_results = $mods_xpath->query('//mods:identifier[@type="issn" and normalize-space(text())]');
     if ($issn_results->length) {
       $issn = $issn_results->item(0)->textContent;
       if ($issn) {
