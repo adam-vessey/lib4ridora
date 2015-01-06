@@ -97,9 +97,10 @@ function lib4ridora_set_impact_factor(AbstractObject $journal, $year, $factor) {
  *   Allowing an array is for convenience, as silly things could happen with
  *   different date encodings we basing things on.
  *
- * @return string|bool
- *   If a factor could be found, the factor for the first year (in the order
- *   they were provided); otherwise, FALSE.
+ * @return array|bool
+ *   If a factor could be found, an array containing the factor for the first
+ *   year (in the order they were provided in $issued_years) and the year;
+ *   otherwise, FALSE.
  */
 function lib4ridora_get_factor_with_fallback(AbstractObject $object, $issued_years) {
   $issued_years = (array) $issued_years;
@@ -118,5 +119,5 @@ function lib4ridora_get_factor_with_fallback(AbstractObject $object, $issued_yea
     }
   }
 
-  return $factor;
+  return $factor !== FALSE ? array($factor, $year) : FALSE;
 }
