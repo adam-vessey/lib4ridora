@@ -316,6 +316,15 @@ function lib4ridora_menu() {
     'type' => MENU_LOCAL_TASK,
     'file' => 'includes/jif_json.form.inc',
   );
+  $items['islandora/object/%islandora_object/manage/document_management'] = array(
+    'title' => 'Document Management',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('lib4ridora_mini_workflow_document_management_form', 2),
+    'access callback' => 'lib4ridora_mini_workflow_landing_access',
+    'access arguments' => array(2),
+    'type' => MENU_LOCAL_TASK,
+    'file' => 'includes/workflow.form.inc',
+  );
   return $items;
 }
 
@@ -592,4 +601,27 @@ function lib4ridora_theme($existing, $type, $theme, $path) {
 function lib4ridora_xml_form_builder_get_form_modify_definition_alter(&$form, &$form_alter) {
   module_load_include('inc', 'lib4ridora', 'includes/field-filter');
   lib4ridora_filter_xml_form_field($form);
+}
+
+/**
+ * Access callback for the LIB4RI mini workflow landing form.
+ *
+ * @param AbstractObject $object
+ *   An AbstractObject representing an object within Fedora.
+ *
+ * @return bool
+ *   TRUE if the user has access, FALSE otherwise.
+ */
+function lib4ridora_mini_workflow_landing_access(AbstractObject $object) {
+  return islandora_object_access(ISLANDORA_MINI_WORKFLOW_USE_PERMISSION, $object);
+}
+
+/**
+ * Implements hook_views_api().
+ */
+function lib4ridora_views_api($module = NULL, $api = NULL) {
+  return array(
+    "api" => '3.0',
+    'path' => drupal_get_path('module', 'lib4ridora') . '/views',
+  );
 }
