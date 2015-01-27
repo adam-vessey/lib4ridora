@@ -39,7 +39,7 @@ function lib4ridora_views_default_views() {
   $handler->display->display_options['fields']['nothing']['label'] = '';
   $handler->display->display_options['fields']['nothing']['alter']['text'] = 'Edit MODS';
   $handler->display->display_options['fields']['nothing']['alter']['make_link'] = TRUE;
-  $handler->display->display_options['fields']['nothing']['alter']['path'] = 'islandora/object/!1/manage/datastream/MODS/edit';
+  $handler->display->display_options['fields']['nothing']['alter']['path'] = 'islandora/object/!1/datastream/MODS/edit';
   $handler->display->display_options['fields']['nothing']['element_label_colon'] = FALSE;
   /* Field: Global: Custom text */
   $handler->display->display_options['fields']['nothing_1']['id'] = 'nothing_1';
