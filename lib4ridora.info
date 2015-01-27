@@ -8,5 +8,6 @@ dependencies[] = islandora_plupload
 dependencies[] = islandora_authority
 dependencies[] = xml_form_builder
 dependencies[] = islandora_mini_workflow
+dependencies[] = islandora_solr_views
 package = Islandora Solution Packs
 configure = admin/islandora/solution_pack_config/lib4ridora
