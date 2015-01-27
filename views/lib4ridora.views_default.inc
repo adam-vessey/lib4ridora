@@ -100,4 +100,3 @@ function lib4ridora_views_default_views() {
   $views['lib4ridora_document_management'] = $view;
   return $views;
 }
-
