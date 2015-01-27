@@ -272,6 +272,15 @@ function lib4ridora_menu_alter(&$items) {
 function lib4ridora_menu() {
   $items = array();
 
+  $items['islandora/object/%islandora_object/lib4ridora_pdf_upload'] = array(
+    'title' => 'Ingest PDF',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('lib4ridora_single_pdf_upload_form', 2),
+    'access callback' => 'lib4ridora_citation_access',
+    'access arguments' => array(ISLANDORA_MINI_WORKFLOW_USE_PERMISSION, 2),
+    'type' => MENU_LOCAL_ACTION,
+    'file' => 'includes/pdf-upload.form.inc',
+  );
   $items['islandora/object/%islandora_object/lib4ridora_pdf_management'] = array(
     'title' => 'PDF Management',
     'page callback' => 'drupal_get_form',

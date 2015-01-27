@@ -591,11 +591,23 @@ function lib4ridora_append_romeo_information(&$form, &$form_state) {
  *   The file to be used as the PDF datastream.
  */
 function lib4ridora_get_primary_file_for_datastream($form_state) {
+  return lib4ridora_get_primary_file_for_datastream_info($form_state['values']['files']);
+}
+
+/**
+ * Gets the primary file for the PDF datastream.
+ *
+ * @param array $info
+ *   An associative array mapping some form of ID to associative arrays of
+ *   datastream info.
+ *
+ * @return string
+ *   The relevant ID for the entry to be used as the PDF datastream.
+ */
+function lib4ridora_get_primary_file_for_datastream_info($info) {
   $options = lib4ridora_multi_pdf_get_options(TRUE);
-  $primary_group = array_map(function () {
-    return FALSE;
-  }, $options['document_version']);
-  foreach ($form_state['values']['files'] as $filename => $values) {
+  $primary_group = array_fill_keys(array_keys($options['document_version']), FALSE);
+  foreach ($info as $filename => $values) {
     if (!$primary_group[$values['document_version']]) {
       $primary_group[$values['document_version']] = $filename;
     }
