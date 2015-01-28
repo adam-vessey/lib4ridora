@@ -276,7 +276,7 @@ function lib4ridora_menu() {
     'title' => 'Ingest PDF',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('lib4ridora_single_pdf_upload_form', 2),
-    'access callback' => 'lib4ridora_citation_access',
+    'access callback' => 'lib4ridora_citation_model_access',
     'access arguments' => array(ISLANDORA_MINI_WORKFLOW_USE_PERMISSION, 2),
     'type' => MENU_LOCAL_ACTION,
     'file' => 'includes/pdf-upload.form.inc',
@@ -366,7 +366,16 @@ function lib4ridora_citation_access($op, $object) {
     $pdf_datastreams = array_filter(iterator_to_array($object), 'lib4ridora_multi_embargo_pdf_filter');
     return !empty($pdf_datastreams);
   };
-  return $object instanceof AbstractObject && in_array('ir:citationCModel', $object->models) && islandora_object_access($op, $object) && $has_pdf($object);
+  return lib4ridora_citation_model_access($op, $object) && $has_pdf($object);
+}
+
+/**
+ * Access callback wrapper.
+ *
+ * Only allow if the object has one of our models.
+ */
+function lib4ridora_citation_model_access($op, $object) {
+  return $object instanceof AbstractObject && in_array('ir:citationCModel', $object->models) && islandora_object_access($op, $object);
 }
 
 /**
