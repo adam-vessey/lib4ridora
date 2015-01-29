@@ -18,6 +18,7 @@ function lib4ridora_single_pdf_upload_form($form, &$form_state, AbstractObject $
   $form['pdf'] = array(
     '#type' => 'managed_file',
     '#title' => t('Upload PDF'),
+    '#required' => TRUE,
     '#upload_validators' => array(
       'file_validate_extensions' => array('pdf'),
     ),
