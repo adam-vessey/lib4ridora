@@ -123,3 +123,30 @@ function lib4ridora_get_factor_with_fallback(AbstractObject $object, $issued_yea
 
   return $factor !== FALSE ? array($factor, $factor_year) : FALSE;
 }
+
+/**
+ * An array of XML form association for the corresponds to the publication type.
+ *
+ * @return array
+ *   Returns an array of publication types with the corresponding form name.
+ * Format: key => value; publication type option => "form name".
+ */
+function lib4ridora_get_custom_citation_form_associations() {
+  $form_associations = array(
+    "Journal Article" => "Journal Article",
+    "Book Chapter" => "Book Chapter",
+    "Book" => "Book",
+    "Edited Book" => "Book",
+    "Newspaper or Magazine Article" => "Newspaper or Magazine Article",
+    "Conference Item" => "Conference Object",
+    "Proceedings Paper" => "Conference Object",
+    "Other Conference Item" => "Conference Object",
+    "Report" => "Report",
+    "Thesis" => "Thesis",
+    "dissertation" => "Thesis",
+    "master thesis" => "Thesis",
+    "bachelor thesis" => "Thesis",
+    "Patent" => "Patent",
+  );
+  return $form_associations;
+}

@@ -113,7 +113,9 @@ function lib4ridora_islandora_xml_form_builder_forms() {
  * Implements hook_islandora_ingest_steps_alter().
  */
 function lib4ridora_ir_citationCModel_islandora_ingest_steps_alter(array &$steps, array &$form_state) {
+  unset($steps['xml_form_builder_association_step']);
   unset($steps['islandora_scholar_file_upload']);
+  unset($steps['islandora_populator_select']);
 }
 
 /**
@@ -121,6 +123,14 @@ function lib4ridora_ir_citationCModel_islandora_ingest_steps_alter(array &$steps
  */
 function lib4ridora_ir_citationCModel_islandora_ingest_steps(array $form_state) {
   $steps = array();
+
+  $steps['lib4ridora_ingest_selector'] = array(
+    'weight' => -2,
+    'type' => 'form',
+    'form_id' => 'lib4ridora_ingest_selector_form',
+    'module' => 'lib4ridora',
+    'file' => 'includes/ingest-selector.form.inc',
+  );
 
   $steps['lib4ridora_multi_pdf_upload'] = array(
     'weight' => 8,
@@ -333,6 +343,24 @@ function lib4ridora_menu() {
     'access arguments' => array(ISLANDORA_MINI_WORKFLOW_USE_PERMISSION, 2),
     'type' => MENU_LOCAL_TASK,
     'file' => 'includes/workflow.form.inc',
+  );
+  $items['islandora/object/%islandora_object/MODS/citation'] = array(
+    'title' => 'Edit datastream',
+    'page callback' => 'lib4ridora_citation_select_mods_edit_form',
+    'page arguments' => array(2),
+    'type' => MENU_CALLBACK,
+    'file' => 'includes/citation-mods-edit.inc',
+    'access callback' => TRUE,
+    'access arguments' => array(ISLANDORA_METADATA_EDIT),
+  );
+  $items['islandora/object/%islandora_object/MODS/citation/unknown'] = array(
+    'title' => 'Edit datastream',
+    'page callback' => 'lib4ridora_citation_unknown_association_edit_form',
+    'page arguments' => array(2),
+    'type' => MENU_CALLBACK,
+    'file' => 'includes/citation-mods-edit.inc',
+    'access callback' => TRUE,
+    'access arguments' => array(ISLANDORA_METADATA_EDIT),
   );
   return $items;
 }
@@ -629,4 +657,15 @@ function lib4ridora_views_api($module = NULL, $api = NULL) {
     "api" => '3.0',
     'path' => drupal_get_path('module', 'lib4ridora') . '/views',
   );
+}
+
+/**
+ * Alter ingest form to change ingest button label for citations.
+ */
+function lib4ridora_form_xml_form_builder_datastream_form_alter(&$form, &$form_state, $form_id) {
+  $obj = $form_state['build_info']['args'][0];
+  if (in_array('ir:citationCModel', $obj->models)) {
+    // Citation objects go to a custom citation form.
+    drupal_goto("islandora/object/{$obj->id}/MODS/citation");
+  }
 }
