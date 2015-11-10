@@ -20,6 +20,7 @@
  */
 function lib4ridora_ingest_selector_form(array $form, array &$form_state, AbstractObject $object = NULL) {
   $form['ingest_selector'] = array(
+    '#title' => t('Select a Publication Type'),
     '#type' => 'radios',
     '#options' => array(
       "Journal Article" => t("Journal Article"),
