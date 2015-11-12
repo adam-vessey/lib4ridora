@@ -116,6 +116,11 @@ function lib4ridora_ir_citationCModel_islandora_ingest_steps_alter(array &$steps
   unset($steps['xml_form_builder_association_step']);
   unset($steps['islandora_scholar_file_upload']);
   unset($steps['islandora_populator_select']);
+  // Remove the islandora_marcxml_upload if importing a doi record.
+  $association_step_storage = &islandora_ingest_form_get_step_storage($form_state, 'xml_form_builder_association_step');
+  if (isset($association_step_storage['journal_import_method']) && $association_step_storage['journal_import_method'] == 'doi') {
+    unset($steps['islandora_marcxml_upload']);
+  }
 }
 
 /**
