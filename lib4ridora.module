@@ -344,22 +344,12 @@ function lib4ridora_menu() {
     'type' => MENU_LOCAL_TASK,
     'file' => 'includes/workflow.form.inc',
   );
-  $items['islandora/object/%islandora_object/MODS/citation'] = array(
+  $items['islandora/object/%islandora_object/MODS/citation/%'] = array(
     'title' => 'Edit datastream',
-    'page callback' => 'lib4ridora_citation_select_mods_edit_form',
-    'page arguments' => array(2),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('lib4ridora_citation_select_mods_edit_form', 2, 5),
     'type' => MENU_CALLBACK,
     'file' => 'includes/citation-mods-edit.inc',
-    'access callback' => TRUE,
-    'access arguments' => array(ISLANDORA_METADATA_EDIT),
-  );
-  $items['islandora/object/%islandora_object/MODS/citation/unknown'] = array(
-    'title' => 'Edit datastream',
-    'page callback' => 'lib4ridora_citation_unknown_association_edit_form',
-    'page arguments' => array(2),
-    'type' => MENU_CALLBACK,
-    'file' => 'includes/citation-mods-edit.inc',
-    'access callback' => TRUE,
     'access arguments' => array(ISLANDORA_METADATA_EDIT),
   );
   return $items;

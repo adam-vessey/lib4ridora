@@ -12,13 +12,13 @@
  *   The Drupal form.
  * @param array $form_state
  *   The Drupal form state.
- * @param AbstractObject $object
- *   The object if the form is coming from editing.
+ * @param bool $editing
+ *   If the form is being called from editing.
  *
  * @return array
  *   The Drupal form state.
  */
-function lib4ridora_ingest_selector_form(array $form, array &$form_state, AbstractObject $object = NULL) {
+function lib4ridora_ingest_selector_form(array $form, array &$form_state, $editing = FALSE) {
   $form['ingest_selector'] = array(
     '#title' => t('Select a Publication Type'),
     '#type' => 'radios',
@@ -64,11 +64,10 @@ function lib4ridora_ingest_selector_form(array $form, array &$form_state, Abstra
   // Handle using this form for editing when required, if the object is passed
   // then the form needs to add a submit button and use $form_state['object']
   // for processing.
-  $form_state['object'] = $object;
-  if ($object) {
+  if ($editing) {
     $form['submit'] = array(
       '#type' => 'submit',
-      '#value' => 'Next',
+      '#value' => t('Update'),
     );
   }
   return $form;
@@ -86,12 +85,7 @@ function lib4ridora_ingest_selector_form_submit(array $form, array &$form_state)
   module_load_include('inc', 'xml_form_builder', 'includes/associations');
   module_load_include('inc', 'lib4ridora', 'includes/utilities');
   $associations = xml_form_builder_get_associations();
-  if ($form_state['object']) {
-    $association_step_storage = array();
-  }
-  else {
-    $association_step_storage = &islandora_ingest_form_get_step_storage($form_state, 'xml_form_builder_association_step');
-  }
+  $association_step_storage = &islandora_ingest_form_get_step_storage($form_state, 'xml_form_builder_association_step');
   $ingest_to_form_association = lib4ridora_get_custom_citation_form_associations();
   foreach ($associations as $key => $association) {
     if ($association['form_name'] == $ingest_to_form_association[$form_state['values']['ingest_selector']]) {
@@ -101,11 +95,6 @@ function lib4ridora_ingest_selector_form_submit(array $form, array &$form_state)
       $association_step_storage['association'] = $association;
       break;
     }
-  }
-  if ($form_state['object']) {
-    session_start();
-    $_SESSION['association'] = $association_step_storage['association'];
-    drupal_goto("islandora/object/{$form_state['object']->id}/MODS/citation/unknown");
   }
 }
 
