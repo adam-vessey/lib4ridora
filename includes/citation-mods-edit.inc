@@ -8,13 +8,19 @@
 /**
  * Grab the correct MODS edit form for citation objects and load it.
  *
+ * @param array $form
+ *   The Drupal form.
+ * @param array $form_state
+ *   The Drupal form state.
  * @param AbstractObject $object
  *   The object to edit.
+ * @param string $forced_form_name
+ *   The form name to force load.
  *
  * @return array
  *   Returns the drupal form to load.
  */
-function lib4ridora_citation_select_mods_edit_form($form, &$form_state, AbstractObject $object, $forced_form_name=NULL) {
+function lib4ridora_citation_select_mods_edit_form($form, &$form_state, AbstractObject $object, $forced_form_name = NULL) {
   module_load_include('inc', 'xml_form_builder', 'includes/associations');
   module_load_include('inc', 'lib4ridora', 'includes/utilities');
   $associations = xml_form_builder_get_associations();
