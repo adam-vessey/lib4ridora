@@ -23,7 +23,7 @@ function lib4ridora_citation_select_mods_edit_form($form, &$form_state, Abstract
   module_load_include('inc', 'lib4ridora', 'includes/utilities');
   $associations = xml_form_builder_get_associations();
   $form_associations = lib4ridora_get_custom_citation_form_associations();
-  $form_state['object'] = $object;
+  $form_state['pid'] = $object->id;
   // Read Genre from MODS to determine what form to use for editing.
   $mods = new SimpleXMLElement($object['MODS']->content);
   $mods->registerXPathNamespace('mods', 'http://www.loc.gov/mods/v3');
@@ -74,12 +74,13 @@ function lib4ridora_citation_select_mods_edit_form($form, &$form_state, Abstract
  *   The Drupal form state.
  */
 function lib4ridora_citation_select_mods_edit_form_submit($form, &$form_state) {
-  $object = $form_state['object'];
   if (isset($form_state['values']['ingest_selector'])) {
     $form_state['form_name'] = $form_state['values']['ingest_selector'];
     $form_state['rebuild'] = TRUE;
   }
   else {
+    $pid = $form_state['pid'];
+    $object = islandora_object_load($pid);
     // Handle all formbuilder things.
     $xml_form = new XMLForm($form_state, array());
     // Pass only the portion of the form that contains the formbuilder markup
