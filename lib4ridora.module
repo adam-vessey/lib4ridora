@@ -650,12 +650,21 @@ function lib4ridora_views_api($module = NULL, $api = NULL) {
 }
 
 /**
- * Alter ingest form to change ingest button label for citations.
+ * Implements hook_islandora_edit_datastream_modify_registry_alter().
  */
-function lib4ridora_form_xml_form_builder_datastream_form_alter(&$form, &$form_state, $form_id) {
-  $obj = $form_state['build_info']['args'][0];
-  if (in_array('ir:citationCModel', $obj->models)) {
-    // Citation objects go to a custom citation form.
-    drupal_goto("islandora/object/{$obj->id}/MODS/citation");
+function lib4ridora_islandora_edit_datastream_modify_registry_alter(&$edit_registry, $context) {
+  $object = islandora_object_load($context['datastream_parent']->id);
+
+  if ($context['datastream']->id == 'MODS' && in_array('ir:citationCModel', $object->models)) {
+    // Example: Remove xml form builder edit registry.
+    if (isset($edit_registry['xml_form_builder_edit_form_registry'])) {
+      unset($edit_registry['xml_form_builder_edit_form_registry']);
+    }
+    // Add custom form to replace the removed form builder edit_form.
+    $edit_registry['lib4ridora_citation_object_edit_form'] = array(
+      'Name' => t('Lib4ridora Citation Edit Form'),
+      'url' => "islandora/object/{$context['datastream_parent']->id}/{$context['datastream']->id}/citation",
+      'weight' => 5,
+    );
   }
 }
