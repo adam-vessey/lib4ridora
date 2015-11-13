@@ -14,13 +14,11 @@
  *   The Drupal form state.
  * @param AbstractObject $object
  *   The object to edit.
- * @param string $forced_form_name
- *   The form name to force load.
  *
  * @return array
  *   Returns the drupal form to load.
  */
-function lib4ridora_citation_select_mods_edit_form($form, &$form_state, AbstractObject $object, $forced_form_name = NULL) {
+function lib4ridora_citation_select_mods_edit_form($form, &$form_state, AbstractObject $object) {
   module_load_include('inc', 'xml_form_builder', 'includes/associations');
   module_load_include('inc', 'lib4ridora', 'includes/utilities');
   $associations = xml_form_builder_get_associations();
@@ -37,8 +35,8 @@ function lib4ridora_citation_select_mods_edit_form($form, &$form_state, Abstract
       $form_name = $form_associations[$type];
     }
   }
-  if (empty($form_name) && !empty($forced_form_name)) {
-    $form_name = $forced_form_name;
+  if (empty($form_name) && isset($form_state['form_name'])) {
+    $form_name = $form_state['form_name'];
   }
   if ($form_name) {
     foreach ($associations as $key => $association) {
@@ -78,7 +76,8 @@ function lib4ridora_citation_select_mods_edit_form($form, &$form_state, Abstract
 function lib4ridora_citation_select_mods_edit_form_submit($form, &$form_state) {
   $object = $form_state['object'];
   if (isset($form_state['values']['ingest_selector'])) {
-    $form_state['redirect'] = "islandora/object/{$object->id}/MODS/citation/" . $form_state['values']['ingest_selector'];
+    $form_state['form_name'] = $form_state['values']['ingest_selector'];
+    $form_state['rebuild'] = TRUE;
   }
   else {
     // Handle all formbuilder things.
