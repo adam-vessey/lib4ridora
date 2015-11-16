@@ -5,6 +5,12 @@
  * Block functionality for lib4ridora.
  */
 
+/**
+ * Gets a form element for an organization block content.
+ *
+ * @return array
+ *   An array representing an organization block content form element.
+ */
 function lib4ridora_get_organizational_block_content() {
   $facets = lib4ridora_get_organization_facets();
   $field = variable_get('lib4ridora_organization_block_organization_field', 'mods_name_personal_affiliation_ms');
@@ -83,6 +89,12 @@ function lib4ridora_get_recent_additions() {
   return $items;
 }
 
+/**
+ * Gets a form for configuring the organization facet block.
+ *
+ * @return array
+ *   Form definition for items in the organization facet block configuration.
+ */
 function lib4ridora_organizational_block_configuration_form() {
   $form = array(
     'namespace' => array(
@@ -101,6 +113,12 @@ function lib4ridora_organizational_block_configuration_form() {
   return $form;
 }
 
+/**
+ * Gets a form for configuring the recent additions block.
+ *
+ * @return array
+ *   Form definition for items in the recent additions block configuration.
+ */
 function lib4ridora_recent_additions_block_configuration_form() {
   return array(
     'namespace' => array(
@@ -112,6 +130,12 @@ function lib4ridora_recent_additions_block_configuration_form() {
   );
 }
 
+/**
+ * Returns the facet fields for a Solr facet search on organizations.
+ *
+ * @return array
+ *   An associative array pairing faceted organization values with their count.
+ */
 function lib4ridora_get_organization_facets() {
   $namespace = variable_get('lib4ridora_organization_block_namespace_filter', 'islandora');
   $query = $namespace == '' ? "*\:*" : "PID:$namespace\:*";
