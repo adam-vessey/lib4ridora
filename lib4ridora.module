@@ -181,7 +181,7 @@ function lib4ridora_islandora_datastream_access($op, AbstractDatastream $datastr
   $options = array(
     'destination_dsid' => $datastream->id,
   );
-  $hooks = islandora_invoke_hook_list(ISLANDORA_DERVIATIVE_CREATION_HOOK, $datastream->parent->models, array($datastream->parent));
+  $hooks = islandora_invoke_hook_list(ISLANDORA_DERIVATIVE_CREATION_HOOK, $datastream->parent->models, array($datastream->parent));
   uasort($hooks, 'drupal_sort_weight');
   $hooks = islandora_filter_derivatives($hooks, $options, $datastream->parent);
   $map_source = function ($hook) {
