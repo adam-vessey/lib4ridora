@@ -653,7 +653,7 @@ function lib4ridora_views_api($module = NULL, $api = NULL) {
  * Implements hook_islandora_edit_datastream_modify_registry_alter().
  */
 function lib4ridora_islandora_edit_datastream_modify_registry_alter(&$edit_registry, $context) {
-  $object = islandora_object_load($context['datastream_parent']->id);
+  $object = islandora_object_load($context['object']->id);
   if ($context['datastream']->id == 'MODS' && in_array('ir:citationCModel', $object->models)) {
     // Example: Remove xml form builder edit registry.
     if (isset($edit_registry['xml_form_builder_edit_form_registry'])) {
@@ -662,7 +662,7 @@ function lib4ridora_islandora_edit_datastream_modify_registry_alter(&$edit_regis
     // Add custom form to replace the removed form builder edit_form.
     $edit_registry['lib4ridora_citation_object_edit_form'] = array(
       'name' => t('Lib4ridora Citation Edit Form'),
-      'url' => "islandora/object/{$context['datastream_parent']->id}/{$context['datastream']->id}/citation",
+      'url' => "islandora/object/{$object->id}/{$context['datastream']->id}/citation",
     );
   }
 }
