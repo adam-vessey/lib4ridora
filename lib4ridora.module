@@ -650,9 +650,9 @@ function lib4ridora_views_api($module = NULL, $api = NULL) {
 }
 
 /**
- * Implements hook_islandora_edit_datastream_modify_registry_alter().
+ * Implements hook_islandora_edit_datastream_registry_alter().
  */
-function lib4ridora_islandora_edit_datastream_modify_registry_alter(&$edit_registry, $context) {
+function lib4ridora_islandora_edit_datastream_registry_alter(&$edit_registry, $context) {
   $object = islandora_object_load($context['object']->id);
   if ($context['datastream']->id == 'MODS' && in_array('ir:citationCModel', $object->models)) {
     // Example: Remove xml form builder edit registry.
