@@ -95,7 +95,7 @@ function lib4ridora_get_recent_additions() {
  *   Form definition for items in the organization facet block configuration.
  */
 function lib4ridora_organizational_block_configuration_form() {
-  $form = array( 
+  $form = array(
     'field' => array(
       '#type' => 'textfield',
       '#title' => t('Organization Solr Field'),

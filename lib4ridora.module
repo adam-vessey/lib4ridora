@@ -644,9 +644,11 @@ function lib4ridora_block_info() {
   return array(
     'lib4ridora_organizational_units' => array(
       'info' => t('Lib4ri Organizational Units'),
+      'cache' => DRUPAL_NO_CACHE,
     ),
     'lib4ridora_recent_additions' => array(
       'info' => t('Lib4RI Recent Additions'),
+      'cache' => DRUPAL_NO_CACHE,
     ),
   );
 }
@@ -688,7 +690,6 @@ function lib4ridora_block_configure($delta) {
     case 'lib4ridora_organizational_units':
       module_load_include('inc', 'lib4ridora', 'includes/block');
       return lib4ridora_organizational_block_configuration_form();
-      break;
 
     default:
       break;
