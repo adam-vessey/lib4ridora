@@ -25,8 +25,65 @@ function lib4ridora_get_organizational_block_content() {
   );
 }
 
+/**
+ * Gets a list of theme info for recently added citations.
+ *
+ * @return array
+ *   Items to be themed into a list of recent citations, containing:
+ *   - 'citation': A citation entry for the object,
+ *   - 'pid': The PID of the object,
+ *   - 'pdfs': an array of PDF datastreams on the object, containing a 'dsid',
+ *     a 'version' and a 'class' for rendering.
+ */
+function lib4ridora_get_recent_additions() {
+  module_load_include('inc', 'lib4ridora', 'includes/embargo.form');
+  module_load_include('inc', 'lib4ridora', 'includes/pdf_list');
+  $filter = variable_get('lib4ridora_recent_additions_block_namespace_filter', 'islandora');
+  $style = citeproc_default_style();
+  $query = $filter == '' ? "*\:*" : "PID:$filter\:*";
+  $qp = new IslandoraSolrQueryProcessor();
+  $qp->buildQuery($query);
+  $qp->solrParams['fl'] = 'PID';
+  $qp->solrParams['fq'] = array("RELS_EXT_hasModel_uri_ms:info\:fedora\/ir\:citationCModel");
+  $qp->solrParams['sort'] = 'fgs_createdDate_dt desc';
+  $qp->solrLimit = 5;
+  $qp->executeQuery(FALSE);
+  $items = array();
+  foreach ($qp->islandoraSolrResult['response']['objects'] as $item) {
+    $object = islandora_object_load($item['PID']);
+    if ($object) {
+      // Render the citation.
+      $mods = islandora_bibliography_get_mods($object->id);
+      $entry = citeproc_bibliography_from_mods($style, $mods);
+      // Get the info for the PDFs.
+      $datastreams = iterator_to_array($object);
+      $pdf_datastreams = array_filter($datastreams, 'lib4ridora_multi_embargo_pdf_filter');
+      $pdfs = array();
+      foreach ($pdf_datastreams as $pdf_datastream) {
+        if (!islandora_datastream_access(ISLANDORA_VIEW_OBJECTS, $pdf_datastream)) {
+          continue;
+        }
+        $version = $pdf_datastream->relationships->get(ISLANDORA_RELS_INT_URI, 'lib4ridora-multi-embargo-document_version');
+        $version = array_shift($version);
+        if (!is_null($version)) {
+          $pdfs[] = array(
+            'dsid' => $pdf_datastream->id,
+            'version' => $version['object']['value'],
+            'id' => 'lib4ri-citation-' . str_replace(' ', '-', $version['object']['value']),
+          );
+        }
+      }
+      $items[] = array(
+        'citation' => $entry,
+        'pid' => $object->id,
+        'pdfs' => $pdfs,
+      );
+    }
+  }
+  return $items;
+}
+
 function lib4ridora_organizational_block_configuration_form() {
-  $organizations = lib4ridora_get_organization_facets();
   $form = array(
     'namespace' => array(
       '#type' => 'textfield',
@@ -42,6 +99,17 @@ function lib4ridora_organizational_block_configuration_form() {
     ),
   );
   return $form;
+}
+
+function lib4ridora_recent_additions_block_configuration_form() {
+  return array(
+    'namespace' => array(
+      '#type' => 'textfield',
+      '#title' => t('Namespace Filter'),
+      '#description' => t('Enter the namespace to use when filtering PIDs for this site.'),
+      '#default_value' => variable_get('lib4ridora_recent_additions_block_namespace_filter', 'islandora'),
+    ),
+  );
 }
 
 function lib4ridora_get_organization_facets() {

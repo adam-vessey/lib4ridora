@@ -610,6 +610,12 @@ function lib4ridora_theme($existing, $type, $theme, $path) {
     'islandora_default' => array(
       'template' => 'theme/lib4ridora-custom-object-view',
     ),
+    'lib4ridora_citation_solr_results' => array(
+      'template' => 'theme/lib4ridora-citation-solr-results',
+      'variables' => array(
+        'citations' => NULL,
+      ),
+    ),
   );
 }
 
@@ -639,6 +645,9 @@ function lib4ridora_block_info() {
     'lib4ridora_organizational_units' => array(
       'info' => t('Lib4ri Organizational Units'),
     ),
+    'lib4ridora_recent_additions' => array(
+      'info' => t('Lib4RI Recent Additions'),
+    ),
   );
 }
 
@@ -653,6 +662,15 @@ function lib4ridora_block_view($delta) {
       $block['subject'] = t('Organizational Unit');
       $block['content'] = array(
         'organizations' => lib4ridora_get_organizational_block_content(),
+      );
+      break;
+
+    case 'lib4ridora_recent_additions':
+      module_load_include('inc', 'lib4ridora', 'includes/block');
+      $block['subject'] = t('Recent Additions');
+      $block['content'] = array(
+        '#theme' => 'lib4ridora_citation_solr_results',
+        '#citations' => lib4ridora_get_recent_additions(),
       );
       break;
 
@@ -672,6 +690,11 @@ function lib4ridora_block_configure($delta) {
       return lib4ridora_organizational_block_configuration_form();
       break;
 
+    case 'lib4ridora_recent_additions':
+      module_load_include('inc', 'lib4ridora', 'includes/block');
+      return lib4ridora_recent_additions_block_configuration_form();
+      break;
+
     default:
       break;
   }
@@ -685,6 +708,10 @@ function lib4ridora_block_save($delta = '', $edit = array()) {
     case 'lib4ridora_organizational_units':
       variable_set('lib4ridora_organization_block_namespace_filter', $edit['namespace']);
       variable_set('lib4ridora_organization_block_organization_field', $edit['field']);
+      break;
+
+    case 'lib4ridora_recent_additions':
+      variable_set('lib4ridora_recent_additions_block_namespace_filter', $edit['namespace']);
       break;
 
     default:
