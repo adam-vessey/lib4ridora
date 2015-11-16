@@ -46,9 +46,8 @@ function lib4ridora_get_recent_additions() {
   module_load_include('inc', 'lib4ridora', 'includes/pdf_list');
   $filter = variable_get('lib4ridora_recent_additions_block_namespace_filter', 'islandora');
   $style = citeproc_default_style();
-  $query = $filter == '' ? "*\:*" : "PID:$filter\:*";
   $qp = new IslandoraSolrQueryProcessor();
-  $qp->buildQuery($query);
+  $qp->buildQuery(lib4ridora_get_allowed_namespaces_as_solr_query());
   $qp->solrParams['fl'] = 'PID';
   $qp->solrParams['fq'] = array("RELS_EXT_hasModel_uri_ms:info\:fedora\/ir\:citationCModel");
   $qp->solrParams['sort'] = 'fgs_createdDate_dt desc';
@@ -96,13 +95,7 @@ function lib4ridora_get_recent_additions() {
  *   Form definition for items in the organization facet block configuration.
  */
 function lib4ridora_organizational_block_configuration_form() {
-  $form = array(
-    'namespace' => array(
-      '#type' => 'textfield',
-      '#title' => t('Namespace Filter'),
-      '#description' => t('Enter the namespace to use when filtering PIDs for this site.'),
-      '#default_value' => variable_get('lib4ridora_organization_block_namespace_filter', 'islandora'),
-    ),
+  $form = array( 
     'field' => array(
       '#type' => 'textfield',
       '#title' => t('Organization Solr Field'),
@@ -114,34 +107,15 @@ function lib4ridora_organizational_block_configuration_form() {
 }
 
 /**
- * Gets a form for configuring the recent additions block.
- *
- * @return array
- *   Form definition for items in the recent additions block configuration.
- */
-function lib4ridora_recent_additions_block_configuration_form() {
-  return array(
-    'namespace' => array(
-      '#type' => 'textfield',
-      '#title' => t('Namespace Filter'),
-      '#description' => t('Enter the namespace to use when filtering PIDs for this site.'),
-      '#default_value' => variable_get('lib4ridora_recent_additions_block_namespace_filter', 'islandora'),
-    ),
-  );
-}
-
-/**
  * Returns the facet fields for a Solr facet search on organizations.
  *
  * @return array
  *   An associative array pairing faceted organization values with their count.
  */
 function lib4ridora_get_organization_facets() {
-  $namespace = variable_get('lib4ridora_organization_block_namespace_filter', 'islandora');
-  $query = $namespace == '' ? "*\:*" : "PID:$namespace\:*";
   $org_field = variable_get('lib4ridora_organization_block_organization_field', 'mods_name_personal_affiliation_ms');
   $qp = new IslandoraSolrQueryProcessor();
-  $qp->buildQuery($query);
+  $qp->buildQuery(lib4ridora_get_allowed_namespaces_as_solr_query());
   $qp->solrParams['fl'] = $org_field;
   $qp->solrParams['facet.limit'] = 100000;
   $qp->solrParams['facet.mincount'] = 1;
@@ -150,4 +124,26 @@ function lib4ridora_get_organization_facets() {
   $qp->solrParams['facet.field'] = array($org_field);
   $qp->executeQuery(FALSE);
   return $qp->islandoraSolrResult['facet_counts']['facet_fields'][$org_field];
+}
+
+/**
+ * Returns a Solr query concatenating allowed namespaces with 'or' statements.
+ *
+ * Allowed namespaces are provided by islandora_get_allowed_namespaces().
+ *
+ * @return string
+ *   Allowed namespaces concatenated together into a Solr query.
+ */
+function lib4ridora_get_allowed_namespaces_as_solr_query() {
+  module_load_include('inc', 'islandora', 'includes/utilities');
+  $namespaces = islandora_get_allowed_namespaces();
+  $first_namespace = array_shift($namespaces);
+  $query = '';
+  if (!is_null($first_namespace)) {
+    $query .= "PID:$first_namespace\:*";
+    foreach ($namespaces as $namespace) {
+      $query .= " or PID:$namespace\:*";
+    }
+  }
+  return $query;
 }
