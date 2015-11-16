@@ -690,11 +690,6 @@ function lib4ridora_block_configure($delta) {
       return lib4ridora_organizational_block_configuration_form();
       break;
 
-    case 'lib4ridora_recent_additions':
-      module_load_include('inc', 'lib4ridora', 'includes/block');
-      return lib4ridora_recent_additions_block_configuration_form();
-      break;
-
     default:
       break;
   }
@@ -706,12 +701,7 @@ function lib4ridora_block_configure($delta) {
 function lib4ridora_block_save($delta = '', $edit = array()) {
   switch ($delta) {
     case 'lib4ridora_organizational_units':
-      variable_set('lib4ridora_organization_block_namespace_filter', $edit['namespace']);
       variable_set('lib4ridora_organization_block_organization_field', $edit['field']);
-      break;
-
-    case 'lib4ridora_recent_additions':
-      variable_set('lib4ridora_recent_additions_block_namespace_filter', $edit['namespace']);
       break;
 
     default:
