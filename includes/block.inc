@@ -121,7 +121,7 @@ function lib4ridora_recent_additions_block_configuration_form() {
       '#default_value' => variable_get('lib4ridora_recent_additions_block_sort_parameter', 'fgs_createdDate_dt desc'),
     ),
   );
-  return $form
+  return $form;
 }
 
 /**
