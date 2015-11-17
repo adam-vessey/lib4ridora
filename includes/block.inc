@@ -48,8 +48,9 @@ function lib4ridora_get_recent_additions() {
   $qp = new IslandoraSolrQueryProcessor();
   $qp->buildQuery('*:*');
   $qp->solrParams['fl'] = 'PID';
-  $qp->solrParams['fq'][] = "RELS_EXT_hasModel_uri_ms:info\:fedora\/ir\:citationCModel";
-  $qp->solrParams['sort'] = 'fgs_createdDate_dt desc';
+  $model_field = variable_get('islandora_solr_content_model_field', 'RELS_EXT_hasModel_uri_ms');
+  $qp->solrParams['fq'][] = "$model_field:info\:fedora\/ir\:citationCModel";
+  $qp->solrParams['sort'] = variable_get('lib4ridora_recent_additions_block_sort_parameter', 'fgs_createdDate_dt desc');
   $qp->solrLimit = 5;
   $qp->executeQuery(FALSE);
   $items = array();
@@ -98,11 +99,29 @@ function lib4ridora_organizational_block_configuration_form() {
     'field' => array(
       '#type' => 'textfield',
       '#title' => t('Organization Solr Field'),
-      '#description' => t('Enter the Solr field to use to search for organizations.'),
+      '#description' => t('Solr field to use to search for organizations.'),
       '#default_value' => variable_get('lib4ridora_organization_block_organization_field', 'mods_name_personal_affiliation_ms'),
     ),
   );
   return $form;
+}
+
+/**
+ * Gets a form for configuring the recent additions block.
+ *
+ * @return array
+ *   Form definition for the recent additions block configuration.
+ */
+function lib4ridora_recent_additions_block_configuration_form() {
+  $form = array(
+    'sort_field' => array(
+      '#type' => 'textfield',
+      '#title' => t('Solr Sort Parameter'),
+      '#description' => t('A parameter to use for sorting the Solr results.'),
+      '#default_value' => variable_get('lib4ridora_recent_additions_block_sort_parameter', 'fgs_createdDate_dt desc'),
+    ),
+  );
+  return $form
 }
 
 /**
