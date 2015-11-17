@@ -46,7 +46,7 @@ function lib4ridora_get_recent_additions() {
   module_load_include('inc', 'lib4ridora', 'includes/pdf_list');
   $style = citeproc_default_style();
   $qp = new IslandoraSolrQueryProcessor();
-  $qp->buildQuery(lib4ridora_get_allowed_namespaces_as_solr_query());
+  $qp->buildQuery('*\:*');
   $qp->solrParams['fl'] = 'PID';
   $qp->solrParams['fq'] = array("RELS_EXT_hasModel_uri_ms:info\:fedora\/ir\:citationCModel");
   $qp->solrParams['sort'] = 'fgs_createdDate_dt desc';
@@ -114,7 +114,7 @@ function lib4ridora_organizational_block_configuration_form() {
 function lib4ridora_get_organization_facets() {
   $org_field = variable_get('lib4ridora_organization_block_organization_field', 'mods_name_personal_affiliation_ms');
   $qp = new IslandoraSolrQueryProcessor();
-  $qp->buildQuery(lib4ridora_get_allowed_namespaces_as_solr_query());
+  $qp->buildQuery('*\:*');
   $qp->solrParams['fl'] = $org_field;
   $qp->solrParams['facet.limit'] = 100000;
   $qp->solrParams['facet.mincount'] = 1;
@@ -123,28 +123,4 @@ function lib4ridora_get_organization_facets() {
   $qp->solrParams['facet.field'] = array($org_field);
   $qp->executeQuery(FALSE);
   return $qp->islandoraSolrResult['facet_counts']['facet_fields'][$org_field];
-}
-
-/**
- * Returns a Solr query concatenating allowed namespaces with 'or' statements.
- *
- * Allowed namespaces are provided by islandora_get_allowed_namespaces().
- *
- * @return string
- *   Allowed namespaces concatenated together into a Lucene query.
- */
-function lib4ridora_get_allowed_namespaces_as_solr_query() {
-  module_load_include('inc', 'islandora', 'includes/utilities');
-  $query = "PID\:*";
-  if (variable_get('islandora_namespace_restriction_enforced', FALSE)) {
-    $namespaces = islandora_get_allowed_namespaces();
-    $first_namespace = array_shift($namespaces);
-    if (!is_null($first_namespace)) {
-      $query = "PID:$first_namespace\:*";
-      foreach ($namespaces as $namespace) {
-        $query .= " or PID:$namespace\:*";
-      }
-    }
-  }
-  return $query;
 }
