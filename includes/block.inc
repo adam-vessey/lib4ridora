@@ -131,17 +131,19 @@ function lib4ridora_get_organization_facets() {
  * Allowed namespaces are provided by islandora_get_allowed_namespaces().
  *
  * @return string
- *   Allowed namespaces concatenated together into a Solr query.
+ *   Allowed namespaces concatenated together into a Lucene query.
  */
 function lib4ridora_get_allowed_namespaces_as_solr_query() {
   module_load_include('inc', 'islandora', 'includes/utilities');
-  $namespaces = islandora_get_allowed_namespaces();
-  $first_namespace = array_shift($namespaces);
-  $query = '';
-  if (!is_null($first_namespace)) {
-    $query .= "PID:$first_namespace\:*";
-    foreach ($namespaces as $namespace) {
-      $query .= " or PID:$namespace\:*";
+  $query = "PID\:*";
+  if (variable_get('islandora_namespace_restriction_enforced', FALSE)) {
+    $namespaces = islandora_get_allowed_namespaces();
+    $first_namespace = array_shift($namespaces);
+    if (!is_null($first_namespace)) {
+      $query = "PID:$first_namespace\:*";
+      foreach ($namespaces as $namespace) {
+        $query .= " or PID:$namespace\:*";
+      }
     }
   }
   return $query;
