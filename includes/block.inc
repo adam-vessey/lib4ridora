@@ -44,7 +44,6 @@ function lib4ridora_get_organizational_block_content() {
 function lib4ridora_get_recent_additions() {
   module_load_include('inc', 'lib4ridora', 'includes/embargo.form');
   module_load_include('inc', 'lib4ridora', 'includes/pdf_list');
-  $filter = variable_get('lib4ridora_recent_additions_block_namespace_filter', 'islandora');
   $style = citeproc_default_style();
   $qp = new IslandoraSolrQueryProcessor();
   $qp->buildQuery(lib4ridora_get_allowed_namespaces_as_solr_query());
