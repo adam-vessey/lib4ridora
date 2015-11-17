@@ -46,9 +46,9 @@ function lib4ridora_get_recent_additions() {
   module_load_include('inc', 'lib4ridora', 'includes/pdf_list');
   $style = citeproc_default_style();
   $qp = new IslandoraSolrQueryProcessor();
-  $qp->buildQuery('*\:*');
+  $qp->buildQuery('*:*');
   $qp->solrParams['fl'] = 'PID';
-  $qp->solrParams['fq'] = array("RELS_EXT_hasModel_uri_ms:info\:fedora\/ir\:citationCModel");
+  $qp->solrParams['fq'][] = "RELS_EXT_hasModel_uri_ms:info\:fedora\/ir\:citationCModel";
   $qp->solrParams['sort'] = 'fgs_createdDate_dt desc';
   $qp->solrLimit = 5;
   $qp->executeQuery(FALSE);
@@ -114,7 +114,7 @@ function lib4ridora_organizational_block_configuration_form() {
 function lib4ridora_get_organization_facets() {
   $org_field = variable_get('lib4ridora_organization_block_organization_field', 'mods_name_personal_affiliation_ms');
   $qp = new IslandoraSolrQueryProcessor();
-  $qp->buildQuery('*\:*');
+  $qp->buildQuery('*:*');
   $qp->solrParams['fl'] = $org_field;
   $qp->solrParams['facet.limit'] = 100000;
   $qp->solrParams['facet.mincount'] = 1;
