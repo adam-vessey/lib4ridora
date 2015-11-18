@@ -27,6 +27,8 @@ function lib4ridora_uninstall() {
     'lib4ridora_solr_field_article_date_issued',
     'lib4ridora_pseudo_solr_field_factor',
     'lib4ridora_pseudo_solr_field_year',
+    'lib4ridora_organization_block_organization_field',
+    'lib4ridora_recent_additions_block_sort_parameter',
   );
   array_walk($variables, 'variable_del');
 }
