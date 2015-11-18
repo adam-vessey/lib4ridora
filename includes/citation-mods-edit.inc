@@ -19,8 +19,8 @@
  *   Returns the drupal form to load.
  */
 function lib4ridora_citation_select_mods_edit_form($form, &$form_state, AbstractObject $object) {
-  module_load_include('inc', 'xml_form_builder', 'includes/associations');
-  module_load_include('inc', 'lib4ridora', 'includes/utilities');
+  form_load_include($form_state, 'inc', 'xml_form_builder', 'includes/associations');
+  form_load_include($form_state, 'inc', 'lib4ridora', 'includes/utilities');
   $associations = xml_form_builder_get_associations();
   $form_associations = lib4ridora_get_custom_citation_form_associations();
   $form_state['pid'] = $object->id;
@@ -38,7 +38,7 @@ function lib4ridora_citation_select_mods_edit_form($form, &$form_state, Abstract
   if (empty($form_name) && isset($form_state['form_name'])) {
     $form_name = $form_state['form_name'];
   }
-  if ($form_name) {
+  if (isset($form_name) && $form_name) {
     foreach ($associations as $key => $association) {
       if ($association['form_name'] == $form_name) {
         // Update the content_model to be ir:citationCModel so that regardless
@@ -56,11 +56,14 @@ function lib4ridora_citation_select_mods_edit_form($form, &$form_state, Abstract
         return $metadata_form;
       }
     }
+    drupal_set_message(t('The XML form could not be loaded. Verify that the %form_name form has an association.', array(
+      '%form_name' => $form_name,
+    )), 'error');
   }
 
   // Fallback to load the ingest form if there is no current association so that
   // an association can be set.
-  module_load_include('inc', 'lib4ridora', 'includes/ingest-selector.form');
+  form_load_include($form_state, 'inc', 'lib4ridora', 'includes/ingest-selector.form');
   $form = lib4ridora_ingest_selector_form($form, $form_state, $object);
   return $form;
 }
