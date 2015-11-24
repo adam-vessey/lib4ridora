@@ -113,7 +113,9 @@ function lib4ridora_islandora_xml_form_builder_forms() {
  * Implements hook_islandora_ingest_steps_alter().
  */
 function lib4ridora_ir_citationCModel_islandora_ingest_steps_alter(array &$steps, array &$form_state) {
+  unset($steps['xml_form_builder_association_step']);
   unset($steps['islandora_scholar_file_upload']);
+  unset($steps['islandora_populator_select']);
 }
 
 /**
@@ -121,6 +123,14 @@ function lib4ridora_ir_citationCModel_islandora_ingest_steps_alter(array &$steps
  */
 function lib4ridora_ir_citationCModel_islandora_ingest_steps(array $form_state) {
   $steps = array();
+
+  $steps['lib4ridora_ingest_selector'] = array(
+    'weight' => -2,
+    'type' => 'form',
+    'form_id' => 'lib4ridora_ingest_selector_form',
+    'module' => 'lib4ridora',
+    'file' => 'includes/ingest-selector.form.inc',
+  );
 
   $steps['lib4ridora_multi_pdf_upload'] = array(
     'weight' => 8,
@@ -171,7 +181,7 @@ function lib4ridora_islandora_datastream_access($op, AbstractDatastream $datastr
   $options = array(
     'destination_dsid' => $datastream->id,
   );
-  $hooks = islandora_invoke_hook_list(ISLANDORA_DERVIATIVE_CREATION_HOOK, $datastream->parent->models, array($datastream->parent));
+  $hooks = islandora_invoke_hook_list(ISLANDORA_DERIVATIVE_CREATION_HOOK, $datastream->parent->models, array($datastream->parent));
   uasort($hooks, 'drupal_sort_weight');
   $hooks = islandora_filter_derivatives($hooks, $options, $datastream->parent);
   $map_source = function ($hook) {
@@ -333,6 +343,14 @@ function lib4ridora_menu() {
     'access arguments' => array(ISLANDORA_MINI_WORKFLOW_USE_PERMISSION, 2),
     'type' => MENU_LOCAL_TASK,
     'file' => 'includes/workflow.form.inc',
+  );
+  $items['islandora/object/%islandora_object/MODS/citation'] = array(
+    'title' => 'Edit datastream',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('lib4ridora_citation_select_mods_edit_form', 2),
+    'type' => MENU_CALLBACK,
+    'file' => 'includes/citation-mods-edit.inc',
+    'access arguments' => array(ISLANDORA_METADATA_EDIT),
   );
   return $items;
 }
@@ -638,6 +656,24 @@ function lib4ridora_views_api($module = NULL, $api = NULL) {
 }
 
 /**
+ * Implements hook_islandora_edit_datastream_registry_alter().
+ */
+function lib4ridora_islandora_edit_datastream_registry_alter(&$edit_registry, $context) {
+  $object = islandora_object_load($context['object']->id);
+  if ($context['datastream']->id == 'MODS' && in_array('ir:citationCModel', $object->models)) {
+    // Example: Remove xml form builder edit registry.
+    if (isset($edit_registry['xml_form_builder_edit_form_registry'])) {
+      unset($edit_registry['xml_form_builder_edit_form_registry']);
+    }
+    // Add custom form to replace the removed form builder edit_form.
+    $edit_registry['lib4ridora_citation_object_edit_form'] = array(
+      'name' => t('Lib4ridora Citation Edit Form'),
+      'url' => "islandora/object/{$object->id}/{$context['datastream']->id}/citation",
+    );
+  }
+}
+
+/**
  * Implements hook_block_info().
  */
 function lib4ridora_block_info() {
@@ -716,5 +752,4 @@ function lib4ridora_block_save($delta = '', $edit = array()) {
     default:
       break;
   }
-
 }
