@@ -143,3 +143,54 @@ function lib4ridora_get_organization_facets() {
   $qp->executeQuery(FALSE);
   return $qp->islandoraSolrResult['facet_counts']['facet_fields'][$org_field];
 }
+
+/**
+ * Helper function to query to get the related items.
+ *
+ * @param AbstractObject $object
+ *   An AbstractObject representing an object within Fedora.
+ *
+ * @return bool|DOMNodeList
+ *   A DOMNodeList of DOMElements to be rendered if present or FALSE if none
+ *   exists.
+ */
+function lib4ridora_get_related_research_data(AbstractObject $object) {
+  if (isset($object['MODS'])) {
+    $dom = new DOMDocument();
+    $dom->loadXML($object['MODS']->content);
+    $xpath = new DOMXPath($dom);
+    $xpath->registerNamespace('mods', 'http://www.loc.gov/mods/v3');
+    $results = $xpath->query('/mods:mods/mods:relatedItem[@type="otherType"]/mods:identifier[@type="uri"]');
+    return $results;
+  }
+  return FALSE;
+}
+
+/**
+ * Renders the markup for related research data.
+ *
+ * @param DOMNodeList $results
+ *   A DOMNodeList of DOMElements to be rendered.
+ *
+ * @return array
+ *   An array representing the markup for the block
+ */
+function lib4ridora_get_related_research_data_block_content($results) {
+  $markup = array();
+  $count = 1;
+  foreach ($results as $result) {
+    $url = $result->nodeValue;
+    $markup["research_$count"] = array(
+      '#theme' => 'link',
+      '#text' => t('View Research Data (!count)', array('!count' => $count)),
+      '#path' => $url,
+      '#options' => array(
+        'attributes' => array('target' => '_blank'),
+      ),
+      "#prefix" => '<div class="libfourri-research-data"><span>',
+      '#suffix' => '</span></div>',
+    );
+    $count++;
+  }
+  return $markup;
+}

@@ -686,6 +686,10 @@ function lib4ridora_block_info() {
       'info' => t('Lib4RI Recent Additions'),
       'cache' => DRUPAL_NO_CACHE,
     ),
+    'lib4ridora_related_research' => array(
+      'info' => t('Lib4RI Related Research Data'),
+      'cache' => DRUPAL_NO_CACHE,
+    ),
   );
 }
 
@@ -710,6 +714,21 @@ function lib4ridora_block_view($delta) {
         '#theme' => 'lib4ridora_citation_solr_results',
         '#citations' => lib4ridora_get_recent_additions(),
       );
+      break;
+
+    case 'lib4ridora_related_research':
+      module_load_include('inc', 'lib4ridora', 'includes/block');
+      // See if there are results before rendering.
+      $object = menu_get_object('islandora_object', 2);
+      if ($object && in_array('ir:citationCModel', $object->models)) {
+        $results = lib4ridora_get_related_research_data($object);
+        if ($results && $results->length > 0) {
+          $block['subject'] = t('Related Research Data');
+          $block['content'] = array(
+            'related_research_data' => lib4ridora_get_related_research_data_block_content($results),
+          );
+        }
+      }
       break;
 
     default:
