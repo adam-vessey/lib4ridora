@@ -177,12 +177,11 @@ function lib4ridora_get_related_research_data(AbstractObject $object) {
  */
 function lib4ridora_get_related_research_data_block_content($results) {
   $markup = array();
-  $count = 1;
-  foreach ($results as $result) {
+  foreach ($results as $key => $result) {
     $url = $result->nodeValue;
-    $markup["research_$count"] = array(
+    $markup["research_$key"] = array(
       '#theme' => 'link',
-      '#text' => t('View Research Data (!count)', array('!count' => $count)),
+      '#text' => format_plural($results->length, 'View Research Data', 'View Research Data (!count)', array('!count' => $key + 1)),
       '#path' => $url,
       '#options' => array(
         'attributes' => array('target' => '_blank'),
@@ -190,7 +189,6 @@ function lib4ridora_get_related_research_data_block_content($results) {
       "#prefix" => '<div class="libfourri-research-data"><span>',
       '#suffix' => '</span></div>',
     );
-    $count++;
   }
   return $markup;
 }
