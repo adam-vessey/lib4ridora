@@ -128,13 +128,7 @@ function lib4ridora_ingest_selector_form(array $form, array &$form_state, $editi
  * next step.
  */
 function lib4ridora_doi_validate_id($element, &$form_state, $form) {
-  $url = parse_url(trim($element['#value']));
-  if (isset($url['path']) && $form_state['values']['journal_import_method'] == 'doi') {
-    // Remove "/" from the path if it's the first or last character.
-    $url['path'] = rtrim($url['path'], '/');
-    $url['path'] = ltrim($url['path'], '/');
-    $element['#value'] = $url['path'];
-    $form_state['values']['doi'] = $url['path'];
+  if (isset($element['#value']) && $form_state['values']['journal_import_method'] == 'doi') {
     module_load_include('inc', 'islandora_doi', 'includes/utilities');
     $mods = islandora_doi_get_mods($element['#value']);
     if ($mods === FALSE) {
@@ -160,14 +154,7 @@ function lib4ridora_doi_validate_id($element, &$form_state, $form) {
         $datastream->label = "MODS Record";
         $datastream->mimetype = 'text/xml';
         $object->ingestDatastream($datastream);
-        $created = TRUE;
       }
-    }
-  }
-  else {
-    $object = islandora_ingest_form_get_object($form_state);
-    if (isset($object["MODS"])) {
-      unset($object["MODS"]);
     }
   }
 }
@@ -211,4 +198,8 @@ function lib4ridora_ingest_selector_form_submit(array $form, array &$form_state)
 function lib4ridora_ingest_selector_form_undo_submit(array $form, array &$form_state) {
   $association_step_storage = &islandora_ingest_form_get_step_storage($form_state, 'xml_form_builder_association_step');
   unset($association_step_storage['association']);
+  $object = islandora_ingest_form_get_object($form_state);
+  if (isset($object["MODS"])) {
+    unset($object["MODS"]);
+  }
 }
