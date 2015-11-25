@@ -14,18 +14,16 @@
  *   The Drupal form state.
  * @param AbstractObject $object
  *   The object to edit.
- * @param string $forced_form_name
- *   The form name to force load.
  *
  * @return array
  *   Returns the drupal form to load.
  */
-function lib4ridora_citation_select_mods_edit_form($form, &$form_state, AbstractObject $object, $forced_form_name = NULL) {
-  module_load_include('inc', 'xml_form_builder', 'includes/associations');
-  module_load_include('inc', 'lib4ridora', 'includes/utilities');
+function lib4ridora_citation_select_mods_edit_form($form, &$form_state, AbstractObject $object) {
+  form_load_include($form_state, 'inc', 'xml_form_builder', 'includes/associations');
+  form_load_include($form_state, 'inc', 'lib4ridora', 'includes/utilities');
   $associations = xml_form_builder_get_associations();
   $form_associations = lib4ridora_get_custom_citation_form_associations();
-  $form_state['object'] = $object;
+  $form_state['pid'] = $object->id;
   // Read Genre from MODS to determine what form to use for editing.
   $mods = new SimpleXMLElement($object['MODS']->content);
   $mods->registerXPathNamespace('mods', 'http://www.loc.gov/mods/v3');
@@ -37,10 +35,10 @@ function lib4ridora_citation_select_mods_edit_form($form, &$form_state, Abstract
       $form_name = $form_associations[$type];
     }
   }
-  if (empty($form_name) && !empty($forced_form_name)) {
-    $form_name = $forced_form_name;
+  if (empty($form_name) && isset($form_state['form_name'])) {
+    $form_name = $form_state['form_name'];
   }
-  if ($form_name) {
+  if (isset($form_name) && $form_name) {
     foreach ($associations as $key => $association) {
       if ($association['form_name'] == $form_name) {
         // Update the content_model to be ir:citationCModel so that regardless
@@ -58,11 +56,14 @@ function lib4ridora_citation_select_mods_edit_form($form, &$form_state, Abstract
         return $metadata_form;
       }
     }
+    drupal_set_message(t('The XML form could not be loaded. Verify that the %form_name form has an association.', array(
+      '%form_name' => $form_name,
+    )), 'error');
   }
 
   // Fallback to load the ingest form if there is no current association so that
   // an association can be set.
-  module_load_include('inc', 'lib4ridora', 'includes/ingest-selector.form');
+  form_load_include($form_state, 'inc', 'lib4ridora', 'includes/ingest-selector.form');
   $form = lib4ridora_ingest_selector_form($form, $form_state, $object);
   return $form;
 }
@@ -76,11 +77,13 @@ function lib4ridora_citation_select_mods_edit_form($form, &$form_state, Abstract
  *   The Drupal form state.
  */
 function lib4ridora_citation_select_mods_edit_form_submit($form, &$form_state) {
-  $object = $form_state['object'];
   if (isset($form_state['values']['ingest_selector'])) {
-    $form_state['redirect'] = "islandora/object/{$object->id}/MODS/citation/" . $form_state['values']['ingest_selector'];
+    $form_state['form_name'] = $form_state['values']['ingest_selector'];
+    $form_state['rebuild'] = TRUE;
   }
   else {
+    $pid = $form_state['pid'];
+    $object = islandora_object_load($pid);
     // Handle all formbuilder things.
     $xml_form = new XMLForm($form_state, array());
     // Pass only the portion of the form that contains the formbuilder markup

@@ -85,7 +85,7 @@ function lib4ridora_ingest_selector_form(array $form, array &$form_state, $editi
   if ($editing) {
     $form['submit'] = array(
       '#type' => 'submit',
-      '#value' => t('Update'),
+      '#value' => t('Next'),
     );
   }
   else {

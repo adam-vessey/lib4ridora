@@ -186,7 +186,7 @@ function lib4ridora_islandora_datastream_access($op, AbstractDatastream $datastr
   $options = array(
     'destination_dsid' => $datastream->id,
   );
-  $hooks = islandora_invoke_hook_list(ISLANDORA_DERVIATIVE_CREATION_HOOK, $datastream->parent->models, array($datastream->parent));
+  $hooks = islandora_invoke_hook_list(ISLANDORA_DERIVATIVE_CREATION_HOOK, $datastream->parent->models, array($datastream->parent));
   uasort($hooks, 'drupal_sort_weight');
   $hooks = islandora_filter_derivatives($hooks, $options, $datastream->parent);
   $map_source = function ($hook) {
@@ -349,10 +349,10 @@ function lib4ridora_menu() {
     'type' => MENU_LOCAL_TASK,
     'file' => 'includes/workflow.form.inc',
   );
-  $items['islandora/object/%islandora_object/MODS/citation/%'] = array(
+  $items['islandora/object/%islandora_object/MODS/citation'] = array(
     'title' => 'Edit datastream',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('lib4ridora_citation_select_mods_edit_form', 2, 5),
+    'page arguments' => array('lib4ridora_citation_select_mods_edit_form', 2),
     'type' => MENU_CALLBACK,
     'file' => 'includes/citation-mods-edit.inc',
     'access arguments' => array(ISLANDORA_METADATA_EDIT),
@@ -633,6 +633,12 @@ function lib4ridora_theme($existing, $type, $theme, $path) {
     'islandora_default' => array(
       'template' => 'theme/lib4ridora-custom-object-view',
     ),
+    'lib4ridora_citation_solr_results' => array(
+      'template' => 'theme/lib4ridora-citation-solr-results',
+      'variables' => array(
+        'citations' => NULL,
+      ),
+    ),
   );
 }
 
@@ -655,12 +661,100 @@ function lib4ridora_views_api($module = NULL, $api = NULL) {
 }
 
 /**
- * Alter ingest form to change ingest button label for citations.
+ * Implements hook_islandora_edit_datastream_registry_alter().
  */
-function lib4ridora_form_xml_form_builder_datastream_form_alter(&$form, &$form_state, $form_id) {
-  $obj = $form_state['build_info']['args'][0];
-  if (in_array('ir:citationCModel', $obj->models)) {
-    // Citation objects go to a custom citation form.
-    drupal_goto("islandora/object/{$obj->id}/MODS/citation");
+function lib4ridora_islandora_edit_datastream_registry_alter(&$edit_registry, $context) {
+  $object = islandora_object_load($context['object']->id);
+  if ($context['datastream']->id == 'MODS' && in_array('ir:citationCModel', $object->models)) {
+    // Example: Remove xml form builder edit registry.
+    if (isset($edit_registry['xml_form_builder_edit_form_registry'])) {
+      unset($edit_registry['xml_form_builder_edit_form_registry']);
+    }
+    // Add custom form to replace the removed form builder edit_form.
+    $edit_registry['lib4ridora_citation_object_edit_form'] = array(
+      'name' => t('Lib4ridora Citation Edit Form'),
+      'url' => "islandora/object/{$object->id}/{$context['datastream']->id}/citation",
+    );
+  }
+}
+
+/**
+ * Implements hook_block_info().
+ */
+function lib4ridora_block_info() {
+  return array(
+    'lib4ridora_organizational_units' => array(
+      'info' => t('Lib4ri Organizational Units'),
+      'cache' => DRUPAL_NO_CACHE,
+    ),
+    'lib4ridora_recent_additions' => array(
+      'info' => t('Lib4RI Recent Additions'),
+      'cache' => DRUPAL_NO_CACHE,
+    ),
+  );
+}
+
+/**
+ * Implements hook_block_view().
+ */
+function lib4ridora_block_view($delta) {
+  $block = array();
+  switch ($delta) {
+    case 'lib4ridora_organizational_units':
+      module_load_include('inc', 'lib4ridora', 'includes/block');
+      $block['subject'] = t('Organizational Unit');
+      $block['content'] = array(
+        'organizations' => lib4ridora_get_organizational_block_content(),
+      );
+      break;
+
+    case 'lib4ridora_recent_additions':
+      module_load_include('inc', 'lib4ridora', 'includes/block');
+      $block['subject'] = t('Recent Additions');
+      $block['content'] = array(
+        '#theme' => 'lib4ridora_citation_solr_results',
+        '#citations' => lib4ridora_get_recent_additions(),
+      );
+      break;
+
+    default:
+      break;
+  }
+  return $block;
+}
+
+/**
+ * Implements hook_block_configure().
+ */
+function lib4ridora_block_configure($delta) {
+  switch ($delta) {
+    case 'lib4ridora_organizational_units':
+      module_load_include('inc', 'lib4ridora', 'includes/block');
+      return lib4ridora_organizational_block_configuration_form();
+
+    case 'lib4ridora_recent_additions':
+      module_load_include('inc', 'lib4ridora', 'includes/block');
+      return lib4ridora_recent_additions_block_configuration_form();
+
+    default:
+      break;
+  }
+}
+
+/**
+ * Implements hook_block_save().
+ */
+function lib4ridora_block_save($delta = '', $edit = array()) {
+  switch ($delta) {
+    case 'lib4ridora_organizational_units':
+      variable_set('lib4ridora_organization_block_organization_field', $edit['field']);
+      break;
+
+    case 'lib4ridora_recent_additions':
+      variable_set('lib4ridora_recent_additions_block_sort_parameter', $edit['sort_field']);
+      break;
+
+    default:
+      break;
   }
 }
