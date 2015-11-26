@@ -762,6 +762,7 @@ function lib4ridora_ir_citationCModel_islandora_view_object_alter(AbstractObject
   unset($rendered['citation.tab']['preview']);
   unset($rendered['citation.tab']['pdf_download']);
   if (isset($object['MODS'])) {
+    module_load_include('inc', 'citeproc', 'includes/converter');
     $mods_content = $object['MODS']->content;
     $dom = new DOMDocument();
     $dom->loadXML($mods_content);
