@@ -372,6 +372,7 @@ function lib4ri_access_denied() {
   $pid = arg(2, $destination['destination']);
   $object = islandora_object_load($pid);
   if ($object && in_array('ir:citationCModel', $object->models)) {
+    module_load_include('inc', 'lib4ridora', 'includes/embargo.form.inc');
     $datastreams = iterator_to_array($object);
     $pdf_datastreams = array_filter($datastreams, 'lib4ridora_multi_embargo_pdf_filter');
     if (!empty($pdf_datastreams)) {
@@ -380,13 +381,8 @@ function lib4ri_access_denied() {
         '@label' => $object->label,
       ));
     }
-    else {
-      return t('You are not authorized to access this page');
-    }
   }
-  else {
-    return t('You are not authorized to access this page');
-  }
+  return t('You are not authorized to access this page');
 }
 
 /**
@@ -758,14 +754,8 @@ function lib4ridora_block_view($delta) {
       module_load_include('inc', 'lib4ridora', 'includes/block');
       $object = menu_get_object('islandora_object', 2);
       if ($object && in_array('ir:citationCModel', $object->models)) {
-        $datastreams = iterator_to_array($object);
-        $pdf_datastreams = array_filter($datastreams, 'lib4ridora_multi_embargo_pdf_filter');
-        if (!empty($pdf_datastreams)) {
-          $block['subject'] = t('Fulltext');
-          $block['content'] = array(
-            'fulltext' => lib4ridora_get_fulltext_block_content($object, $pdf_datastreams),
-          );
-        }
+        $block['subject'] = t('Fulltext');
+        $block['content'] = lib4ridora_get_fulltext_block_content($object);
       }
       break;
 

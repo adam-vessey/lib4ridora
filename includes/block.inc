@@ -76,9 +76,6 @@ function lib4ridora_get_recent_additions() {
  *
  * @param AbstractObject $object
  *   An AbstractObject representing an object within Fedora.
- * @param array $datastreams
- *   An array containing a list of PDF datastreams to be rendered, or empty if
- *   needed to still be retrieved.
  * @param bool $availability
  *   Whether to grab the availability information as well.
  *
@@ -88,15 +85,10 @@ function lib4ridora_get_recent_additions() {
  *   -version (string): The version type of the PDF.
  *   -id (string): An id to be used as a selector.
  */
-function lib4ridora_get_pdf_datastream_info(AbstractObject $object, $datastreams = array(), $availability = FALSE) {
-  // Get the info for the PDFs.
-  if (empty($datastreams)) {
-    $datastreams = iterator_to_array($object);
-    $pdf_datastreams = array_filter($datastreams, 'lib4ridora_multi_embargo_pdf_filter');
-  }
-  else {
-    $pdf_datastreams = $datastreams;
-  }
+function lib4ridora_get_pdf_datastream_info(AbstractObject $object, $availability = FALSE) {
+  module_load_include('inc', 'lib4ridora', 'includes/embargo.form.inc');
+  $datastreams = iterator_to_array($object);
+  $pdf_datastreams = array_filter($datastreams, 'lib4ridora_multi_embargo_pdf_filter');
   $pdfs = array();
   ksort($pdf_datastreams);
   foreach ($pdf_datastreams as $pdf_datastream) {
@@ -111,25 +103,32 @@ function lib4ridora_get_pdf_datastream_info(AbstractObject $object, $datastreams
         'dsid' => $pdf_datastream->id,
         'version' => $version,
         'id' => 'lib4ri-citation-' . str_replace(' ', '-', $version),
+
       );
       if ($availability) {
-        $date = FALSE;
-        $availability_text = t('Open Access');
+        $pdf_vals += array(
+          'availability' => array(
+            'status' => 'public',
+            'date' => FALSE,
+            'statement' => t('Open Access'),
+          ),
+        );
         if (isset($parsed_rels['lib4ridora-multi-embargo-availability'])) {
-          $availability_text = $parsed_rels['lib4ridora-multi-embargo-availability'];
+          $pdf_vals['availability']['status'] = $parsed_rels['lib4ridora-multi-embargo-availability'];
+          $pdf_vals['availability']['statement'] = ucwords($pdf_vals['availability']['status']);
           // Get the date.
-          if ($availability_text == 'date') {
-            $date = $parsed_rels['lib4ridora-multi-embargo-embargo_date'];
-            $availability_text = t('Intranet Only');
+          if ($pdf_vals['availability']['status'] == 'date') {
+            $pdf_vals['availability']['date'] = $parsed_rels['lib4ridora-multi-embargo-embargo_date'];
+            $pdf_vals['availability']['statement'] = t('Intranet only until @date', array(
+              '@date' => format_date(strtotime($parsed_rels['lib4ridora-multi-embargo-embargo_date']), 'custom', 'd F Y'),
+            ));
+          }
+          else {
+            $pdf_vals['availability']['statement'] = t('Intranet only');
           }
         }
-
-        $pdf_vals['availability'] = array(
-          'availability' => $availability_text,
-          'date' => $date,
-        );
       }
-      $pdfs[] = $pdf_vals;
+      $pdfs[$pdf_datastream->id] = $pdf_vals;
     }
   }
   return $pdfs;
@@ -196,18 +195,13 @@ function lib4ridora_get_organization_facets() {
  *
  * @param AbstractObject $object
  *   An AbstractObject representing an object within Fedora.
- * @param array $pdf_datastreams
- *   An array containing information about the PDFs:
- *   -dsid (string): The datastream ID of the PDF.
- *   -version (string): The version type of the PDF.
- *   -id (string): An id to be used as a selector.
  *
  * @return array
  *   The markup to be rendered.
  */
-function lib4ridora_get_fulltext_block_content($object, $pdf_datastreams) {
+function lib4ridora_get_fulltext_block_content($object) {
   $fulltext = array();
-  $pdf_info = lib4ridora_get_pdf_datastream_info($object, $pdf_datastreams, TRUE);
+  $pdf_info = lib4ridora_get_pdf_datastream_info($object, TRUE);
   $version_classes = libfourri_theme_get_accepted_version_types();
   foreach ($pdf_info as $pdf) {
     $dsid = $pdf['dsid'];
@@ -215,30 +209,21 @@ function lib4ridora_get_fulltext_block_content($object, $pdf_datastreams) {
     $fulltext[$dsid] = array(
       'link' => array(
         '#theme' => 'link',
-        '#text' => t('@version', array('@version' => ucwords($version))),
+        '#text' => ucwords($version),
         '#path' => "islandora/object/{$object->id}/datastream/{$dsid}/view",
         '#options' => array(
           'attributes' => array('target' => '_blank'),
         ),
-        '#prefix' => format_string('<div class="libfourri-fulltext"><span id="!id" class="!class">',
-          array('!id' => $pdf['id'], '!class' => $version_classes[$version])
-        ),
+        '#prefix' => format_string('<div class="libfourri-fulltext"><span id="@id" class="@class">', array(
+          '@id' => $pdf['id'],
+          '@class' => $version_classes[$version],
+        )),
         '#suffix' => '</span></div>',
       ),
     );
     // Add the availability.
-    $availability = ucwords($pdf['availability']['availability']);
-    // Output text doesn't directly match RELS-INT.
-    if ($availability == 'Intranet') {
-      $availability = 'Intranet Only';
-    }
-    // See if there's a date.
-    $date = $pdf['availability']['date'] ? $pdf['availability']['date'] : '';
     $fulltext[$dsid]['availability'] = array(
-      '#markup' => t('@availability@date', array(
-        '@availability' => ucwords($availability),
-        '@date' => empty($date) ? '' : ' ' . t('until @date_format', array('@date_format' => date('d F Y', strtotime($date)))),
-      )),
+      '#markup' => $pdf['availability']['statement'],
     );
   }
   return $fulltext;
