@@ -243,3 +243,52 @@ function lib4ridora_get_fulltext_block_content($object, $pdf_datastreams) {
   }
   return $fulltext;
 }
+
+/**
+ * Helper function to query to get the related items.
+ *
+ * @param AbstractObject $object
+ *   An AbstractObject representing an object within Fedora.
+ *
+ * @return bool|DOMNodeList
+ *   A DOMNodeList of DOMElements to be rendered if present or FALSE if none
+ *   exists.
+ */
+function lib4ridora_get_related_research_data(AbstractObject $object) {
+  if (isset($object['MODS'])) {
+    $dom = new DOMDocument();
+    $dom->loadXML($object['MODS']->content);
+    $xpath = new DOMXPath($dom);
+    $xpath->registerNamespace('mods', 'http://www.loc.gov/mods/v3');
+    $results = $xpath->query('//mods:relatedItem[@type="otherType"]/mods:identifier[@type="uri"]');
+    return $results;
+  }
+  return FALSE;
+}
+
+/**
+ * Renders the markup for related research data.
+ *
+ * @param DOMNodeList $results
+ *   A DOMNodeList of DOMElements to be rendered.
+ *
+ * @return array
+ *   An array representing the markup for the block
+ */
+function lib4ridora_get_related_research_data_block_content($results) {
+  $markup = array();
+  foreach ($results as $key => $result) {
+    $url = $result->nodeValue;
+    $markup["research_$key"] = array(
+      '#theme' => 'link',
+      '#text' => format_plural($results->length, 'View Research Data', 'View Research Data (!count)', array('!count' => $key + 1)),
+      '#path' => $url,
+      '#options' => array(
+        'attributes' => array('target' => '_blank'),
+      ),
+      "#prefix" => '<div class="libfourri-research-data"><span>',
+      '#suffix' => '</span></div>',
+    );
+  }
+  return $markup;
+}
