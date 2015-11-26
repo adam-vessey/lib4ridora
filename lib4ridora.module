@@ -753,3 +753,62 @@ function lib4ridora_block_save($delta = '', $edit = array()) {
       break;
   }
 }
+
+/**
+ * Implements hook_CMODEL_PID_islandora_view_object().
+ */
+function lib4ridora_ir_citationCModel_islandora_view_object_alter(AbstractObject $object, &$rendered) {
+  // Lib4RI does not want the PDF preview or download links.
+  unset($rendered['citation.tab']['preview']);
+  unset($rendered['citation.tab']['pdf_download']);
+  if (isset($object['MODS'])) {
+    $mods_content = $object['MODS']->content;
+    $dom = new DOMDocument();
+    $dom->loadXML($mods_content);
+    $xpath = new DOMXPath($dom);
+    $xpath->registerNamespace('mods', 'http://loc.gov/mods/v3');
+    $simple = simplexml_load_string($mods_content);
+    $author_json = convert_mods_to_citeproc_json_names($simple);
+    $authors = $author_json['author'];
+    $author_list = array();
+    foreach ($authors as &$author) {
+      $family = $author['family'];
+      $given = $author['given'];
+      $entity = $xpath->evaluate('string(//mods:name[@type="personal"][mods:namePart[@type="family"] = "' . strtolower($family) . '"]/mods:nameIdentifier[@type="authorId"])');
+      $author_string = t('@lastname, @firstname', array(
+        '@firstname' => $given,
+        '@lastname' => $family,
+      ));
+      if (!empty($entity)) {
+        $author_string = l($author_string, format_string('islandora/search/mods_name_personal_author_authority_marcrelator_nameIdentifier_authorId_s:"@entity_pid"', array('@entity_pid' => $entity)));
+      }
+      $author_list[] = $author_string;
+    }
+    // Pop the last author off for APA styleness.
+    $last_author = array_pop($author_list);
+    $authors_string = implode(', ', $author_list);
+    $authors_string .= " & {$last_author}";
+    $rendered['citation.tab']['authors'] = array(
+      '#type' => 'item',
+      '#markup' => $authors_string,
+      '#weight' => -10,
+    );
+    $rendered['citation.tab']['abstract'] = array(
+      '#type' => 'item',
+      '#markup' => $xpath->evaluate('string(//mods:abstract)'),
+      '#weight' => -9,
+    );
+    $rendered['citation.tab']['citation']['#type'] = 'item';
+    $rendered['citation.tab']['citation']['#title'] = t('Citation');
+    // Decode for human readability.
+    $persistent_url = urldecode(url("islandora/object/{$object->id}", array('absolute' => TRUE)));
+    $rendered['citation.tab']['persistent_url'] = array(
+      '#type' => 'item',
+      '#title' => t('Persistent URL'),
+      '#markup' => format_string('<a href="@url">@url</a>', array(
+        '@url' => $persistent_url)
+      ),
+      '#weight' => 3,
+    );
+  }
+}
