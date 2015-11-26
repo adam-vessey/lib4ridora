@@ -722,7 +722,7 @@ function lib4ridora_block_view($delta) {
       $object = menu_get_object('islandora_object', 2);
       if ($object && in_array('ir:citationCModel', $object->models)) {
         $results = lib4ridora_get_related_research_data($object);
-        if ($results && $results->length > 0) {
+        if ($results && !empty($results)) {
           $block['subject'] = t('Related Research Data');
           $block['content'] = array(
             'related_research_data' => lib4ridora_get_related_research_data_block_content($results),
