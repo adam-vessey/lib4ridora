@@ -160,7 +160,7 @@ function lib4ridora_get_related_research_data(AbstractObject $object) {
     $dom->loadXML($object['MODS']->content);
     $xpath = new DOMXPath($dom);
     $xpath->registerNamespace('mods', 'http://www.loc.gov/mods/v3');
-    $results = $xpath->query('/mods:mods/mods:relatedItem[@type="otherType"]/mods:identifier[@type="uri"]');
+    $results = $xpath->query('//mods:relatedItem[@type="otherType"]/mods:identifier[@type="uri"]');
     return $results;
   }
   return FALSE;
