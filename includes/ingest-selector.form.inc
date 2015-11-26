@@ -27,14 +27,10 @@ function lib4ridora_ingest_selector_form(array $form, array &$form_state, $editi
   if (!$editing) {
     // Load the defaults from the form step storage if returning to the form.
     $association_step_storage = &islandora_ingest_form_get_step_storage($form_state, 'xml_form_builder_association_step');
-    if (isset($association_step_storage['journal_import_method'])) {
-      $default['journal_import_method'] = $association_step_storage['journal_import_method'];
-    }
-    if (isset($association_step_storage['doi'])) {
-      $default['doi'] = $association_step_storage['doi'];
-    }
-    if (isset($association_step_storage['ingest_selector'])) {
-      $default['ingest_selector'] = $association_step_storage['ingest_selector'];
+    foreach ($default as $index => &$value) {
+      if (isset($association_step_storage[$index])) {
+        $value = $association_step_storage[$index];
+      }
     }
   }
   $form['ingest_selector'] = array(
@@ -132,7 +128,7 @@ function lib4ridora_doi_validate_id($element, &$form_state, $form) {
     module_load_include('inc', 'islandora_doi', 'includes/utilities');
     $mods = islandora_doi_get_mods($element['#value']);
     if ($mods === FALSE) {
-      form_error($element, t('"@value" does not appear to be a valid DOI.', array(
+      form_error($element, t('"@value" does not appear to be a valid DOI, or there could be an issue with the DOI configuration.', array(
         '@value' => $element['#value'],
       )));
     }
