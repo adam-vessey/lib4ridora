@@ -352,7 +352,38 @@ function lib4ridora_menu() {
     'file' => 'includes/citation-mods-edit.inc',
     'access arguments' => array(ISLANDORA_METADATA_EDIT),
   );
+  $items['lib4ri-access-denied'] = array(
+    'title' => 'Access Denied',
+    'page callback' => 'lib4ri_access_denied',
+    'type' => MENU_CALLBACK,
+    'access callback' => TRUE,
+  );
   return $items;
+}
+
+/**
+ * Custom access denied menu path for Lib4RI.
+ *
+ * @return string
+ *   The access denied text.
+ */
+function lib4ri_access_denied() {
+  $destination = drupal_get_destination();
+  $pid = arg(2, $destination['destination']);
+  $ds = arg(4, $destination['destination']);
+  $object = islandora_object_load($pid);
+  if ($object && $ds && strpos($ds, 'PDF') === 0 && isset($object[$ds]) && in_array('ir:citationCModel', $object->models)) {
+    module_load_include('inc', 'lib4ridora', 'includes/embargo.form');
+    $datastreams = iterator_to_array($object);
+    $pdf_datastreams = array_filter($datastreams, 'lib4ridora_multi_embargo_pdf_filter');
+    if (!empty($pdf_datastreams)) {
+      return t('You do not have access to this PDF. Return to the parent object: <a href="@url">@label</a>.', array(
+        '@url' => url("islandora/object/{$object->id}"),
+        '@label' => $object->label,
+      ));
+    }
+  }
+  return t('You are not authorized to access this page');
 }
 
 /**
@@ -633,6 +664,23 @@ function lib4ridora_theme($existing, $type, $theme, $path) {
       'variables' => array(
         'citations' => NULL,
       ),
+      'file' => 'theme/theme.inc',
+    ),
+    'lib4ridora_pdf_materials' => array(
+      'template' => 'theme/lib4ridora-pdf-materials',
+      'variables' => array(
+        'object' => NULL,
+        'statement' => FALSE,
+      ),
+      'file' => 'theme/theme.inc',
+    ),
+    'lib4ridora_pdf_link' => array(
+      'file' => 'theme/theme.inc',
+      'template' => 'theme/lib4ridora-pdf-link',
+      'variables' => array(
+        'datastream' => NULL,
+        'statement' => FALSE,
+      ),
     ),
   );
 }
@@ -686,6 +734,14 @@ function lib4ridora_block_info() {
       'info' => t('Lib4RI Recent Additions'),
       'cache' => DRUPAL_NO_CACHE,
     ),
+    'lib4ridora_full_text' => array(
+      'info' => t('Lib4RI Full Text'),
+      'cache' => DRUPAL_NO_CACHE,
+    ),
+    'lib4ridora_related_research' => array(
+      'info' => t('Lib4RI Related Research Data'),
+      'cache' => DRUPAL_NO_CACHE,
+    ),
   );
 }
 
@@ -710,6 +766,34 @@ function lib4ridora_block_view($delta) {
         '#theme' => 'lib4ridora_citation_solr_results',
         '#citations' => lib4ridora_get_recent_additions(),
       );
+      break;
+
+    case 'lib4ridora_full_text':
+      module_load_include('inc', 'lib4ridora', 'includes/block');
+      $object = menu_get_object('islandora_object', 2);
+      if ($object && in_array('ir:citationCModel', $object->models)) {
+        $block['subject'] = t('Fulltext');
+        $block['content'] = array(
+          '#theme' => 'lib4ridora_pdf_materials',
+          '#object' => $object,
+          '#statement' => TRUE,
+        );
+      }
+      break;
+
+    case 'lib4ridora_related_research':
+      module_load_include('inc', 'lib4ridora', 'includes/block');
+      // See if there are results before rendering.
+      $object = menu_get_object('islandora_object', 2);
+      if ($object && in_array('ir:citationCModel', $object->models)) {
+        $results = lib4ridora_get_related_research_data($object);
+        if ($results && $results->length > 0) {
+          $block['subject'] = t('Related Research Data');
+          $block['content'] = array(
+            'related_research_data' => lib4ridora_get_related_research_data_block_content($results),
+          );
+        }
+      }
       break;
 
     default:
