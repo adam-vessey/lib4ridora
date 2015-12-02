@@ -60,78 +60,13 @@ function lib4ridora_get_recent_additions() {
       // Render the citation.
       $mods = islandora_bibliography_get_mods($object->id);
       $entry = citeproc_bibliography_from_mods($style, $mods);
-      $pdfs = lib4ridora_get_pdf_datastream_info($object);
       $items[] = array(
         'citation' => $entry,
         'pid' => $object->id,
-        'pdfs' => $pdfs,
       );
     }
   }
   return $items;
-}
-
-/**
- * Helper to retrieve PDF information from an object.
- *
- * @param AbstractObject $object
- *   An AbstractObject representing an object within Fedora.
- * @param bool $availability
- *   Whether to grab the availability information as well.
- *
- * @return array
- *   An array containing information about the PDFs:
- *   -dsid (string): The datastream ID of the PDF.
- *   -version (string): The version type of the PDF.
- *   -id (string): An id to be used as a selector.
- */
-function lib4ridora_get_pdf_datastream_info(AbstractObject $object, $availability = FALSE) {
-  module_load_include('inc', 'lib4ridora', 'includes/embargo.form.inc');
-  $datastreams = iterator_to_array($object);
-  $pdf_datastreams = array_filter($datastreams, 'lib4ridora_multi_embargo_pdf_filter');
-  $pdfs = array();
-  ksort($pdf_datastreams);
-  foreach ($pdf_datastreams as $pdf_datastream) {
-    $pdf_rels = $pdf_datastream->relationships->get();
-    $parsed_rels = array();
-    foreach ($pdf_rels as $values) {
-      $parsed_rels[$values['predicate']['value']] = $values['object']['value'];
-    }
-    if (isset($parsed_rels['lib4ridora-multi-embargo-document_version'])) {
-      $version = $parsed_rels['lib4ridora-multi-embargo-document_version'];
-      $pdf_vals = array(
-        'dsid' => $pdf_datastream->id,
-        'version' => $version,
-        'id' => 'lib4ri-citation-' . str_replace(' ', '-', $version),
-
-      );
-      if ($availability) {
-        $pdf_vals += array(
-          'availability' => array(
-            'status' => 'public',
-            'date' => FALSE,
-            'statement' => t('Open Access'),
-          ),
-        );
-        if (isset($parsed_rels['lib4ridora-multi-embargo-availability'])) {
-          $pdf_vals['availability']['status'] = $parsed_rels['lib4ridora-multi-embargo-availability'];
-          $pdf_vals['availability']['statement'] = ucwords($pdf_vals['availability']['status']);
-          // Get the date.
-          if ($pdf_vals['availability']['status'] == 'date') {
-            $pdf_vals['availability']['date'] = $parsed_rels['lib4ridora-multi-embargo-embargo_date'];
-            $pdf_vals['availability']['statement'] = t('Intranet only until @date', array(
-              '@date' => format_date(strtotime($parsed_rels['lib4ridora-multi-embargo-embargo_date']), 'custom', 'd F Y'),
-            ));
-          }
-          else {
-            $pdf_vals['availability']['statement'] = t('Intranet only');
-          }
-        }
-      }
-      $pdfs[$pdf_datastream->id] = $pdf_vals;
-    }
-  }
-  return $pdfs;
 }
 
 /**
@@ -188,45 +123,6 @@ function lib4ridora_get_organization_facets() {
   $qp->solrParams['facet.field'] = array($org_field);
   $qp->executeQuery(FALSE);
   return $qp->islandoraSolrResult['facet_counts']['facet_fields'][$org_field];
-}
-
-/**
- * Renders the markup for the full text block.
- *
- * @param AbstractObject $object
- *   An AbstractObject representing an object within Fedora.
- *
- * @return array
- *   The markup to be rendered.
- */
-function lib4ridora_get_fulltext_block_content($object) {
-  $fulltext = array();
-  $pdf_info = lib4ridora_get_pdf_datastream_info($object, TRUE);
-  $version_classes = libfourri_theme_get_accepted_version_types();
-  foreach ($pdf_info as $pdf) {
-    $dsid = $pdf['dsid'];
-    $version = $pdf['version'];
-    $fulltext[$dsid] = array(
-      'link' => array(
-        '#theme' => 'link',
-        '#text' => ucwords($version),
-        '#path' => "islandora/object/{$object->id}/datastream/{$dsid}/view",
-        '#options' => array(
-          'attributes' => array('target' => '_blank'),
-        ),
-        '#prefix' => format_string('<div class="libfourri-fulltext"><span id="@id" class="@class">', array(
-          '@id' => $pdf['id'],
-          '@class' => $version_classes[$version],
-        )),
-        '#suffix' => '</span></div>',
-      ),
-    );
-    // Add the availability.
-    $fulltext[$dsid]['availability'] = array(
-      '#markup' => $pdf['availability']['statement'],
-    );
-  }
-  return $fulltext;
 }
 
 /**

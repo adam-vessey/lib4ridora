@@ -370,9 +370,10 @@ function lib4ridora_menu() {
 function lib4ri_access_denied() {
   $destination = drupal_get_destination();
   $pid = arg(2, $destination['destination']);
+  $ds = arg(4, $destination['destination']);
   $object = islandora_object_load($pid);
-  if ($object && in_array('ir:citationCModel', $object->models)) {
-    module_load_include('inc', 'lib4ridora', 'includes/embargo.form.inc');
+  if ($object && $ds && strpos($ds, 'PDF') === 0 && isset($object[$ds]) && in_array('ir:citationCModel', $object->models)) {
+    module_load_include('inc', 'lib4ridora', 'includes/embargo.form');
     $datastreams = iterator_to_array($object);
     $pdf_datastreams = array_filter($datastreams, 'lib4ridora_multi_embargo_pdf_filter');
     if (!empty($pdf_datastreams)) {
@@ -663,6 +664,23 @@ function lib4ridora_theme($existing, $type, $theme, $path) {
       'variables' => array(
         'citations' => NULL,
       ),
+      'file' => 'theme/theme.inc',
+    ),
+    'lib4ridora_pdf_materials' => array(
+      'template' => 'theme/lib4ridora-pdf-materials',
+      'variables' => array(
+        'object' => NULL,
+        'statement' => FALSE,
+      ),
+      'file' => 'theme/theme.inc',
+    ),
+    'lib4ridora_pdf_link' => array(
+      'file' => 'theme/theme.inc',
+      'template' => 'theme/lib4ridora-pdf-link',
+      'variables' => array(
+        'datastream' => NULL,
+        'statement' => FALSE,
+      ),
     ),
   );
 }
@@ -755,7 +773,11 @@ function lib4ridora_block_view($delta) {
       $object = menu_get_object('islandora_object', 2);
       if ($object && in_array('ir:citationCModel', $object->models)) {
         $block['subject'] = t('Fulltext');
-        $block['content'] = lib4ridora_get_fulltext_block_content($object);
+        $block['content'] = array(
+          '#theme' => 'lib4ridora_pdf_materials',
+          '#object' => $object,
+          '#statement' => TRUE,
+        );
       }
       break;
 

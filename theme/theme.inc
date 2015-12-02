@@ -82,7 +82,7 @@ function template_process_lib4ridora_pdf_link(&$variables) {
 }
 
 /**
- * Implements hook_preprocess().
+ * Implements hook_preprocess_lib4ridora_citation_solr_results().
  */
 function template_preprocess_lib4ridora_citation_solr_results(&$variables) {
   foreach ($variables['citations'] as &$citation) {
