@@ -768,6 +768,8 @@ function lib4ridora_ir_citationCModel_islandora_view_object_alter(AbstractObject
     $dom->loadXML($mods_content);
     $xpath = new DOMXPath($dom);
     $xpath->registerNamespace('mods', 'http://loc.gov/mods/v3');
+    $xpath->registerNamespace('php', 'http://php.net/xpath');
+    $xpath->registerPhpFunctions('strtolower');
     $simple = simplexml_load_string($mods_content);
     $author_json = convert_mods_to_citeproc_json_names($simple);
     $authors = $author_json['author'];
@@ -775,7 +777,7 @@ function lib4ridora_ir_citationCModel_islandora_view_object_alter(AbstractObject
     foreach ($authors as &$author) {
       $family = $author['family'];
       $given = $author['given'];
-      $entity = $xpath->evaluate('string(//mods:name[@type="personal"][mods:namePart[@type="family"] = "' . strtolower($family) . '"]/mods:nameIdentifier[@type="authorId"])');
+      $entity = $xpath->evaluate('string(//mods:name[@type="personal"][php:functionString("strtolower", mods:namePart[@type="family"]) = "' . strtolower($family) . '"]/mods:nameIdentifier[@type="authorId"])');
       $author_string = t('@lastname, @firstname', array(
         '@firstname' => $given,
         '@lastname' => $family,
@@ -787,8 +789,13 @@ function lib4ridora_ir_citationCModel_islandora_view_object_alter(AbstractObject
     }
     // Pop the last author off for APA styleness.
     $last_author = array_pop($author_list);
-    $authors_string = implode(', ', $author_list);
-    $authors_string .= " & {$last_author}";
+    if (count($author_list)) {
+      $authors_string = implode(', ', $author_list);
+      $authors_string .= " & {$last_author}";
+    }
+    else {
+      $authors_string = "$last_author";
+    }
     $rendered['citation.tab']['authors'] = array(
       '#type' => 'item',
       '#markup' => $authors_string,
