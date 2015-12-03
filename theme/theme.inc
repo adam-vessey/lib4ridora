@@ -36,6 +36,9 @@ function template_preprocess_lib4ridora_pdf_link(&$variables) {
   $values = lib4ridora_get_embargo_info($ds);
   $variables['pdf_link'] = $values;
   $access = islandora_datastream_access(ISLANDORA_VIEW_OBJECTS, $variables['datastream']);
+  $variables['availability_classes']= array(
+    'availability-text',
+  );
   if ($access) {
     $variables['span_classes_array'][] = 'fa fa-unlock-alt';
   }
@@ -71,7 +74,8 @@ function template_process_lib4ridora_pdf_link(&$variables) {
     else {
       $availability_text = t('Open Access');
     }
-    $variables['availability'] = '<span class="availability-text">' . $availability_text . '</span>';
+    $variables['availability'] = $availability_text;
+
   }
   $human_readable = lib4ridora_multi_pdf_get_options();
   $human_version = $human_readable['document_version'];
