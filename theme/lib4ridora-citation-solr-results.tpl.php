@@ -12,15 +12,16 @@
  *   'dsid' and an 'id'.
  */
 ?>
-
 <div id="lib4ridora-citation-solr-results">
   <?php foreach ($citations as $citation): ?>
   <div class="lib4ri-citation-solr-results-citation">
     <?php print $citation['citation']; ?>
-    <span id="lib4ri-citation-detailed-record"><?php print l(t('Detailed Record'), "/islandora/object/{$citation['pid']}"); ?></span>
-    <?php foreach ($citation['pdfs'] as $pdf): ?>
-    <span id="<?php print $pdf['id']; ?>"><?php print l(ucwords($pdf['version']), "/islandora/object/{$citation['pid']}/datastream/{$pdf['dsid']}/view"); ?></span>
-    <?php endforeach; ?>
+    <div class="bib-detail-record">
+      <div><?php $cit_pid = $citation['pid']; print l(t("Detailed Record"), "/islandora/object/$cit_pid"); ?></div>
+    </div>
+    <div class="bib-versions">
+      <?php print $citation['pdf_listing']; ?>
+    </div>
   </div>
   <?php endforeach; ?>
 </div>

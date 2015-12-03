@@ -150,3 +150,21 @@ function lib4ridora_get_custom_citation_form_associations() {
   );
   return $form_associations;
 }
+
+
+/**
+ * Retrieve PDFs.
+ *
+ * @param AbstractObject $object
+ *   An ABstractObject representing an object within Fedora.
+ *
+ * @return array
+ *   The listing of the PDFs on the object.
+ */
+function lib4ridora_retrieve_filtered_pdfs(AbstractObject $object) {
+  module_load_include('inc', 'lib4ridora', 'includes/embargo.form');
+  $dses = iterator_to_array($object);
+  $dses = array_filter($dses, 'lib4ridora_multi_embargo_pdf_filter');
+  ksort($dses);
+  return $dses;
+}

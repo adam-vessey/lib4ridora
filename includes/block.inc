@@ -60,28 +60,9 @@ function lib4ridora_get_recent_additions() {
       // Render the citation.
       $mods = islandora_bibliography_get_mods($object->id);
       $entry = citeproc_bibliography_from_mods($style, $mods);
-      // Get the info for the PDFs.
-      $datastreams = iterator_to_array($object);
-      $pdf_datastreams = array_filter($datastreams, 'lib4ridora_multi_embargo_pdf_filter');
-      $pdfs = array();
-      foreach ($pdf_datastreams as $pdf_datastream) {
-        if (!islandora_datastream_access(ISLANDORA_VIEW_OBJECTS, $pdf_datastream)) {
-          continue;
-        }
-        $version = $pdf_datastream->relationships->get(ISLANDORA_RELS_INT_URI, 'lib4ridora-multi-embargo-document_version');
-        $version = array_shift($version);
-        if (!is_null($version)) {
-          $pdfs[] = array(
-            'dsid' => $pdf_datastream->id,
-            'version' => $version['object']['value'],
-            'id' => 'lib4ri-citation-' . str_replace(' ', '-', $version['object']['value']),
-          );
-        }
-      }
       $items[] = array(
         'citation' => $entry,
         'pid' => $object->id,
-        'pdfs' => $pdfs,
       );
     }
   }
