@@ -36,7 +36,7 @@ function template_preprocess_lib4ridora_pdf_link(&$variables) {
   $values = lib4ridora_get_embargo_info($ds);
   $variables['pdf_link'] = $values;
   $access = islandora_datastream_access(ISLANDORA_VIEW_OBJECTS, $variables['datastream']);
-  $variables['availability_classes']= array(
+  $variables['availability_classes'] = array(
     'availability-text',
   );
   if ($access) {
