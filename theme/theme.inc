@@ -71,7 +71,7 @@ function template_process_lib4ridora_pdf_link(&$variables) {
     else {
       $availability_text = t('Open Access');
     }
-    $variables['availability'] = $availability_text;
+    $variables['availability'] = '<span class="availability-text">' . $availability_text . '</span>';
   }
   $human_readable = lib4ridora_multi_pdf_get_options();
   $human_version = $human_readable['document_version'];
