@@ -9,7 +9,7 @@
 <span class="<?php print implode(' ', $span_classes_array); ?>">
   <a href="<?php print $title_link['url']; ?>"><?php print $title_link['title']; ?></a>
 </span>
-    <?php if ($variables['availability']) :
-      print $variables['availability'];
-    endif; ?>
+    <?php if ($variables['availability']): ?>
+      <span class="<?php print implode(' ', $availability_classes); ?>"><?php print $variables['availability'];?></span>
+    <?php endif;?>
 </div>
