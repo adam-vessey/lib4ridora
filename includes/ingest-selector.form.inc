@@ -19,6 +19,20 @@
  *   The Drupal form state.
  */
 function lib4ridora_ingest_selector_form(array $form, array &$form_state, $editing = FALSE) {
+  $default = array(
+    'ingest_selector' => 'Journal Article',
+    'journal_import_method' => 'manual',
+    'doi' => "",
+  );
+  if (!$editing) {
+    // Load the defaults from the form step storage if returning to the form.
+    $association_step_storage = &islandora_ingest_form_get_step_storage($form_state, 'xml_form_builder_association_step');
+    foreach ($default as $index => &$value) {
+      if (isset($association_step_storage[$index])) {
+        $value = $association_step_storage[$index];
+      }
+    }
+  }
   $form['ingest_selector'] = array(
     '#title' => t('Select a Publication Type'),
     '#type' => 'radios',
@@ -32,7 +46,7 @@ function lib4ridora_ingest_selector_form(array $form, array &$form_state, $editi
       "Patent" => t("Patent"),
       "Report" => t("Report"),
     ),
-    "#default_value" => "Journal Article",
+    "#default_value" => $default['ingest_selector'],
   );
 
   // Add descriptions to the radio buttons.
@@ -70,7 +84,75 @@ function lib4ridora_ingest_selector_form(array $form, array &$form_state, $editi
       '#value' => t('Next'),
     );
   }
+  else {
+    // On ingest allow for DOI for Journal Articles.
+    $form['journal_import_method'] = array(
+      '#title' => t('Import Method'),
+      '#type' => 'radios',
+      '#options' => array(
+        "manual" => t("Manually enter publication details"),
+        "doi" => t("Import via DOI"),
+      ),
+      "#default_value" => $default['journal_import_method'],
+      '#states' => array(
+        'visible' => array(
+          ':input[name="ingest_selector"]' => array('value' => 'Journal Article'),
+        ),
+      ),
+    );
+    $form['doi'] = array(
+      '#title' => t('Digital Object Identifier'),
+      '#type' => 'textfield',
+      '#description' => t('Enter an identifier for which to attempt to acquire metadata, such as: 10.1016/j.jorganchem.2011.11.018, 10.1016/j.tiv.2011.10.017, 10.1111/j.1540-4560.2012.01733.x, http://dx.doi.org/10.1111/eva.12339, or http://doi.org/10.1111/eva.12340'),
+      '#element_validate' => array('lib4ridora_doi_validate_id'),
+      "#default_value" => $default['doi'],
+      '#states' => array(
+        'visible' => array(
+          ':input[name="journal_import_method"]' => array('value' => 'doi'),
+          ':input[name="ingest_selector"]' => array('value' => 'Journal Article'),
+        ),
+      ),
+    );
+  }
   return $form;
+}
+
+/**
+ * Element validation callback; ensure the submitted DOI is valid.
+ *
+ * If it is valid, put it in the MODS datastream so it can be loaded in the
+ * next step.
+ */
+function lib4ridora_doi_validate_id($element, &$form_state, $form) {
+  if (isset($element['#value']) && $form_state['values']['journal_import_method'] == 'doi') {
+    module_load_include('inc', 'islandora_doi', 'includes/utilities');
+    $mods = islandora_doi_get_mods($element['#value']);
+    if ($mods === FALSE) {
+      form_error($element, t('"@value" does not appear to be a valid DOI, or there could be an issue with the DOI configuration.', array(
+        '@value' => $element['#value'],
+      )));
+    }
+    else {
+      $object = islandora_ingest_form_get_object($form_state);
+      if (isset($object["MODS"])) {
+        $datastream = $object["MODS"];
+        $datastream->setContentFromString(trim($mods->asXML()));
+        if ($datastream->label != "MODS Record") {
+          $datastream->label = "MODS Record";
+        }
+        if ($datastream->mimetype != 'text/xml') {
+          $datastream->mimetype = 'text/xml';
+        }
+      }
+      else {
+        $datastream = $object->constructDatastream("MODS", 'M');
+        $datastream->setContentFromString(trim($mods->asXML()));
+        $datastream->label = "MODS Record";
+        $datastream->mimetype = 'text/xml';
+        $object->ingestDatastream($datastream);
+      }
+    }
+  }
 }
 
 /**
@@ -86,6 +168,9 @@ function lib4ridora_ingest_selector_form_submit(array $form, array &$form_state)
   module_load_include('inc', 'lib4ridora', 'includes/utilities');
   $associations = xml_form_builder_get_associations();
   $association_step_storage = &islandora_ingest_form_get_step_storage($form_state, 'xml_form_builder_association_step');
+  $association_step_storage['journal_import_method'] = $form_state['values']['journal_import_method'];
+  $association_step_storage['doi'] = $form_state['values']['doi'];
+  $association_step_storage['ingest_selector'] = $form_state['values']['ingest_selector'];
   $ingest_to_form_association = lib4ridora_get_custom_citation_form_associations();
   foreach ($associations as $key => $association) {
     if ($association['form_name'] == $ingest_to_form_association[$form_state['values']['ingest_selector']]) {
@@ -109,4 +194,8 @@ function lib4ridora_ingest_selector_form_submit(array $form, array &$form_state)
 function lib4ridora_ingest_selector_form_undo_submit(array $form, array &$form_state) {
   $association_step_storage = &islandora_ingest_form_get_step_storage($form_state, 'xml_form_builder_association_step');
   unset($association_step_storage['association']);
+  $object = islandora_ingest_form_get_object($form_state);
+  if (isset($object["MODS"])) {
+    unset($object["MODS"]);
+  }
 }
