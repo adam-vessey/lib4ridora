@@ -788,12 +788,16 @@ function lib4ridora_block_view($delta) {
       module_load_include('inc', 'lib4ridora', 'includes/block');
       $object = menu_get_object('islandora_object', 2);
       if ($object && in_array('ir:citationCModel', $object->models)) {
-        $block['subject'] = t('Fulltext');
-        $block['content'] = array(
-          '#theme' => 'lib4ridora_pdf_materials',
-          '#object' => $object,
-          '#statement' => TRUE,
-        );
+        module_load_include('inc', 'lib4ridora', 'includes/utilities');
+        $pdfs = lib4ridora_retrieve_filtered_pdfs($object);
+        if (!empty($pdfs)) {
+          $block['subject'] = t('Fulltext');
+          $block['content'] = array(
+            '#theme' => 'lib4ridora_pdf_materials',
+            '#object' => $object,
+            '#statement' => TRUE,
+          );
+        }
       }
       break;
 
