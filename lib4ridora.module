@@ -95,6 +95,22 @@ function lib4ridora_islandora_xml_form_builder_form_associations() {
 }
 
 /**
+ * Implements hook_islandora_solr_primary_display().
+ */
+function lib4ridora_islandora_solr_primary_display() {
+  return array(
+    'bookmark_lib4ri' => array(
+      'name' => t('Lib4ri Bookmark'),
+      'module' => 'lib4ridora',
+      'file' => 'includes/solr_results.inc',
+      'class' => 'IslandoraSolrResultsLib4riBookmark',
+      'function' => 'displayResults',
+      'description' => t('Lib4Ri Custom Bookmark Display'),
+    ),
+  );
+}
+
+/**
  * Implements hook_islandora_xml_form_builder_forms().
  */
 function lib4ridora_islandora_xml_form_builder_forms() {
