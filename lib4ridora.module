@@ -839,3 +839,164 @@ function lib4ridora_ir_citationCModel_islandora_view_object_alter(AbstractObject
     );
   }
 }
+
+/**
+ * Implements hook_form_alter().
+ */
+function lib4ridora_form_islandora_solr_advanced_search_form_alter(&$form, &$form_state, $form_id) {
+  $form['year'] = array(
+    '#type' => 'markup',
+    '#prefix' => '<div id="lib4ri-advanced-search-year">',
+    '#suffix' => '</div>',
+    '#tree' => TRUE,
+  ); 
+  $form['year']['select'] = array(
+    '#type' => 'select',
+    '#options' => array(
+      'publication year' => t('Publication Year'),
+      'reporting year' => t('Reporting Year'),
+    ),
+    '#title' => t("Year"), 
+    '#tree' => TRUE,
+  );
+  $form['year']['from'] = array(
+    '#type' => 'textfield',
+    '#title' => t('From'),
+    '#tree' => TRUE,
+  );
+  $form['year']['to'] = array(
+    '#type' => 'textfield',
+    '#title' => t('To'),
+    '#tree' => TRUE,
+  );
+
+  $form['pub_type'] = array(
+    '#type' => 'checkboxes',
+    '#prefix' => '<div id="lib4ri-advanced-search-pub-type">',
+    '#suffix' => '</div>',
+    '#options' => lib4ridora_get_all_publication_types(),
+    '#title' => t('Publication Type'),
+  );
+
+  $form['org_unit'] = array(
+    '#type' => 'select',
+    '#prefix' => '<div id="lib4ri-advanced-search-org-unit">',
+    '#suffix' => '</div>',
+    '#options' => lib4ridora_get_all_organizational_units(),
+    '#title' => t('Organizational Unit'),
+  );
+
+  $form['peer_review'] = array(
+    '#type' => 'checkboxes',
+    '#prefix' => '<div id="lib4ri-advanced-search-peer-review">',
+    '#suffix' => '</div>',
+    '#options' => array(
+      'yes' => t('Yes'),
+      'no' => t('No'),
+      'not specified' => t('Not Specified'),
+    ),
+    '#title' => t('Peer Reviewed'),
+  );
+
+  $form['full_text'] = array(
+    '#type' => 'checkboxes',
+    '#prefix' => '<div id="lib4ri-advanced-search-full-text">',
+    '#suffix' => '</div>',
+    '#options' => array(
+      'open access' => t('Open Access'),
+      'restricted' => t('Restricted'),
+      'no full text' => t('No Full Text'),
+    ),
+    '#title' => t('Full Text'),
+  );
+
+  $form['controls']['#weight'] = 100;
+  $form['#submit'][0] = 'lib4ridora_solr_advanced_search_form_submit';
+}
+
+function lib4ridora_solr_advanced_search_form_submit($form, &$form_state) {
+  dsm("WOOOOOOOO");
+}
+
+/**
+ * Queries solr to get all publication types.
+ *
+ * @return array
+ *   Associative array of publication types formatted for #options
+ */
+function lib4ridora_get_all_publication_types() {
+  $facet_fields = array('mods_genre_ms');
+  $facets = lib4ridora_facet_query($facet_fields);
+
+  // If there's results, construct an array where the keys are the genres
+  // as in Solr, and the values are formatted to be labels.
+  if (isset($facets['mods_genre_ms'])) {
+    $keys = array_keys($facets['mods_genre_ms']);
+    $values = array_map('lib4ridora_format_option_value', $keys);
+    return array_combine($keys, $values);
+  }
+
+  // Default to returning an empty array.
+  return array();
+}
+
+/**
+ * Queries solr to get all organizational units.
+ *
+ * @return array
+ *   Associative array of organizational units formatted for #options
+ */
+function lib4ridora_get_all_organizational_units() {
+  $facet_fields = array(
+    'mods_name_personal_affiliation_ms',
+    'mods_name_corporate_affiliation_ms',
+    'mods_name_conference_affiliation_ms',
+  );
+  $facets = lib4ridora_facet_query($facet_fields);
+
+  $org_units = array();
+
+  // If there's results, construct an array where the keys are affiliations 
+  // as in Solr, and the values are formatted to be labels.
+  foreach ($facets as $facet) {
+    if (empty($facet)) {
+      continue;
+    }
+    $keys = array_keys($facet);
+    $values = array_map('lib4ridora_format_option_value', $keys);
+    $org_units = array_merge($org_units, array_combine($keys, $values));
+  }
+
+  // Return 'all' alongside whatever else.
+  return array("*" => t("All")) + $org_units;
+}
+
+/**
+ * Issues a facet query to solr for the provided fields.
+ *
+ * @return array
+ *   Associative array where key is the facet field and the value is the count.
+ */
+function lib4ridora_facet_query(array $facet_fields) {
+  $qp = new IslandoraSolrQueryProcessor();
+  $query = '*:*';
+  $qp->buildQuery($query);
+  $qp->solrParams['fl'] = "PID";
+  $qp->solrParams['facet.mincount'] = 1;
+  $qp->solrParams['facet.field'] = $facet_fields;
+  $qp->solrParams['facet'] = 'true';
+  $qp->solrLimit = 1;
+  $qp->executeQuery();
+
+  return $qp->islandoraSolrResult['facet_counts']['facet_fields'];
+}
+
+/**
+ * Formats values to be displayed in a form api element that uses #options.
+ *
+ * @return string
+ *   Properly formatted and translated #option value.
+ */
+function lib4ridora_format_option_value($val) {
+  return t(ucwords($val));
+}
