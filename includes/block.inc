@@ -60,28 +60,9 @@ function lib4ridora_get_recent_additions() {
       // Render the citation.
       $mods = islandora_bibliography_get_mods($object->id);
       $entry = citeproc_bibliography_from_mods($style, $mods);
-      // Get the info for the PDFs.
-      $datastreams = iterator_to_array($object);
-      $pdf_datastreams = array_filter($datastreams, 'lib4ridora_multi_embargo_pdf_filter');
-      $pdfs = array();
-      foreach ($pdf_datastreams as $pdf_datastream) {
-        if (!islandora_datastream_access(ISLANDORA_VIEW_OBJECTS, $pdf_datastream)) {
-          continue;
-        }
-        $version = $pdf_datastream->relationships->get(ISLANDORA_RELS_INT_URI, 'lib4ridora-multi-embargo-document_version');
-        $version = array_shift($version);
-        if (!is_null($version)) {
-          $pdfs[] = array(
-            'dsid' => $pdf_datastream->id,
-            'version' => $version['object']['value'],
-            'id' => 'lib4ri-citation-' . str_replace(' ', '-', $version['object']['value']),
-          );
-        }
-      }
       $items[] = array(
         'citation' => $entry,
         'pid' => $object->id,
-        'pdfs' => $pdfs,
       );
     }
   }
@@ -150,9 +131,8 @@ function lib4ridora_get_organization_facets() {
  * @param AbstractObject $object
  *   An AbstractObject representing an object within Fedora.
  *
- * @return bool|DOMNodeList
- *   A DOMNodeList of DOMElements to be rendered if present or FALSE if none
- *   exists.
+ * @return bool|array
+ *   An array containing URLs to be rendered or FALSE if MODS does not exist.
  */
 function lib4ridora_get_related_research_data(AbstractObject $object) {
   if (isset($object['MODS'])) {
@@ -161,7 +141,14 @@ function lib4ridora_get_related_research_data(AbstractObject $object) {
     $xpath = new DOMXPath($dom);
     $xpath->registerNamespace('mods', 'http://www.loc.gov/mods/v3');
     $results = $xpath->query('//mods:relatedItem[@type="otherType"]/mods:identifier[@type="uri"]');
-    return $results;
+    // Filter out empty results now.
+    $filtered_results = array();
+    foreach ($results as $result) {
+      if (!empty($result->nodeValue)) {
+        $filtered_results[] = $result->nodeValue;
+      }
+    }
+    return $filtered_results;
   }
   return FALSE;
 }
@@ -178,11 +165,10 @@ function lib4ridora_get_related_research_data(AbstractObject $object) {
 function lib4ridora_get_related_research_data_block_content($results) {
   $markup = array();
   foreach ($results as $key => $result) {
-    $url = $result->nodeValue;
     $markup["research_$key"] = array(
       '#theme' => 'link',
-      '#text' => format_plural($results->length, 'View Research Data', 'View Research Data (!count)', array('!count' => $key + 1)),
-      '#path' => $url,
+      '#text' => format_plural(count($results), 'View Research Data', 'View Research Data (!count)', array('!count' => $key + 1)),
+      '#path' => $result,
       '#options' => array(
         'attributes' => array('target' => '_blank'),
       ),

@@ -329,7 +329,7 @@ function lib4ridora_multi_pdf_get_options($sort = FALSE) {
       'accepted version' => t('Accepted Version'),
       'updated version' => t('Updated Version'),
       'supplemental material' => t('Supplemental Material'),
-      'unspecified' => t('Unspecified'),
+      'unspecified' => t('Unspecified PDF'),
     );
   }
   else {
@@ -338,7 +338,7 @@ function lib4ridora_multi_pdf_get_options($sort = FALSE) {
       'published version' => t('Published Version'),
       'updated version' => t('Updated Version'),
       'supplemental material' => t('Supplemental Material'),
-      'unspecified' => t('Unspecified'),
+      'unspecified' => t('Unspecified PDF'),
     );
   }
   return array(
