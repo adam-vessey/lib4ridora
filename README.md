@@ -11,6 +11,7 @@ This module requires the following modules/libraries:
 * [Islandora](https://github.com/islandora/islandora)
 * [Islandora Scholar](https://github.com/islandora/islandora_scholar)
 * [Islandora Plupload](https://github.com/discoverygarden/islandora_plupload)
+* [Islandora Solr Metadata](https://github.com/Islandora/islandora_solr_metadata)
 
 ## Installation
 
@@ -34,6 +35,16 @@ When restrictions are specified on an element, the element (and its children) wi
 
 For example, if one wanted to allow access to an element to those with the "Replace datastreams" permission or the "metadata manager" or "repository administrator" roles, your configuration might look like:
 ![Screenshot](http://puu.sh/dgOMH/ad3d3d7964.png)
+
+### Islandora Solr Metadata Author and Org linking
+
+A pseudo-field has been introduced to produce markup for authors in Solr Metadata displays. The produced markup should create a link to both:
+* Documents by the same author
+* Documents from the same affiliated organization
+
+### Context-based Islandora Solr Metadata Displays
+
+The ability to associate Solr metadata configurations according to the MODS genre on `ir:citationCModel` objects has been facilitated via the menu path at `admin/islandora/solution_pack_config/lib4ridora/solr_metadata`.
 
 ## Maintainers/Sponsors
 
