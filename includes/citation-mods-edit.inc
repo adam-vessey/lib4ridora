@@ -22,19 +22,9 @@ function lib4ridora_citation_select_mods_edit_form($form, &$form_state, Abstract
   form_load_include($form_state, 'inc', 'xml_form_builder', 'includes/associations');
   form_load_include($form_state, 'inc', 'lib4ridora', 'includes/utilities');
   $associations = xml_form_builder_get_associations();
-  $form_associations = lib4ridora_get_custom_citation_form_associations();
   $form_state['pid'] = $object->id;
-  // Read Genre from MODS to determine what form to use for editing.
-  $mods = new SimpleXMLElement($object['MODS']->content);
-  $mods->registerXPathNamespace('mods', 'http://www.loc.gov/mods/v3');
-  // Product Type.
-  $type = $mods->xpath('/mods:mods/mods:genre');
-  if (count($type) > 0) {
-    $type = (string) reset($type);
-    if (array_key_exists($type, $form_associations)) {
-      $form_name = $form_associations[$type];
-    }
-  }
+
+  $form_name = lib4ridora_determine_form_name($object);
   if (empty($form_name) && isset($form_state['form_name'])) {
     $form_name = $form_state['form_name'];
   }

@@ -105,3 +105,44 @@ function template_process_lib4ridora_citation_solr_results(&$variables) {
     $citation['pdf_listing'] = drupal_render($citation['pdf_listing']);
   }
 }
+
+/**
+ * Implements hook_preprocess_lib4ridora_islandora_solr_metadata_injected_author_info().
+ */
+function template_preprocess_lib4ridora_islandora_solr_metadata_injected_author_info(&$variables) {
+  module_load_include('inc', 'islandora_solr', 'includes/utilities');
+  $variables['author_href'] = array(
+    'islandora/search',
+    array(
+      'query' => array(
+        'f' => array(
+          format_string('!field:"!value"', array(
+            '!field' => islandora_solr_lesser_escape('mods_name_personal_author_authority_marcrelator_nameIdentifier_authorId_ms'),
+            '!value' => $variables['info']['author']['id'],
+          )),
+        ),
+      ),
+    ),
+  );
+  $variables['org_href'] = array(
+    'islandora/search',
+    array(
+      'query' => array(
+        'f' => array(
+          format_string('!field:"!value"', array(
+            '!field' => islandora_solr_lesser_escape('mods_name_personal_author_authority_marcrelator_nameIdentifier_organizational unit id_ms'),
+            '!value' => $variables['info']['org']['id'],
+          )),
+        ),
+      ),
+    ),
+  );
+}
+
+/**
+ * Implements hook_process_lib4ridora_islandora_solr_metadata_injected_author_info().
+ */
+function template_process_lib4ridora_islandora_solr_metadata_injected_author_info(&$variables) {
+  $variables['author_href'] = call_user_func_array('url', $variables['author_href']);
+  $variables['org_href'] = call_user_func_array('url', $variables['org_href']);
+}
