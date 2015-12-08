@@ -87,9 +87,9 @@ function lib4ridora_islandora_solr_metadata_mapping_form($form, &$form_state) {
       '#title' => t('Mapping for @type', array(
         '@type' => $type,
       )),
-      '#default_value' => (isset($defaults[$type]) && isset($associations[$defaults[$type]])) ?
+      '#default_value' => ((isset($defaults[$type]) && isset($associations[$defaults[$type]])) ?
         $defaults[$type] :
-        NULL,
+        NULL),
     );
   }
 

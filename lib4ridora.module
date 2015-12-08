@@ -19,6 +19,8 @@ define('LIB4RIDORA_JOURNAL_FORM', 'Lib4RI Journal MODS Form');
 // Datastream ID.
 define('LIB4RIDORA_FACTOR_DSID', 'IMPACT-FACTORS');
 
+const LIB4RIDORA_ISLANDORA_SOLR_METADATA_MODS_AUTHOR_PSEUDO_FIELD = 'lib4ridora_mods_pseudo_field';
+
 /**
  * Implements hook_islandora_required_objects().
  */
@@ -947,8 +949,6 @@ function lib4ridora_ir_citationCModel_islandora_view_object_alter(AbstractObject
   }
 }
 
-const LIB4RIDORA_ISLANDORA_SOLR_METADATA_MODS_AUTHOR_PSEUDO_FIELD='lib4ridora_mods_pseudo_field';
-
 /**
  * Implements hook_preprocess_islandora_solr_metadata_display().
  */
@@ -971,10 +971,10 @@ function lib4ridora_preprocess_islandora_solr_metadata_display(&$variables) {
     // doesn't strip out our pseudo-field.
     $value_map = function (array $info) {
       if ($info['org']['name']) {
-      return t('@author (@org)', array(
-        '@author' => $info['author']['name'],
-        '@org' => $info['org']['name'],
-      ));
+        return t('@author (@org)', array(
+          '@author' => $info['author']['name'],
+          '@org' => $info['org']['name'],
+        ));
       }
       else {
         return $info['author']['name'];
@@ -984,6 +984,9 @@ function lib4ridora_preprocess_islandora_solr_metadata_display(&$variables) {
   }
 }
 
+/**
+ * Implements hook_process_islandora_solr_metadata_display().
+ */
 function lib4ridora_process_islandora_solr_metadata_display(&$variables) {
   if (isset($variables['solr_fields'][LIB4RIDORA_ISLANDORA_SOLR_METADATA_MODS_AUTHOR_PSEUDO_FIELD]['lib4ridora_renderable'])) {
     $pseudo_field =& $variables['solr_fields'][LIB4RIDORA_ISLANDORA_SOLR_METADATA_MODS_AUTHOR_PSEUDO_FIELD];
@@ -1062,6 +1065,9 @@ function lib4ridora_form_islandora_solr_metadata_config_form_validate(&$form, &$
   }
 }
 
+/**
+ * Implements hook_form_islandora_solr_metadata_config_field_form_alter().
+ */
 function lib4ridora_form_islandora_solr_metadata_config_field_form_alter(&$form, &$form_state) {
   list($config_id, $field_name) = $form_state['build_info']['args'];
   if ($field_name == LIB4RIDORA_ISLANDORA_SOLR_METADATA_MODS_AUTHOR_PSEUDO_FIELD) {
@@ -1069,6 +1075,9 @@ function lib4ridora_form_islandora_solr_metadata_config_field_form_alter(&$form,
   }
 }
 
+/**
+ * Implements hook_islandora_solr_metadata_display_elements_alter().
+ */
 function lib4ridora_islandora_solr_metadata_display_elements_alter(&$elements) {
   if (in_array('ir:citationCModel', $elements['islandora_object']->models)) {
     module_load_include('inc', 'lib4ridora', 'includes/utilities');

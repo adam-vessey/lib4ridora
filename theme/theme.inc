@@ -107,7 +107,7 @@ function template_process_lib4ridora_citation_solr_results(&$variables) {
 }
 
 /**
- * Implements hook_preprocess_lib4ridora_islandora_solr_metadata_injected_author_info().
+ * Implements hook_preprocess_HOOK().
  */
 function template_preprocess_lib4ridora_islandora_solr_metadata_injected_author_info(&$variables) {
   module_load_include('inc', 'islandora_solr', 'includes/utilities');
@@ -140,7 +140,7 @@ function template_preprocess_lib4ridora_islandora_solr_metadata_injected_author_
 }
 
 /**
- * Implements hook_process_lib4ridora_islandora_solr_metadata_injected_author_info().
+ * Implements hook_process_THEME().
  */
 function template_process_lib4ridora_islandora_solr_metadata_injected_author_info(&$variables) {
   $variables['author_href'] = call_user_func_array('url', $variables['author_href']);
