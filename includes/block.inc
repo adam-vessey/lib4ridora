@@ -115,7 +115,7 @@ function lib4ridora_get_organization_facets() {
   $org_field = variable_get('lib4ridora_organization_block_organization_field', 'mods_name_personal_affiliation_ms');
   $qp = new IslandoraSolrQueryProcessor();
   $qp->buildQuery('*:*');
-  $qp->solrParams['fl'] = $org_field;
+  $qp->solrParams['fl'] = "PID, {$org_field}";
   $qp->solrParams['facet.limit'] = 100000;
   $qp->solrParams['facet.mincount'] = 1;
   $qp->solrParams['facet.field'] = array();
