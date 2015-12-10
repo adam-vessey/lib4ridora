@@ -877,7 +877,10 @@ function lib4ridora_ir_citationCModel_islandora_view_object_alter(AbstractObject
     $xpath->registerPhpFunctions('strtolower');
     $simple = simplexml_load_string($mods_content);
     $author_json = convert_mods_to_citeproc_json_names($simple);
-    $authors = $author_json['author'];
+    $authors = array();
+    if (isset($author_json['author'])) {
+      $authors = $author_json['author'];
+    }
     $author_list = array();
     foreach ($authors as &$author) {
       $family = $author['family'];
@@ -892,20 +895,22 @@ function lib4ridora_ir_citationCModel_islandora_view_object_alter(AbstractObject
       }
       $author_list[] = $author_string;
     }
-    // Pop the last author off for APA styleness.
-    $last_author = array_pop($author_list);
-    if (count($author_list)) {
-      $authors_string = implode(', ', $author_list);
-      $authors_string .= " & {$last_author}";
+    if (!empty($author_list)) {
+      // Pop the last author off for APA styleness.
+      $last_author = array_pop($author_list);
+      if (count($author_list)) {
+        $authors_string = implode(', ', $author_list);
+        $authors_string .= " & {$last_author}";
+      }
+      else {
+        $authors_string = "$last_author";
+      }
+      $rendered['citation.tab']['authors'] = array(
+        '#type' => 'item',
+        '#markup' => $authors_string,
+        '#weight' => -10,
+      );
     }
-    else {
-      $authors_string = "$last_author";
-    }
-    $rendered['citation.tab']['authors'] = array(
-      '#type' => 'item',
-      '#markup' => $authors_string,
-      '#weight' => -10,
-    );
     $rendered['citation.tab']['abstract'] = array(
       '#type' => 'item',
       '#markup' => $xpath->evaluate('string(//mods:abstract)'),
