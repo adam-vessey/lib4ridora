@@ -193,7 +193,7 @@ function lib4ridora_get_author_info(AbstractObject $object) {
   $authors = array();
 
   foreach ($xpath->query('//mods:mods/mods:name[@type="personal"][mods:role/mods:roleTerm[@authority="marcrelator" and @type="text"]/text() = "author"]') as $person) {
-    $authors[] = array(
+    $info = array(
       'author' => array(
         'name' => $xpath->evaluate('normalize-space(mods:fullName)', $person),
         'id' => $xpath->evaluate('string(mods:nameIdentifier[@type="authorId"]/text())', $person),
@@ -203,6 +203,12 @@ function lib4ridora_get_author_info(AbstractObject $object) {
         'id' => $xpath->evaluate('string(mods:nameIdentifier[@type="organizational unit id"]/text())', $person),
       ),
     );
+
+    if (!$info['author']['name']) {
+      $info['author']['name'] = $xpath->evaluate('normalize-space(concat(mods:namePart[@type="given"], " ", mods:namePart[@type="family"]))', $person);
+    }
+
+    $authors[] = $info;
   }
 
   return $authors;
