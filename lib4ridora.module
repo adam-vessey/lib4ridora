@@ -95,6 +95,22 @@ function lib4ridora_islandora_xml_form_builder_form_associations() {
 }
 
 /**
+ * Implements hook_islandora_solr_primary_display().
+ */
+function lib4ridora_islandora_solr_primary_display() {
+  return array(
+    'bookmark_lib4ri' => array(
+      'name' => t('Lib4ri Bookmark'),
+      'module' => 'lib4ridora',
+      'file' => 'includes/solr_results.inc',
+      'class' => 'IslandoraSolrResultsLib4riBookmark',
+      'function' => 'displayResults',
+      'description' => t('Lib4Ri Custom Bookmark Display'),
+    ),
+  );
+}
+
+/**
  * Implements hook_islandora_xml_form_builder_forms().
  */
 function lib4ridora_islandora_xml_form_builder_forms() {
@@ -696,6 +712,7 @@ function lib4ridora_theme($existing, $type, $theme, $path) {
       'variables' => array(
         'datastream' => NULL,
         'statement' => FALSE,
+        'availability' => FALSE,
       ),
     ),
   );
@@ -788,12 +805,16 @@ function lib4ridora_block_view($delta) {
       module_load_include('inc', 'lib4ridora', 'includes/block');
       $object = menu_get_object('islandora_object', 2);
       if ($object && in_array('ir:citationCModel', $object->models)) {
-        $block['subject'] = t('Fulltext');
-        $block['content'] = array(
-          '#theme' => 'lib4ridora_pdf_materials',
-          '#object' => $object,
-          '#statement' => TRUE,
-        );
+        module_load_include('inc', 'lib4ridora', 'includes/utilities');
+        $pdfs = lib4ridora_retrieve_filtered_pdfs($object);
+        if (!empty($pdfs)) {
+          $block['subject'] = t('Fulltext');
+          $block['content'] = array(
+            '#theme' => 'lib4ridora_pdf_materials',
+            '#object' => $object,
+            '#statement' => TRUE,
+          );
+        }
       }
       break;
 

@@ -7,7 +7,10 @@
  */
 
 /**
- * Extention of IslandoraSolrResultsBookmark to create an alternative display type.
+ * Extension of IslandoraSolrResultsBookmark to create an alternative display
+ * type. The purpose of overriding this for Lib4RI, is to remove the markup from
+ * the returned $object_url_info, before being passed to bookmark's
+ * generate_markup helper.
  */
 class IslandoraSolrResultsLib4riBookmark extends IslandoraSolrResultsBookmark {
   /**
