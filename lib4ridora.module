@@ -696,6 +696,7 @@ function lib4ridora_theme($existing, $type, $theme, $path) {
       'variables' => array(
         'datastream' => NULL,
         'statement' => FALSE,
+        'availability' => FALSE,
       ),
     ),
   );
