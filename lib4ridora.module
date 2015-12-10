@@ -879,6 +879,7 @@ function lib4ridora_ir_citationCModel_islandora_view_object_alter(AbstractObject
     $author_json = convert_mods_to_citeproc_json_names($simple);
     if (isset($author_json['author'])) {
       $authors = $author_json['author'];
+      $author_list = array();
       foreach ($authors as &$author) {
         $family = $author['family'];
         $given = $author['given'];
