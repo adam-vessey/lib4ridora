@@ -126,22 +126,6 @@ function lib4ridora_islandora_xml_form_builder_forms() {
 }
 
 /**
- * Implements hook_islandora_solr_primary_display().
- */
-function lib4ridora_islandora_solr_primary_display() {
-  return array(
-    'bookmark_lib4ri' => array(
-      'name' => t('Lib4ri Bookmark'),
-      'module' => 'lib4ridora',
-      'file' => 'includes/solr_results.inc',
-      'class' => 'IslandoraSolrResultsLib4riBookmark',
-      'function' => 'displayResults',
-      'description' => t('Lib4Ri Custom Bookmark Display'),
-    ),
-  );
-}
-
-/**
  * Implements hook_islandora_ingest_steps_alter().
  */
 function lib4ridora_ir_citationCModel_islandora_ingest_steps_alter(array &$steps, array &$form_state) {
@@ -306,6 +290,7 @@ function lib4ridora_check_ip($ip_address) {
 function lib4ridora_menu_alter(&$items) {
   // Nuke old "Document" tab.
   unset($items['islandora/object/%islandora_object/islandora_scholar_upload']);
+  
 }
 
 /**
@@ -447,7 +432,7 @@ function lib4ridora_citation_access($op, $object) {
     $pdf_datastreams = array_filter(iterator_to_array($object), 'lib4ridora_multi_embargo_pdf_filter');
     return !empty($pdf_datastreams);
   };
-  return lib4ridora_citation_model_access($op, $object) && $has_pdf($object);
+  return lib4ridora_citation_model_access($op, $object) && $has_pdf($object) && user_is_logged_in();
 }
 
 /**
