@@ -79,7 +79,15 @@ class IslandoraSolrResultsLib4riBookmark extends IslandoraSolrResultsBookmark {
   /**
    * Provide specific fields for given content models.
    *
-   *   the cmodel in question.
+   * @param array $data
+   *   Key value array of CModels and associated fields.
+   *
+   * @param array $object_result
+   *   A result from the query processor.
+   *
+   * @return string
+   *   Concatenated and space separated string of provided
+   *   Fields.
    */
   protected function getMarkupForCModel($data, $object_results) {
     $markup = "";
