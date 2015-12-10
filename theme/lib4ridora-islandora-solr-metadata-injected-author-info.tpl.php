@@ -6,8 +6,10 @@
  * Somewhat gross, due to the default nl2br-type stuffs.
  *
  * Available variables:
- * - $author_href: URL for the author.
- * - $org_href: URL for the author's org.
+ * - $author_attributes: An associative array which may contain:
+ *   - href: URL for the author.
+ * - $org_attributes: An associative array which may contain:
+ *   - href: URL for the author's org.
  * - $info: Associative array containing:
  *   - author
  *     - name
@@ -16,7 +18,10 @@
  *     - name
  *     - id
  */
+
+$author_element_type = isset($author_attributes['href']) ? 'a' : 'span';
+$org_element_type = isset($org_attributes['href']) ? 'a' : 'span';
 ?>
-<span class="<?php print $classes;?>"><a class="name" href="<?php print check_plain($author_href);?>"><?php print $info['author']['name'];?></a><?php
-  if ($org_href && $info['org']['name']):?> (<a class="org" href="<?php print check_plain($org_href); ?>"><?php print $info['org']['name']; ?></a>)<?php
+<span class="<?php print $classes;?>"><<?php print $author_element_type; print drupal_attributes($author_attributes);?>><?php print $info['author']['name']; ?></<?php print $author_element_type;?>><?php
+  if ($info['org']['name']):?> (<<?php print $org_element_type; print drupal_attributes($org_attributes);?>><?php print $info['org']['name']; ?></<?php print $org_element_type;?>>)<?php
   endif;?></span>

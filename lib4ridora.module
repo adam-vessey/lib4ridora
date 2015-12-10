@@ -720,6 +720,16 @@ function lib4ridora_theme($existing, $type, $theme, $path) {
       'variables' => array(
         'object' => NULL,
         'info' => NULL,
+        'author_attributes' => array(
+          'class' => array(
+            'author',
+          ),
+        ),
+        'org_attributes' => array(
+          'class' => array(
+            'org',
+          ),
+        ),
       ),
     ),
   );
