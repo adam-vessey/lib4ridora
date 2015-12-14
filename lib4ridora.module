@@ -71,6 +71,22 @@ function lib4ridora_islandora_required_objects(IslandoraTuque $connection) {
 }
 
 /**
+ * Implements hook_islandora_solr_query_blocks().
+ */
+function lib4ridora_islandora_solr_query_blocks() {
+  return array(
+    'current_query_facet_name' => array(
+      'name' => t('Islandora Query With Facet Title'),
+      'module' => 'lib4ridora',
+      'file' => 'includes/solr_results.inc',
+      'class' => 'IslandoraSolrResultsLib4riBookmark',
+      'function' => 'currentQuery',
+      'form' => NULL,
+    ),
+  );
+}
+
+/**
  * Implements hook_islandora_xml_form_builder_form_associations().
  */
 function lib4ridora_islandora_xml_form_builder_form_associations() {
