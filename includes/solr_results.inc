@@ -46,7 +46,7 @@ class IslandoraSolrResultsLib4riBookmark extends IslandoraSolrResultsBookmark {
       ),
       'info:fedora/islandora:personCModel' => array(
         'MADS_given_mt',
-        'MADS_family_mt'
+        'MADS_family_mt',
       ),
     );
 
@@ -59,7 +59,7 @@ class IslandoraSolrResultsLib4riBookmark extends IslandoraSolrResultsBookmark {
 
     foreach ($cmodels as $key => $value) {
       $found = array_search($key, $object_result['content_models']);
-      if (false !== $found) {
+      if (FALSE !== $found) {
         $data['key'] = $key;
         $data['fields'] = $cmodels[$key];
         $markup .= $this->getMarkupForCModel($data, $object_result);
@@ -82,7 +82,7 @@ class IslandoraSolrResultsLib4riBookmark extends IslandoraSolrResultsBookmark {
    * @param array $data
    *   Key value array of CModels and associated fields.
    *
-   * @param array $object_result
+   * @param array $object_results
    *   A result from the query processor.
    *
    * @return string
@@ -91,11 +91,12 @@ class IslandoraSolrResultsLib4riBookmark extends IslandoraSolrResultsBookmark {
    */
   protected function getMarkupForCModel($data, $object_results) {
     $markup = "";
-    foreach ($data['fields']  as $key => $value) {
+    foreach ($data['fields'] as $key => $value) {
       $field = isset($object_results['solr_doc'][$value]) ? $object_results['solr_doc'][$value] : "";
       if (is_array($field)) {
         $markup .= implode(" ", $field) . " ";
-      } else {
+      }
+      else {
         $markup .= $field . " ";
       }
     }
@@ -219,14 +220,17 @@ class IslandoraSolrResultsLib4riBookmark extends IslandoraSolrResultsBookmark {
         $hooks = islandora_build_hook_list(ISLANDORA_SOLR_FACET_BUCKET_CLASSES_HOOK_BASE);
         drupal_alter($hooks, $attributes, $islandora_solr_query);
 
-        // Append the human readable labels to the front of the facet removeal link, in
-        // the 'current_query_facet_name' block.
-        foreach ($records as $key => $value ){
-          if (strpos($filter, $value['solr_field']) !== false) {
+        // Append the human readable labels to the front of
+        // the facet removeal link, in the
+        // 'current_query_facet_name' block.
+        foreach ($records as $key => $value) {
+          if (strpos($filter, $value['solr_field']) !== FALSE) {
             // XXX: We are not using l() because of active classes:
-            // @see http://drupal.org/node/41595  $value['solr_field']
-            // Create link.
-            $filter_list[] = '<a' . drupal_attributes($attributes['minus']['attr']) . '>(-)</a>' . " {$value['solr_field_settings']['label']}: " . $symbol . " " .check_plain($filter_string);
+            // @see http://drupal.org/node/41595
+
+            // The following differs from the default
+            // islandora_query block currentQuery().
+            $filter_list[] = '<a' . drupal_attributes($attributes['minus']['attr']) . '>(-)</a>' . " {$value['solr_field_settings']['label']}: " . $symbol . " " . check_plain($filter_string);
           }
         }
       }
