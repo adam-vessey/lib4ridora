@@ -38,7 +38,7 @@ For example, if one wanted to allow access to an element to those with the "Repl
 
 ### Islandora Solr Metadata Author and Org linking
 
-A pseudo-field has been introduced to produce markup for authors in Solr Metadata displays. The produced markup should create a link to both:
+The `lib4ridora_mods_pseudo_field` pseudo-field has been introduced to produce markup for authors in Solr Metadata displays. The produced markup should create a link to both:
 * Documents by the same author
 * Documents from the same affiliated organization
 
