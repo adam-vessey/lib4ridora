@@ -306,6 +306,27 @@ function lib4ridora_check_ip($ip_address) {
 function lib4ridora_menu_alter(&$items) {
   // Nuke old "Document" tab.
   unset($items['islandora/object/%islandora_object/islandora_scholar_upload']);
+  $items['islandora/object/%islandora_object/islandora_scholar_romeo']['access callback']
+    = 'lib4ridora_romeo_access';
+  $items['islandora/object/%islandora_object/islandora_scholar_romeo']['access arguments']
+    = array(2);
+}
+
+/**
+ * Access callback, to determine whether or not to create the RoMEO tab.
+ *
+ * Checks if it's enabled, we have the relevant content model, and we have an
+ * ISSN to look up and that a user is not anonymous.
+ */
+function lib4ridora_romeo_access($object) {
+  module_load_include('inc', 'islandora_scholar', 'includes/romeo.tab');
+
+  return variable_get('islandora_scholar_romeo_enable', FALSE) &&
+    in_array('ir:citationCModel', $object->models) &&
+    isset($object['MODS']) &&
+    islandora_datastream_access(ISLANDORA_VIEW_OBJECTS, $object['MODS']) &&
+    RomeoView::getISSN($object) &&
+    !user_is_anonymous();
 }
 
 /**
