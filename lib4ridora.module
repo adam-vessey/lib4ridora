@@ -19,6 +19,8 @@ define('LIB4RIDORA_JOURNAL_FORM', 'Lib4RI Journal MODS Form');
 // Datastream ID.
 define('LIB4RIDORA_FACTOR_DSID', 'IMPACT-FACTORS');
 
+const LIB4RIDORA_ISLANDORA_SOLR_METADATA_MODS_AUTHOR_PSEUDO_FIELD = 'lib4ridora_mods_pseudo_field';
+
 /**
  * Implements hook_islandora_required_objects().
  */
@@ -341,6 +343,20 @@ function lib4ridora_menu() {
     'page arguments' => array('lib4ridora_admin'),
     'file' => 'includes/admin.form.inc',
     'type' => MENU_NORMAL_ITEM,
+  );
+  $items['admin/islandora/solution_pack_config/lib4ridora/general'] = array(
+    'title' => 'General Configuration',
+    'description' => 'Configure lib4ridora.',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+  );
+  $items['admin/islandora/solution_pack_config/lib4ridora/solr_metadata'] = array(
+    'title' => 'Metadata Mappings',
+    'description' => 'Configure lib4ridora citation metadata displays.',
+    'page callback' => 'drupal_get_form',
+    'access arguments' => array('administer site configuration'),
+    'page arguments' => array('lib4ridora_islandora_solr_metadata_mapping_form'),
+    'file' => 'includes/admin.form.inc',
+    'type' => MENU_LOCAL_TASK,
   );
   $items['islandora/object/%/lib4ridora_edit_factors'] = array(
     'title' => 'Impact Factors',
@@ -699,6 +715,24 @@ function lib4ridora_theme($existing, $type, $theme, $path) {
         'availability' => FALSE,
       ),
     ),
+    'lib4ridora_islandora_solr_metadata_injected_author_info' => array(
+      'file' => 'theme/theme.inc',
+      'template' => 'theme/lib4ridora-islandora-solr-metadata-injected-author-info',
+      'variables' => array(
+        'object' => NULL,
+        'info' => NULL,
+        'author_attributes' => array(
+          'class' => array(
+            'author',
+          ),
+        ),
+        'org_attributes' => array(
+          'class' => array(
+            'org',
+          ),
+        ),
+      ),
+    ),
   );
 }
 
@@ -927,5 +961,165 @@ function lib4ridora_ir_citationCModel_islandora_view_object_alter(AbstractObject
       ),
       '#weight' => 3,
     );
+  }
+}
+
+/**
+ * Implements hook_preprocess_islandora_solr_metadata_display().
+ */
+function lib4ridora_preprocess_islandora_solr_metadata_display(&$variables) {
+  if (isset($variables['solr_fields'][LIB4RIDORA_ISLANDORA_SOLR_METADATA_MODS_AUTHOR_PSEUDO_FIELD])) {
+    $pseudo_field =& $variables['solr_fields'][LIB4RIDORA_ISLANDORA_SOLR_METADATA_MODS_AUTHOR_PSEUDO_FIELD];
+
+    module_load_include('inc', 'lib4ridora', 'includes/utilities');
+
+    $author_info = lib4ridora_get_author_info($variables['islandora_object']);
+    $renderable_map = function (array $info) {
+      return array(
+        '#theme' => 'lib4ridora_islandora_solr_metadata_injected_author_info',
+        '#info' => $info,
+      );
+    };
+    $pseudo_field['lib4ridora_renderable'] = array_map($renderable_map, $author_info);
+
+    // Need to populate "value" with something, so the "omit empty values" stuff
+    // doesn't strip out our pseudo-field.
+    $value_map = function (array $info) {
+      if ($info['org']['name']) {
+        return t('@author (@org)', array(
+          '@author' => $info['author']['name'],
+          '@org' => $info['org']['name'],
+        ));
+      }
+      else {
+        return $info['author']['name'];
+      }
+    };
+    $pseudo_field['value'] = array_map($value_map, $author_info);
+  }
+}
+
+/**
+ * Implements hook_process_islandora_solr_metadata_display().
+ */
+function lib4ridora_process_islandora_solr_metadata_display(&$variables) {
+  if (isset($variables['solr_fields'][LIB4RIDORA_ISLANDORA_SOLR_METADATA_MODS_AUTHOR_PSEUDO_FIELD]['lib4ridora_renderable'])) {
+    $pseudo_field =& $variables['solr_fields'][LIB4RIDORA_ISLANDORA_SOLR_METADATA_MODS_AUTHOR_PSEUDO_FIELD];
+    // Need to render each individually, since Solr metadata expects separate
+    // values separately.
+    $pseudo_field['value'] = array_map('drupal_render', $pseudo_field['lib4ridora_renderable']);
+  }
+}
+
+/**
+ * Alter islandora_solr_metadata config form to swap in our validation.
+ *
+ * The core validation would not allow for our pseudo-fields.
+ */
+function lib4ridora_form_islandora_solr_metadata_config_form_alter(&$form, &$form_state) {
+  foreach (array_keys($form['#validate'], 'islandora_solr_metadata_config_form_validate') as $original_validation) {
+    unset($form['#validate'][$original_validation]);
+  }
+  $form['#validate'][] = 'lib4ridora_form_islandora_solr_metadata_config_form_validate';
+}
+
+/**
+ * Overriding validation for the islandora_solr_metadata configuration form.
+ */
+function lib4ridora_form_islandora_solr_metadata_config_form_validate(&$form, &$form_state) {
+  if ($form_state['triggering_element']['#name'] == 'islandora-solr-metadata-add-field') {
+    module_load_include('inc', 'islandora_solr_search', 'includes/luke');
+    $solr_luke = islandora_solr_get_luke();
+    $luke_fields = array_keys($solr_luke['fields']);
+    $field = $form_state['values']['islandora_solr_metadata_fields']['table_wrapper']['add_fieldset']['available_solr_fields'];
+    // XXX: Field check here is divergence.
+    if ($field != LIB4RIDORA_ISLANDORA_SOLR_METADATA_MODS_AUTHOR_PSEUDO_FIELD && !in_array($field, $luke_fields)) {
+      form_set_error('islandora_solr_metadata_fields][table_wrapper][add_fieldset][available_solr_fields', t('The field @field is not a valid field within Solr!', array('@field' => $field)));
+    }
+    else {
+      $added_values = isset($form_state['values']['islandora_solr_metadata_fields']['table_wrapper']['table']['table']) ?
+        array_keys($form_state['values']['islandora_solr_metadata_fields']['table_wrapper']['table']['table']) :
+        array();
+      if (in_array($form_state['values']['islandora_solr_metadata_fields']['table_wrapper']['add_fieldset']['available_solr_fields'], $added_values)) {
+        form_set_error('islandora_solr_metadata_fields][table_wrapper][add_fieldset][available_solr_fields', t('The field @field already exists in this configuration!', array('@field' => $form_state['values']['islandora_solr_metadata_fields']['table_wrapper']['add_fieldset']['available_solr_fields'])));
+      }
+    }
+  }
+  if ($form_state['triggering_element']['#name'] == 'islandora-solr-metadata-fields-remove-selected') {
+    $rows_to_remove = array();
+    foreach ($form_state['values']['islandora_solr_metadata_fields']['table_wrapper']['table']['table']['rows'] as $key => $row) {
+      if ($row['remove_field'] == TRUE) {
+        $rows_to_remove[] = $key;
+      }
+    }
+    if (count($rows_to_remove) === 0) {
+      form_set_error('islandora_solr_metadata', t('Must select at least one entry to remove!'));
+    }
+  }
+  if ($form_state['triggering_element']['#name'] == 'islandora-solr-metadata-cmodels-remove-selected') {
+    $rows_to_remove = array();
+    foreach ($form_state['values']['islandora_solr_metadata_cmodels']['table_wrapper']['table'] as $key => $row) {
+      if ($row !== 0) {
+        $rows_to_remove[] = $key;
+      }
+    }
+    if (count($rows_to_remove) === 0) {
+      form_set_error('islandora_solr_metadata', t('Must select at least one entry to remove!'));
+    }
+  }
+  if ($form_state['triggering_element']['#value'] == 'Save configuration') {
+    $solr_field = $form_state['values']['islandora_solr_metadata_fields']['description_fieldset']['available_solr_fields'];
+    if (!empty($solr_field)) {
+      module_load_include('inc', 'islandora_solr_search', 'includes/luke');
+      $solr_luke = islandora_solr_get_luke();
+      $luke_fields = array_keys($solr_luke['fields']);
+      if (!in_array($solr_field, $luke_fields)) {
+        form_set_error('islandora_solr_metadata_fields][description_fieldset][available_solr_fields', t('The field @field is not a valid field within Solr!', array('@field' => $solr_field)));
+      }
+    }
+  }
+}
+
+/**
+ * Implements hook_form_islandora_solr_metadata_config_field_form_alter().
+ */
+function lib4ridora_form_islandora_solr_metadata_config_field_form_alter(&$form, &$form_state) {
+  list($config_id, $field_name) = $form_state['build_info']['args'];
+  if ($field_name == LIB4RIDORA_ISLANDORA_SOLR_METADATA_MODS_AUTHOR_PSEUDO_FIELD) {
+    $form['wrapper']['hyperlink']['#access'] = $form['wrapper']['truncation']['#access'] = FALSE;
+  }
+}
+
+/**
+ * Implements hook_islandora_solr_metadata_display_elements_alter().
+ */
+function lib4ridora_islandora_solr_metadata_display_elements_alter(&$elements) {
+  if (in_array('ir:citationCModel', $elements['islandora_object']->models)) {
+    module_load_include('inc', 'lib4ridora', 'includes/utilities');
+    $type = lib4ridora_determine_form_name($elements['islandora_object']);
+    if (!$type) {
+      // No mapping; do nothing.
+      return;
+    }
+
+    $displays = variable_get('lib4ridora_islandora_solr_metadata_mappings', array());
+    if (!array_key_exists($type, $displays)) {
+      // No/default configuration selected; do nothing.
+      return;
+    }
+    $display = $displays[$type];
+
+    module_load_include('inc', 'islandora_solr_metadata', 'includes/db');
+    $config_id = islandora_solr_metadata_retrieve_configuration_from_machine_name($display);
+    if (!$config_id) {
+      // Config doesn't exist... Features out of whack?
+      watchdog('lib4ridora', 'The "@name" metadata display does not appear to exist, loading a "@type" object.', array(
+        '@name' => $display,
+        '@type' => $type,
+      ));
+      return;
+    }
+
+    $elements['associations'] = array($config_id);
   }
 }
