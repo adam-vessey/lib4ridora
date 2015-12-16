@@ -73,6 +73,22 @@ function lib4ridora_islandora_required_objects(IslandoraTuque $connection) {
 }
 
 /**
+ * Implements hook_islandora_solr_query_blocks().
+ */
+function lib4ridora_islandora_solr_query_blocks() {
+  return array(
+    'current_query_facet_name' => array(
+      'name' => t('Islandora Query With Facet Title'),
+      'module' => 'lib4ridora',
+      'file' => 'includes/solr_results.inc',
+      'class' => 'IslandoraSolrResultsLib4riBookmark',
+      'function' => 'currentQuery',
+      'form' => NULL,
+    ),
+  );
+}
+
+/**
  * Implements hook_islandora_xml_form_builder_form_associations().
  */
 function lib4ridora_islandora_xml_form_builder_form_associations() {
@@ -292,6 +308,18 @@ function lib4ridora_check_ip($ip_address) {
 function lib4ridora_menu_alter(&$items) {
   // Nuke old "Document" tab.
   unset($items['islandora/object/%islandora_object/islandora_scholar_upload']);
+  $items['islandora/object/%islandora_object/islandora_scholar_romeo']['access callback']
+    = 'lib4ridora_romeo_access';
+}
+
+/**
+ * Access callback, to determine whether or not to create the RoMEO tab.
+ *
+ * Checks if it's enabled, we have the relevant content model, and we have an
+ * ISSN to look up and that a user is not anonymous.
+ */
+function lib4ridora_romeo_access($object) {
+  return islandora_scholar_romeo_access($object) && !user_is_anonymous();
 }
 
 /**
@@ -447,7 +475,7 @@ function lib4ridora_citation_access($op, $object) {
     $pdf_datastreams = array_filter(iterator_to_array($object), 'lib4ridora_multi_embargo_pdf_filter');
     return !empty($pdf_datastreams);
   };
-  return lib4ridora_citation_model_access($op, $object) && $has_pdf($object);
+  return lib4ridora_citation_model_access($op, $object) && $has_pdf($object) && !user_is_anonymous();
 }
 
 /**
@@ -897,6 +925,7 @@ function lib4ridora_block_save($delta = '', $edit = array()) {
  * Implements hook_CMODEL_PID_islandora_view_object().
  */
 function lib4ridora_ir_citationCModel_islandora_view_object_alter(AbstractObject $object, &$rendered) {
+  $tab = lib4ridora_romeo_access($object);
   // Lib4RI does not want the PDF preview or download links.
   unset($rendered['citation.tab']['preview']);
   unset($rendered['citation.tab']['pdf_download']);
