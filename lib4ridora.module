@@ -308,8 +308,6 @@ function lib4ridora_menu_alter(&$items) {
   unset($items['islandora/object/%islandora_object/islandora_scholar_upload']);
   $items['islandora/object/%islandora_object/islandora_scholar_romeo']['access callback']
     = 'lib4ridora_romeo_access';
-  $items['islandora/object/%islandora_object/islandora_scholar_romeo']['access arguments']
-    = array(2);
 }
 
 /**
@@ -319,14 +317,9 @@ function lib4ridora_menu_alter(&$items) {
  * ISSN to look up and that a user is not anonymous.
  */
 function lib4ridora_romeo_access($object) {
-  module_load_include('inc', 'islandora_scholar', 'includes/romeo.tab');
-
-  return variable_get('islandora_scholar_romeo_enable', FALSE) &&
-    in_array('ir:citationCModel', $object->models) &&
-    isset($object['MODS']) &&
-    islandora_datastream_access(ISLANDORA_VIEW_OBJECTS, $object['MODS']) &&
-    RomeoView::getISSN($object) &&
-    !user_is_anonymous();
+  module_load_include('module', 'islandora_scholar', 'islandora_scholar');
+  $access = islandora_scholar_romeo_access($object);
+  return $access && !user_is_anonymous();
 }
 
 /**
