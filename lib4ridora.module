@@ -461,7 +461,7 @@ function lib4ridora_citation_access($op, $object) {
     $pdf_datastreams = array_filter(iterator_to_array($object), 'lib4ridora_multi_embargo_pdf_filter');
     return !empty($pdf_datastreams);
   };
-  return lib4ridora_citation_model_access($op, $object) && $has_pdf($object) && user_is_logged_in();
+  return lib4ridora_citation_model_access($op, $object) && $has_pdf($object) && !user_is_anonymous();
 }
 
 /**
