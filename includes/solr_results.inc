@@ -116,7 +116,7 @@ class IslandoraSolrResultsLib4riBookmark extends IslandoraSolrResultsBookmark {
         }
       }
     }
-    return  t("@prefix", array("@prefix" => $data['prefix'])) . ": " . $markup;
+    return t("@prefix", array("@prefix" => $data['prefix'])) . ": " . $markup;
   }
 
   /**
