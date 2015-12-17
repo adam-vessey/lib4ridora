@@ -51,7 +51,7 @@ function lib4ridora_get_recent_additions() {
   $model_field = variable_get('islandora_solr_content_model_field', 'RELS_EXT_hasModel_uri_ms');
   $qp->solrParams['fq'][] = "$model_field:info\:fedora\/ir\:citationCModel";
   $qp->solrParams['sort'] = variable_get('lib4ridora_recent_additions_block_sort_parameter', 'fgs_createdDate_dt desc');
-  $qp->solrLimit = 5;
+  $qp->solrLimit = 10;
   $qp->executeQuery(FALSE);
   $items = array();
   foreach ($qp->islandoraSolrResult['response']['objects'] as $item) {
