@@ -37,16 +37,28 @@ class IslandoraSolrResultsLib4riBookmark extends IslandoraSolrResultsBookmark {
     $cmodels = array(
       'info:fedora/islandora:organizationCModel' => array(
         "fgs_label_s",
+        "prefix" => array(
+          "Organizational Unit",
+        ),
       ),
       'info:fedora/islandora:collectionCModel' => array(
         "dc.title",
+        "prefix" => array(
+          "Collection",
+        ),
       ),
       'info:fedora/lib4ri:journalCModel' => array(
         "fgs_label_s",
+        "prefix" => array(
+          "Journal",
+        ),
       ),
       'info:fedora/islandora:personCModel' => array(
         'MADS_given_mt',
         'MADS_family_mt',
+        "prefix" => array(
+          "Author",
+        ),
       ),
     );
 
@@ -55,6 +67,7 @@ class IslandoraSolrResultsLib4riBookmark extends IslandoraSolrResultsBookmark {
     $data = array(
       "key" => NULL,
       "fields" => NULL,
+      "prefix" => "",
     );
 
     foreach ($cmodels as $key => $value) {
@@ -62,6 +75,7 @@ class IslandoraSolrResultsLib4riBookmark extends IslandoraSolrResultsBookmark {
       if (FALSE !== $found) {
         $data['key'] = $key;
         $data['fields'] = $cmodels[$key];
+        $data['prefix'] = $cmodels[$key]['prefix'][0];
         $markup .= $this->getMarkupForCModel($data, $object_result);
       }
     }
@@ -92,15 +106,17 @@ class IslandoraSolrResultsLib4riBookmark extends IslandoraSolrResultsBookmark {
   protected function getMarkupForCModel($data, $object_results) {
     $markup = "";
     foreach ($data['fields'] as $key => $value) {
-      $field = isset($object_results['solr_doc'][$value]) ? $object_results['solr_doc'][$value] : "";
-      if (is_array($field)) {
-        $markup .= implode(" ", $field) . " ";
-      }
-      else {
-        $markup .= $field . " ";
+      if (is_string($value)) {
+        $field = isset($object_results['solr_doc'][$value]) ? $object_results['solr_doc'][$value] : "";
+        if (is_array($field)) {
+          $markup .= implode(" ", $field) . " ";
+        }
+        else {
+          $markup .= $field . " ";
+        }
       }
     }
-    return $markup;
+    return t("@prefix", array("@prefix" => $data['prefix'])) . ": " . $markup;
   }
 
   /**
