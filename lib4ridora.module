@@ -910,6 +910,7 @@ function lib4ridora_block_save($delta = '', $edit = array()) {
   switch ($delta) {
     case 'lib4ridora_organizational_units':
       variable_set('lib4ridora_organization_block_organization_field', $edit['field']);
+      variable_set('lib4ridora_organization_block_results_to_omit', $edit['results_to_omit']);
       break;
 
     case 'lib4ridora_recent_additions':
