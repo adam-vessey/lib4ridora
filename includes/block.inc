@@ -12,12 +12,22 @@
  *   An array representing an organization block content form element.
  */
 function lib4ridora_get_organizational_block_content() {
+  module_load_include('inc', 'islandora_solr', 'includes/utilities');
   $facets = lib4ridora_get_organization_facets();
-  $field = variable_get('lib4ridora_organization_block_organization_field', 'mods_name_personal_affiliation_ms');
+  ksort($facets);
   $items = array();
-  foreach ($facets as $facet => $count) {
+  foreach ($facets as $facet => $info) {
     $items[] = array(
-      'data' => l($facet, "islandora/search/$field:($facet)") . "<span class='label label-default'>($count)</span>",
+      'data' => l($facet, 'islandora/search/*:*', array(
+        'query' => array(
+          'f' => array(
+            format_string('!field:"!value"', array(
+              '!field' => $info['field'],
+              '!value' => islandora_solr_facet_escape($facet),
+            )),
+          ),
+        ),
+      )) . "<span class='label label-default'>({$info['count']})</span>",
       'class' => array('list-group-item'),
     );
   }
@@ -79,9 +89,15 @@ function lib4ridora_organizational_block_configuration_form() {
   $form = array(
     'field' => array(
       '#type' => 'textfield',
-      '#title' => t('Organization Solr Field'),
-      '#description' => t('Solr field to use to search for organizations.'),
-      '#default_value' => variable_get('lib4ridora_organization_block_organization_field', 'mods_name_personal_affiliation_ms'),
+      '#title' => t('Organization Solr Fields'),
+      '#description' => t('Comma-and-space-separated names of Solr fields to use to search for organizations.'),
+      '#default_value' => variable_get('lib4ridora_organization_block_organization_field', 'mods_name_personal_affiliation_ms, mods_name_corporate_affiliation_ms'),
+    ),
+    'results_to_omit' => array(
+      '#type' => 'textarea',
+      '#title' => t('Omitted Organizations'),
+      '#description' => t('A list of organization to omit from facet results, separated by new lines.'),
+      '#default_value' => variable_get('lib4ridora_organization_block_results_to_omit', ''),
     ),
   );
   return $form;
@@ -109,20 +125,31 @@ function lib4ridora_recent_additions_block_configuration_form() {
  * Returns the facet fields for a Solr facet search on organizations.
  *
  * @return array
- *   An associative array pairing faceted organization values with their count.
+ *   An associative array with facets as keys, each containing an array of
+ *   'field' as the query field and 'count' as the facet count.
  */
 function lib4ridora_get_organization_facets() {
-  $org_field = variable_get('lib4ridora_organization_block_organization_field', 'mods_name_personal_affiliation_ms');
+  $org_fields = explode(', ', variable_get('lib4ridora_organization_block_organization_field', 'mods_name_personal_affiliation_ms, mods_name_corporate_affiliation_ms'));
+  $facets = array();
+  $omitted_facets = explode(PHP_EOL, variable_get('lib4ridora_organization_block_results_to_omit', ''));
   $qp = new IslandoraSolrQueryProcessor();
   $qp->buildQuery('*:*');
-  $qp->solrParams['fl'] = "PID, {$org_field}";
+  $qp->solrParams['fl'] = "PID, {$org_fields}";
   $qp->solrParams['facet.limit'] = 100000;
   $qp->solrParams['facet.mincount'] = 1;
-  $qp->solrParams['facet.field'] = array();
-  $qp->solrParams['facet.query'] = array('*');
-  $qp->solrParams['facet.field'] = array($org_field);
+  $qp->solrParams['facet.field'] = $org_fields;
   $qp->executeQuery(FALSE);
-  return $qp->islandoraSolrResult['facet_counts']['facet_fields'][$org_field];
+  foreach ($qp->islandoraSolrResult['facet_counts']['facet_fields'] as $organization => $results) {
+    foreach ($results as $facet => $count) {
+      if (!in_array($facet, $omitted_facets)) {
+        $facets[$facet] = array(
+          'field' => $organization,
+          'count' => $count,
+        );
+      }
+    }
+  }
+  return $facets;
 }
 
 /**
