@@ -17,9 +17,17 @@ function lib4ridora_get_organizational_block_content() {
   ksort($facets);
   $items = array();
   foreach ($facets as $facet => $info) {
-    $escaped_facet = islandora_solr_lesser_escape($facet);
     $items[] = array(
-      'data' => l($facet, "islandora/search/{$info['field']}:($escaped_facet)") . "<span class='label label-default'>({$info['count']})</span>",
+      'data' => l($facet, 'islandora/search/*:*', array(
+        'query' => array(
+          'f' => array(
+            format_string('!field:"!value"', array(
+              '!field' => $info['field'],
+              '!value' => islandora_solr_facet_escape($facet),
+            )),
+          ),
+        ),
+      )) . "<span class='label label-default'>({$info['count']})</span>",
       'class' => array('list-group-item'),
     );
   }
@@ -129,8 +137,6 @@ function lib4ridora_get_organization_facets() {
   $qp->solrParams['fl'] = "PID, {$org_fields}";
   $qp->solrParams['facet.limit'] = 100000;
   $qp->solrParams['facet.mincount'] = 1;
-  $qp->solrParams['facet.field'] = array();
-  $qp->solrParams['facet.query'] = array('*');
   $qp->solrParams['facet.field'] = $org_fields;
   $qp->executeQuery(FALSE);
   foreach ($qp->islandoraSolrResult['facet_counts']['facet_fields'] as $organization => $results) {
