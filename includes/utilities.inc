@@ -167,3 +167,80 @@ function lib4ridora_retrieve_filtered_pdfs(AbstractObject $object) {
   ksort($dses);
   return $dses;
 }
+
+/**
+ * Extract author info from an object.
+ *
+ * @param AbstractObject $object
+ *   An object from which to extract a list of authors.
+ *
+ * @return array
+ *   An array of associtive arrays of the form:
+ *   - author: An associative array containing:
+ *     - name: The author's name.
+ *     - id: The author's ID.
+ *   - org: An associative array containing:
+ *     - name: The organization's name.
+ *     - id: The organization's ID.
+ */
+function lib4ridora_get_author_info(AbstractObject $object) {
+  $dom = new DOMDocument();
+  $dom->loadXML($object['MODS']->content);
+  $xpath = new DOMXPath($dom);
+  $xpath->registerNamespace('mods', 'http://loc.gov/mods/v3');
+
+  $authors = array();
+
+  foreach ($xpath->query('//mods:mods/mods:name[@type="personal"][mods:role/mods:roleTerm[@authority="marcrelator" and @type="text"]/text() = "author"]') as $person) {
+    $info = array(
+      'author' => array(
+        'name' => $xpath->evaluate('normalize-space(mods:fullName)', $person),
+        'id' => $xpath->evaluate('string(mods:nameIdentifier[@type="authorId"]/text())', $person),
+      ),
+      'org' => array(
+        'name' => $xpath->evaluate('normalize-space(mods:affiliation)', $person),
+        'id' => $xpath->evaluate('string(mods:nameIdentifier[@type="organizational unit id"]/text())', $person),
+      ),
+    );
+
+    if (!$info['author']['name']) {
+      $info['author']['name'] = $xpath->evaluate('normalize-space(concat(mods:namePart[@type="given"], " ", mods:namePart[@type="family"]))', $person);
+    }
+
+    $authors[] = $info;
+  }
+
+  return $authors;
+}
+
+/**
+ * Determine the form to use to edit the given object.
+ *
+ * @param AbstractObject $object
+ *   The object for which to determine the form.
+ *
+ * @return string|NULL
+ *   The name of the form if we have one; otherwise, NULL.
+ */
+function lib4ridora_determine_form_name(AbstractObject $object) {
+  if (!isset($object['MODS'])) {
+    watchdog('lib4ridora', 'Attempted to determine the form for an object without MODS: @object_id', array(
+      '@object_id' => $object->id,
+    ));
+    return;
+  }
+  $form_associations = lib4ridora_get_custom_citation_form_associations();
+
+  // Read Genre from MODS to determine what form to use for editing.
+  $mods = new DOMDocument();
+  $mods->loadXML($object['MODS']->content);
+  $xpath = new DOMXPath($mods);
+  $xpath->registerNamespace('mods', 'http://www.loc.gov/mods/v3');
+
+  foreach ($xpath->query('//mods:mods/mods:genre[@authorityURI="info:eu-repo/semantics" and @valueURI="info:eu-repo/semantics/article"]') as $genre) {
+    $genre_text = $genre->nodeValue;
+    if (isset($form_associations[$genre_text])) {
+      return $form_associations[$genre_text];
+    }
+  }
+}
