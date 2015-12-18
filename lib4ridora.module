@@ -1001,8 +1001,10 @@ function lib4ridora_form_islandora_solr_advanced_search_form_alter(&$form, &$for
   module_load_include('inc', 'lib4ridora', 'includes/advanced_search');
   $form['year'] = array(
     '#type' => 'markup',
-    '#prefix' => '<div id="lib4ri-advanced-search-year">',
-    '#suffix' => '</div>',
+    '#id' => 'lib4ridora-year-range',
+    '#theme_wrappers' => array(
+      'container',
+    ),
     '#tree' => TRUE,
   );
   $form['year']['select'] = array(
@@ -1027,24 +1029,18 @@ function lib4ridora_form_islandora_solr_advanced_search_form_alter(&$form, &$for
 
   $form['pub_type'] = array(
     '#type' => 'checkboxes',
-    '#prefix' => '<div id="lib4ri-advanced-search-pub-type">',
-    '#suffix' => '</div>',
     '#options' => lib4ridora_get_all_publication_types(),
     '#title' => t('Publication Type'),
   );
 
   $form['org_unit'] = array(
     '#type' => 'select',
-    '#prefix' => '<div id="lib4ri-advanced-search-org-unit">',
-    '#suffix' => '</div>',
     '#options' => lib4ridora_get_all_organizational_units(),
     '#title' => t('Organizational Unit'),
   );
 
   $form['peer_review'] = array(
     '#type' => 'checkboxes',
-    '#prefix' => '<div id="lib4ri-advanced-search-peer-review">',
-    '#suffix' => '</div>',
     '#options' => array(
       'yes' => t('Yes'),
       'no' => t('No'),
@@ -1055,8 +1051,6 @@ function lib4ridora_form_islandora_solr_advanced_search_form_alter(&$form, &$for
 
   $form['full_text'] = array(
     '#type' => 'checkboxes',
-    '#prefix' => '<div id="lib4ri-advanced-search-full-text">',
-    '#suffix' => '</div>',
     '#options' => array(
       'open access' => t('Open Access'),
       'restricted' => t('Restricted'),
