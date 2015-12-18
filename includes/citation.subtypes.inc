@@ -88,6 +88,9 @@ function lib4ridora_citation_subtypes() {
   return $map;
 }
 
+/**
+ * Helper function to list Solr metadata options.
+ */
 function lib4ridora_citation_subtype_islandora_solr_metadata_options() {
   module_load_include('inc', 'islandora_solr_metadata', 'includes/db');
   $raw_associations = islandora_solr_metadata_get_associations();
@@ -98,22 +101,24 @@ function lib4ridora_citation_subtype_islandora_solr_metadata_options() {
   return $associations;
 }
 
+/**
+ * Helper function to obtain eligible forms.
+ *
+ * @return array
+ *   An associative array wherein keys are equal to their related values, which
+ *   represent form names from XML forms.
+ */
 function lib4ridora_citation_subtype_form_options() {
-  return array();
+  module_load_include('inc', 'xml_form_builder', 'includes/associations');
+  $forms = array();
+  foreach (xml_form_builder_get_associations(array(), array(), array('MODS')) as $id => $association) {
+    $forms[$association['form_name']] = $association['form_name'];
+  }
+  return $forms;
 }
 
 /**
  * Form building function; permit the selection of mappings.
- *
- * @param string $variable
- *   The name of the Drupal variable in which to store values.
- * @param array $strings
- *   An associative array mapping a few string for use in the display, including:
- *   - title: Title to use near the top of the form.
- *   - description: Description to use near the top of the form.
- *   - mapping_title: Title for each type, with some substitutions available:
- *     - '@type': The human-readable name of the given subtype.
- *   - submit: The text for the submit button.
  */
 function lib4ridora_citation_subtype_mapping_form($form, &$form_state) {
   form_load_include($form_state, 'inc', 'lib4ridora', 'includes/utilities');
@@ -124,6 +129,10 @@ function lib4ridora_citation_subtype_mapping_form($form, &$form_state) {
     '#type' => 'vertical_tabs',
   );
 
+  $subtypes = lib4ridora_citation_subtypes();
+  $map_for_forms = function ($subtype) {
+    return $subtype['name'];
+  };
   $variables = array(
     'lib4ridora_islandora_solr_metadata_mappings' => array(
       'options' => lib4ridora_citation_subtype_islandora_solr_metadata_options(),
@@ -140,10 +149,13 @@ function lib4ridora_citation_subtype_mapping_form($form, &$form_state) {
         'description' => t('Instead of using content models to choose which XML form should be used, the mapping on this page can be used.'),
         'mapping_title' => t('Mapping for @type'),
       ),
+      // Matches present defaults with explicitly matching form names.
+      'defaults' => array_map($map_for_forms, $subtypes),
     ),
   );
   foreach ($variables as $variable => $info) {
-    $defaults = variable_get($variable, array());
+    $current_value = variable_get($variable, array());
+    $defaults = isset($info['defaults']) ? $info['defaults'] : array();
 
     $base_select = array(
       '#type' => 'select',
@@ -155,18 +167,21 @@ function lib4ridora_citation_subtype_mapping_form($form, &$form_state) {
     $form['settings'][$variable] = array(
       '#type' => 'fieldset',
       '#group' => 'subtype_mappings',
-      '#title' => $info['strings']['title'],
-      '#description' => $info['strings']['description'],
+      '#title' => filter_xss($info['strings']['title']),
+      '#description' => filter_xss($info['strings']['description']),
     );
-    foreach (lib4ridora_citation_subtypes() as $type => $type_info) {
+    foreach ($subtypes as $type => $type_info) {
       $form['settings'][$variable][$type] = $base_select + array(
-        '#title' => format_string($info['strings']['mapping_title'], array(
+        '#title' => filter_xss(format_string($info['strings']['mapping_title'], array(
           '@type' => $type_info['name'],
-        )),
-        '#description' => $type_info['description'],
-        '#default_value' => ((isset($defaults[$type]) && isset($info['options'][$defaults[$type]])) ?
-          $defaults[$type] :
-          NULL),
+        ))),
+        '#description' => filter_xss($type_info['description']),
+        // Current value, defined default, or NULL.
+        '#default_value' => ((isset($current_value[$type]) && isset($info['options'][$current_value[$type]])) ?
+          $current_value[$type] :
+          ((isset($defaults[$type]) && isset($info['options'][$defaults[$type]])) ?
+            $defaults[$type] :
+            NULL)),
       );
     }
   }
