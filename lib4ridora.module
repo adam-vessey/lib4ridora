@@ -377,13 +377,13 @@ function lib4ridora_menu() {
     'description' => 'Configure lib4ridora.',
     'type' => MENU_DEFAULT_LOCAL_TASK,
   );
-  $items['admin/islandora/solution_pack_config/lib4ridora/solr_metadata'] = array(
-    'title' => 'Metadata Mappings',
-    'description' => 'Configure lib4ridora citation metadata displays.',
+  $items['admin/islandora/solution_pack_config/lib4ridora/publication_types'] = array(
+    'title' => 'Publication Type Mappings',
+    'description' => 'Configure lib4ridora publication type mappings.',
     'page callback' => 'drupal_get_form',
     'access arguments' => array('administer site configuration'),
-    'page arguments' => array('lib4ridora_islandora_solr_metadata_mapping_form'),
-    'file' => 'includes/admin.form.inc',
+    'page arguments' => array('lib4ridora_citation_subtype_mapping_form'),
+    'file' => 'includes/citation.subtypes.inc',
     'type' => MENU_LOCAL_TASK,
   );
   $items['islandora/object/%/lib4ridora_edit_factors'] = array(
