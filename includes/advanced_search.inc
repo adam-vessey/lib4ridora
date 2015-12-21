@@ -143,6 +143,11 @@ function lib4ridora_construct_publication_type_filter($form_state) {
   // Merge down to a flat array.
   $genres = array_reduce($genres_blocks, 'array_merge', array());
 
+  if (!$genres) {
+    // No genres; no filter needed.
+    return '';
+  }
+
   module_load_include("inc", "islandora_solr", "includes/utilities");
   $quote = function ($string) {
     return format_string('"!string"', array(
