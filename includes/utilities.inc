@@ -202,21 +202,9 @@ function lib4ridora_determine_form_name(AbstractObject $object) {
     ));
     return;
   }
+
   module_load_include('inc', 'lib4ridora', 'includes/citation.subtypes');
-  $types = lib4ridora_citation_subtypes();
-
-  // Read Genre from MODS to determine what form to use for editing.
-  $mods = new DOMDocument();
-  $mods->loadXML($object['MODS']->content);
-  $xpath = new DOMXPath($mods);
-  $xpath->registerNamespace('mods', 'http://www.loc.gov/mods/v3');
-
-  foreach ($xpath->query('//mods:mods/mods:genre[@authorityURI="info:eu-repo/semantics"]') as $genre) {
-    $genre_text = $genre->nodeValue;
-    foreach ($types as $type => $info) {
-      if (in_array($info['genres'], $genre_text)) {
-        return $info['form'];
-      }
-    }
-  }
+  $subtypes = lib4ridora_determine_subtypes($object);
+  $first = reset($subtypes);
+  return $first ? $first['form'] : NULL;
 }

@@ -219,3 +219,38 @@ function lib4ridora_citation_subtype_mapping_form_submit(&$form, &$form_state) {
   }
   drupal_set_message(t('Saved mappings.'));
 }
+
+/**
+ * Helper to get the subtype(s) of a given object.
+ *
+ * @param AbstractObject $object
+ *   The object to test.
+ *
+ * @return array
+ *   An associative array similar to lib4ridora_citation_subtypes().
+ */
+function lib4ridora_determine_subtypes(AbstractObject $object) {
+  if (!isset($object['MODS'])) {
+    watchdog('lib4ridora', 'Attempted to determine the subtype of an object without MODS: @object_id', array(
+      '@object_id' => $object->id,
+    ));
+    return;
+  }
+  $types = lib4ridora_citation_subtypes();
+
+  // Read Genre from MODS to determine what form to use for editing.
+  $mods = new DOMDocument();
+  $mods->loadXML($object['MODS']->content);
+  $xpath = new DOMXPath($mods);
+  $xpath->registerNamespace('mods', 'http://www.loc.gov/mods/v3');
+
+  $subtypes = array();
+  foreach ($xpath->query('//mods:mods/mods:genre[@authorityURI="info:eu-repo/semantics"]') as $genre) {
+    $genre_text = $genre->nodeValue;
+    $test_match = function ($genres) use ($genre_text) {
+      return in_array($genre_text, $genres);
+    };
+    $subtypes += array_filter($types, $test_match);
+  }
+  return $subtypes;
+}

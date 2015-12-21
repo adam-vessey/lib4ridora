@@ -1151,19 +1151,17 @@ function lib4ridora_form_islandora_solr_metadata_config_field_form_alter(&$form,
  */
 function lib4ridora_islandora_solr_metadata_display_elements_alter(&$elements) {
   if (in_array('ir:citationCModel', $elements['islandora_object']->models)) {
-    module_load_include('inc', 'lib4ridora', 'includes/utilities');
-    $type = lib4ridora_determine_form_name($elements['islandora_object']);
-    if (!$type) {
-      // No mapping; do nothing.
+    module_load_include('inc', 'lib4ridora', 'includes/citation.subtypes');
+    $display = NULL;
+    foreach(lib4ridora_determine_subtypes($elements['islandora_object']) as $type => $info) {
+      if ($info['display'] !== NULL) {
+        $display = $info['display'];
+        break;
+      }
+    }
+    if ($display === NULL) {
       return;
     }
-
-    $displays = variable_get('lib4ridora_islandora_solr_metadata_mappings', array());
-    if (!array_key_exists($type, $displays)) {
-      // No/default configuration selected; do nothing.
-      return;
-    }
-    $display = $displays[$type];
 
     module_load_include('inc', 'islandora_solr_metadata', 'includes/db');
     $config_id = islandora_solr_metadata_retrieve_configuration_from_machine_name($display);
