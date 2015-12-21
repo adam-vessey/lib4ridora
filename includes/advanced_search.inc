@@ -12,15 +12,14 @@
  *   Associative array of publication types formatted for #options
  */
 function lib4ridora_get_all_publication_types() {
-  $facet_fields = array('mods_genre_ms');
+  $field = variable_get('lib4ridora_solr_field_publication_type', 'mods_genre_ms');
+  $facet_fields = array($field);
   $facets = lib4ridora_facet_query($facet_fields);
 
   // If there's results, construct an array where the keys are the genres
   // as in Solr, and the values are formatted to be labels.
-  if (isset($facets['mods_genre_ms'])) {
-    $keys = array_keys($facets['mods_genre_ms']);
-    $values = array_map('ucwords', $keys);
-    return array_combine($keys, $values);
+  if (isset($facets[$field]) && $facets[$field]) {
+    return drupal_map_assoc(array_keys($facets[$field]), 'ucwords');
   }
 
   // Default to returning an empty array.
@@ -46,8 +45,7 @@ function lib4ridora_get_all_organizational_units() {
       continue;
     }
     $keys = array_keys($facet);
-    $values = array_map('ucwords', $keys);
-    $org_units = array_merge($org_units, array_combine($keys, $values));
+    $org_units = array_merge($org_units, drupal_map_assoc($keys, 'ucwords'));
   }
 
   // Return 'all' alongside whatever else.
@@ -62,7 +60,6 @@ function lib4ridora_get_all_organizational_units() {
  */
 function lib4ridora_parse_affiliation_fields() {
   $comma_separated_list = variable_get('lib4ridora_solr_field_affiliations', 'mods_name_personal_affiliation_ms,mods_name_corporate_affiliation_ms,mods_name_conference_affiliation_ms');
-  $trimmed = trim($comma_separated_list);
   $exploded = explode(",", $trimmed);
   return array_map("lib4ridora_trim_and_solr_escape", $exploded);
 }
@@ -98,7 +95,8 @@ function lib4ridora_facet_query(array $facet_fields) {
   $qp->solrParams['facet.mincount'] = 1;
   $qp->solrParams['facet.field'] = $facet_fields;
   $qp->solrParams['facet'] = 'true';
-  $qp->solrLimit = 1;
+  $qp->solrParams['facet.limit'] = 1000000;
+  $qp->solrLimit = 0;
   $qp->executeQuery();
 
   return $qp->islandoraSolrResult['facet_counts']['facet_fields'];
@@ -120,7 +118,7 @@ function lib4ridora_construct_year_filter($form_state) {
   $from = empty($form_state['values']['year']['from']) ? "*" : $form_state['values']['year']['from'];
 
   // If nothing was entered in the date fields, exit early.
-  if (strcmp($to, "*") == 0 && strcmp($from, "*") == 0) {
+  if ($to == "*" && $from == "*") {
     return "";
   }
 
@@ -191,7 +189,7 @@ function lib4ridora_construct_publication_type_filter($form_state) {
  *   Solr query statement
  */
 function lib4ridora_construct_solr_statement($field_name, $field_value) {
-  if (strcmp($field_value, "*") != 0) {
+  if ($field_value != "*") {
     $field_value = '"' . $field_value . '"';
   }
   return "$field_name:$field_value";
@@ -234,7 +232,7 @@ function lib4ridora_construct_organization_unit_filter(&$form_state) {
   // Get the organizational unit value from the dropdown.
   $org_unit = $form_state['values']['org_unit'];
 
-  if (strcmp($org_unit, "*") == 0) {
+  if ($org_unit == "*") {
     return "";
   }
 

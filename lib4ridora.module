@@ -1001,8 +1001,10 @@ function lib4ridora_form_islandora_solr_advanced_search_form_alter(&$form, &$for
   module_load_include('inc', 'lib4ridora', 'includes/advanced_search');
   $form['year'] = array(
     '#type' => 'markup',
-    '#prefix' => '<div id="lib4ri-advanced-search-year">',
-    '#suffix' => '</div>',
+    '#id' => 'lib4ridora-year-range',
+    '#theme_wrappers' => array(
+      'container',
+    ),
     '#tree' => TRUE,
   );
   $form['year']['select'] = array(
@@ -1027,46 +1029,54 @@ function lib4ridora_form_islandora_solr_advanced_search_form_alter(&$form, &$for
 
   $form['pub_type'] = array(
     '#type' => 'checkboxes',
-    '#prefix' => '<div id="lib4ri-advanced-search-pub-type">',
-    '#suffix' => '</div>',
     '#options' => lib4ridora_get_all_publication_types(),
     '#title' => t('Publication Type'),
+    // XXX: Wrapping element desired to counteract core CSS at this level, and
+    // #theme_wrappers do not quite cut it.
+    '#prefix' => '<div id="lib4ri-advanced-search-pub-type">',
+    '#suffix' => '</div>',
   );
 
   $form['org_unit'] = array(
     '#type' => 'select',
-    '#prefix' => '<div id="lib4ri-advanced-search-org-unit">',
-    '#suffix' => '</div>',
     '#options' => lib4ridora_get_all_organizational_units(),
     '#title' => t('Organizational Unit'),
+    // XXX: Wrapping element desired to counteract core CSS at this level, and
+    // #theme_wrappers do not quite cut it.
+    '#prefix' => '<div id="lib4ri-advanced-search-org-unit">',
+    '#suffix' => '</div>',
   );
 
   $form['peer_review'] = array(
     '#type' => 'checkboxes',
-    '#prefix' => '<div id="lib4ri-advanced-search-peer-review">',
-    '#suffix' => '</div>',
     '#options' => array(
       'yes' => t('Yes'),
       'no' => t('No'),
       'not specified' => t('Not Specified'),
     ),
     '#title' => t('Peer Reviewed'),
+    // XXX: Wrapping element desired to counteract core CSS at this level, and
+    // #theme_wrappers do not quite cut it.
+    '#prefix' => '<div id="lib4ri-advanced-search-peer-review">',
+    '#suffix' => '</div>',
   );
 
   $form['full_text'] = array(
     '#type' => 'checkboxes',
-    '#prefix' => '<div id="lib4ri-advanced-search-full-text">',
-    '#suffix' => '</div>',
     '#options' => array(
       'open access' => t('Open Access'),
       'restricted' => t('Restricted'),
       'no full text' => t('No Full Text'),
     ),
     '#title' => t('Full Text'),
+    // XXX: Wrapping element desired to counteract core CSS at this level, and
+    // #theme_wrappers do not quite cut it.
+    '#prefix' => '<div id="lib4ri-advanced-search-full-text">',
+    '#suffix' => '</div>',
   );
 
   $form['controls']['#weight'] = 100;
-  $form['#submit'][0] = 'lib4ridora_solr_advanced_search_form_submit';
+  $form['#submit'][] = 'lib4ridora_solr_advanced_search_form_submit';
 }
 
 /**
@@ -1081,74 +1091,24 @@ function lib4ridora_form_islandora_solr_advanced_search_form_alter(&$form, &$for
  */
 function lib4ridora_solr_advanced_search_form_submit($form, &$form_state) {
   module_load_include('inc', 'lib4ridora', 'includes/advanced_search');
-  module_load_include('inc', 'islandora_solr', 'includes/utilities');
-  // Collect query values.
-  $query_array = array();
-  foreach ($form_state['values']['terms'] as $term) {
-    $field = $term['field'];
-    $search = trim($term['search']);
-    $search = islandora_solr_replace_slashes($search);
-    $boolean = (isset($term['boolean'])) ? $term['boolean'] : variable_get('islandora_solr_search_boolean', 'user');
-    $field = islandora_solr_lesser_escape($field);
-    // Add query.
-    if (!empty($search)) {
-      $query_array[] = array(
-        'search' => "$field:($search)",
-        'boolean' => $boolean,
-      );
-    }
-  }
-  // Create query.
-  $query = '';
-  $i = 0;
-  foreach ($query_array as $term) {
-    $query .= $term['search'];
-    if (count($query_array) - 1 != $i) {
-      $query .= ' ' . $term['boolean'] . ' ';
-    }
-    $i++;
-  }
-  // Check if query is empty.
-  if (empty($query)) {
-    $query = '*:*';
-  }
 
-  // Handle filters.
-  $filters = array();
-  if (isset($form_state['values']['islandora_solr_allow_preserve_filters']) && $form_state['values']['islandora_solr_allow_preserve_filters'] && isset($_GET['f'])) {
-    $filters[] = $_GET['f'];
-  }
-
-  $year_filter = lib4ridora_construct_year_filter($form_state);
-  if (!empty($year_filter)) {
-    $filters[] = $year_filter;
-  }
-
-  $pub_type_filter = lib4ridora_construct_publication_type_filter($form_state);
-  if (!empty($pub_type_filter)) {
-    $filters[] = $pub_type_filter;
-  }
-
-  $org_unit_filter = lib4ridora_construct_organization_unit_filter($form_state);
-  if (!empty($org_unit_filter)) {
-    $filters[] = $org_unit_filter;
-  }
-
-  $peer_review_filter = lib4ridora_construct_peer_reviewed_filter($form_state);
-  if (!empty($peer_review_filter)) {
-    $filters[] = $peer_review_filter;
-  }
-
-  $full_text_filter = lib4ridora_construct_full_text_filter($form_state);
-  if (!empty($full_text_filter)) {
-    $filters[] = $full_text_filter;
-  }
-
-  // Navigate to results page.
-  $form_state['redirect'] = array(
-    ISLANDORA_SOLR_SEARCH_PATH . "/$query",
-    array('query' => array('f' => $filters)),
+  $filters = array(
+    lib4ridora_construct_year_filter($form_state),
+    lib4ridora_construct_publication_type_filter($form_state),
+    lib4ridora_construct_organization_unit_filter($form_state),
+    lib4ridora_construct_peer_reviewed_filter($form_state),
+    lib4ridora_construct_full_text_filter($form_state),
   );
+  $filters = array_filter($filters);
+
+  if ($filters) {
+    // Jam our filters into the redirect.
+    $form_state['redirect'][1] = array_merge_recursive($form_state['redirect'][1], array(
+      'query' => array(
+        'f' => $filters,
+      ),
+    ));
+  }
 }
 
 /**
