@@ -1153,7 +1153,7 @@ function lib4ridora_islandora_solr_metadata_display_elements_alter(&$elements) {
   if (in_array('ir:citationCModel', $elements['islandora_object']->models)) {
     module_load_include('inc', 'lib4ridora', 'includes/citation.subtypes');
     $display = NULL;
-    foreach(lib4ridora_determine_subtypes($elements['islandora_object']) as $type => $info) {
+    foreach (lib4ridora_determine_subtypes($elements['islandora_object']) as $type => $info) {
       if ($info['display'] !== NULL) {
         $display = $info['display'];
         break;
