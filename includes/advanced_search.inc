@@ -75,7 +75,8 @@ function lib4ridora_facet_query(array $facet_fields) {
   $qp->solrParams['facet.mincount'] = 1;
   $qp->solrParams['facet.field'] = $facet_fields;
   $qp->solrParams['facet'] = 'true';
-  $qp->solrLimit = 1;
+  $qp->solrParams['facet.limit'] = 1000000;
+  $qp->solrLimit = 0;
   $qp->executeQuery();
 
   return $qp->islandoraSolrResult['facet_counts']['facet_fields'];
@@ -97,7 +98,7 @@ function lib4ridora_construct_year_filter($form_state) {
   $from = empty($form_state['values']['year']['from']) ? "*" : $form_state['values']['year']['from'];
 
   // If nothing was entered in the date fields, exit early.
-  if (strcmp($to, "*") == 0 && strcmp($from, "*") == 0) {
+  if ($to == "*" && $from == "*") {
     return "";
   }
 
@@ -173,7 +174,7 @@ function lib4ridora_construct_publication_type_filter($form_state) {
  *   Solr query statement
  */
 function lib4ridora_construct_solr_statement($field_name, $field_value) {
-  if (strcmp($field_value, "*") != 0) {
+  if ($field_value != "*") {
     $field_value = '"' . $field_value . '"';
   }
   return "$field_name:$field_value";
@@ -216,7 +217,7 @@ function lib4ridora_construct_organization_unit_filter(&$form_state) {
   // Get the organizational unit value from the dropdown.
   $org_unit = $form_state['values']['org_unit'];
 
-  if (strcmp($org_unit, "*") == 0) {
+  if ($org_unit ==  "*") {
     return "";
   }
 
