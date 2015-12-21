@@ -167,11 +167,6 @@ function lib4ridora_construct_publication_type_filter($form_state) {
     return "";
   }
 
-  if (!$genres) {
-    // No genres; no filter needed.
-    return '';
-  }
-
   module_load_include("inc", "islandora_solr", "includes/utilities");
   $publication_type_field = islandora_solr_lesser_escape(variable_get('lib4ridora_solr_field_publication_type', 'mods_genre_ms'));
 
