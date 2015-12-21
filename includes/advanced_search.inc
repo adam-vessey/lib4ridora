@@ -60,7 +60,7 @@ function lib4ridora_get_all_organizational_units() {
  */
 function lib4ridora_parse_affiliation_fields() {
   $comma_separated_list = variable_get('lib4ridora_solr_field_affiliations', 'mods_name_personal_affiliation_ms,mods_name_corporate_affiliation_ms,mods_name_conference_affiliation_ms');
-  $exploded = explode(",", $trimmed);
+  $exploded = explode(",", $comma_separated_list);
   return array_map("lib4ridora_trim_and_solr_escape", $exploded);
 }
 
