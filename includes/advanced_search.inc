@@ -6,6 +6,28 @@
  */
 
 /**
+ * Queries solr to get all publication types.
+ *
+ * @return array
+ *   Associative array of publication types formatted for #options
+ */
+function lib4ridora_get_all_publication_types() {
+  $facet_fields = array('mods_genre_ms');
+  $facets = lib4ridora_facet_query($facet_fields);
+
+  // If there's results, construct an array where the keys are the genres
+  // as in Solr, and the values are formatted to be labels.
+  if (isset($facets['mods_genre_ms'])) {
+    $keys = array_keys($facets['mods_genre_ms']);
+    $values = array_map('ucwords', $keys);
+    return array_combine($keys, $values);
+  }
+
+  // Default to returning an empty array.
+  return array();
+}
+
+/**
  * Queries solr to get all organizational units.
  *
  * @return array
@@ -40,6 +62,7 @@ function lib4ridora_get_all_organizational_units() {
  */
 function lib4ridora_parse_affiliation_fields() {
   $comma_separated_list = variable_get('lib4ridora_solr_field_affiliations', 'mods_name_personal_affiliation_ms,mods_name_corporate_affiliation_ms,mods_name_conference_affiliation_ms');
+  $trimmed = trim($comma_separated_list);
   $exploded = explode(",", $trimmed);
   return array_map("lib4ridora_trim_and_solr_escape", $exploded);
 }
@@ -134,15 +157,18 @@ function lib4ridora_construct_year_filter($form_state) {
  *   Solr filter query
  */
 function lib4ridora_construct_publication_type_filter($form_state) {
-  module_load_include('inc', 'lib4ridora', 'includes/citation.subtypes');
-  $genre_map = function ($subtype) {
-    return $subtype['genres'];
-  };
-  // Collect the genres for the selected values.
-  $genres_blocks = array_intersect_key(array_map($genre_map, lib4ridora_citation_subtypes()), drupal_map_assoc($form_state['values']['pub_type']));
+  // Collect the selected values.
+  $genres = array();
+  foreach ($form_state['values']['pub_type'] as $genre) {
+    if ($genre) {
+      $genres[] = $genre;
+    }
+  }
 
-  // Merge down to a flat array.
-  $genres = array_reduce($genres_blocks, 'array_merge', array());
+  // Exit early if no check box was selected.
+  if (empty($genres)) {
+    return "";
+  }
 
   if (!$genres) {
     // No genres; no filter needed.
@@ -150,16 +176,13 @@ function lib4ridora_construct_publication_type_filter($form_state) {
   }
 
   module_load_include("inc", "islandora_solr", "includes/utilities");
-  $quote = function ($string) {
-    return format_string('"!string"', array(
-      '!string' => islandora_solr_facet_escape($string),
-    ));
-  };
+  $publication_type_field = islandora_solr_lesser_escape(variable_get('lib4ridora_solr_field_publication_type', 'mods_genre_ms'));
 
-  return format_string('!field:(!value)', array(
-    '!field' => islandora_solr_lesser_escape(variable_get('lib4ridora_solr_field_publication_type', 'mods_genre_ms')),
-    '!value' => implode(' OR ', array_map($quote, $genres)),
-  ));
+  $field_names = array_fill(0, count($genres), $publication_type_field);
+
+  $filters = array_map("lib4ridora_construct_solr_statement", $field_names, $genres);
+
+  return lib4ridora_construct_filter_string_from_array($filters);
 }
 
 /**

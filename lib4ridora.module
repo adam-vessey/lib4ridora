@@ -1027,14 +1027,9 @@ function lib4ridora_form_islandora_solr_advanced_search_form_alter(&$form, &$for
     '#tree' => TRUE,
   );
 
-  module_load_include('inc', 'lib4ridora', 'includes/citation.subtypes');
-  $option_map = function ($subtype) {
-    return $subtype['name'];
-  };
-
   $form['pub_type'] = array(
     '#type' => 'checkboxes',
-    '#options' => array_map($option_map, lib4ridora_citation_subtypes()),
+    '#options' => lib4ridora_get_all_publication_types(),
     '#title' => t('Publication Type'),
   );
 
