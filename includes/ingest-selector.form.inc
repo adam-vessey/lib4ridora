@@ -41,10 +41,16 @@ function lib4ridora_ingest_selector_form(array $form, array &$form_state, $editi
     "#default_value" => $default['ingest_selector'],
   );
 
+  $test_form_association = function ($form_name) {
+    // Test that an association exists for the given form (and it is a MODS
+    // form).
+    module_load_include('inc', 'xml_form_builder', 'includes/associate');
+    return xml_form_builder_get_associations(array($form_name), array(), array('MODS'));
+  };
   foreach (lib4ridora_citation_subtypes() as $type => $info) {
     $form['ingest_selector']['#options'][$type] = $info['name'];
     $form['ingest_selector'][$type]['#description'] = $info['description'];
-    if ($info['form'] === NULL) {
+    if ($info['form'] === NULL || !$test_form_association($info['form'])) {
       $form['ingest_selector'][$type]['#disabled'] = TRUE;
       $form['ingest_selector'][$type]['#description'] .= ' ' . t('(No form associated)');
     }
