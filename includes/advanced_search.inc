@@ -217,7 +217,7 @@ function lib4ridora_construct_organization_unit_filter(&$form_state) {
   // Get the organizational unit value from the dropdown.
   $org_unit = $form_state['values']['org_unit'];
 
-  if ($org_unit ==  "*") {
+  if ($org_unit == "*") {
     return "";
   }
 
