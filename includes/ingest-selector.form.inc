@@ -148,7 +148,6 @@ function lib4ridora_ingest_selector_form_submit(array $form, array &$form_state)
   module_load_include('inc', 'xml_form_builder', 'includes/associations');
   module_load_include('inc', 'lib4ridora', 'includes/utilities');
   module_load_include('inc', 'lib4ridora', 'includes/citation.subtypes');
-  $associations = xml_form_builder_get_associations();
   $association_step_storage = &islandora_ingest_form_get_step_storage($form_state, 'xml_form_builder_association_step');
   $association_step_storage['journal_import_method'] = $form_state['values']['journal_import_method'];
   $association_step_storage['doi'] = $form_state['values']['doi'];
@@ -157,14 +156,12 @@ function lib4ridora_ingest_selector_form_submit(array $form, array &$form_state)
   $subtype = $form_state['values']['ingest_selector'];
   $subtypes = lib4ridora_citation_subtypes();
   $form_name = $subtypes[$subtype]['form'];
-  foreach ($associations as $key => $association) {
-    if ($association['form_name'] == $form_name) {
-      // Update the content_model to be ir:citationCModel so that regardless of
-      // the form used it will only have the ir:citationCModel.
-      $association['content_model'] = "ir:citationCModel";
-      $association_step_storage['association'] = $association;
-      break;
-    }
+  foreach (xml_form_builder_get_associations(array($form_name), array(), array('MODS')) as $key => $association) {
+    // Update the content_model to be ir:citationCModel so that regardless of
+    // the form used it will only have the ir:citationCModel.
+    $association['content_model'] = "ir:citationCModel";
+    $association_step_storage['association'] = $association;
+    break;
   }
   if (!isset($association_step_storage['association'])) {
     form_set_error('ingest_selector', t('A form could not be determined for the selected publication type.'));
