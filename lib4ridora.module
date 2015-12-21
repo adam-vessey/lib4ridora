@@ -155,7 +155,7 @@ function lib4ridora_ir_citationCModel_islandora_ingest_steps_alter(array &$steps
 /**
  * Implements hook_CMODEL_PID_islandora_ingest_steps().
  */
-function lib4ridora_ir_citationCModel_islandora_ingest_steps(array $form_state) {
+function lib4ridora_ir_citationCModel_islandora_ingest_steps(array &$form_state) {
   $steps = array();
 
   $steps['lib4ridora_ingest_selector'] = array(
@@ -164,6 +164,16 @@ function lib4ridora_ir_citationCModel_islandora_ingest_steps(array $form_state) 
     'form_id' => 'lib4ridora_ingest_selector_form',
     'module' => 'lib4ridora',
     'file' => 'includes/ingest-selector.form.inc',
+  );
+
+  $steps['lib4ridora_default_relations'] = array(
+    'weight' => 7,
+    'type' => 'callback',
+    'do_function' => array(
+      'function' => 'lib4ridora_update_full_text_ingest_step',
+    ),
+    'module' => 'lib4ridora',
+    'file' => 'includes/full_text.inc',
   );
 
   $steps['lib4ridora_multi_pdf_upload'] = array(
@@ -1152,4 +1162,21 @@ function lib4ridora_islandora_solr_metadata_display_elements_alter(&$elements) {
 
     $elements['associations'] = array($config_id);
   }
+}
+
+/**
+ * Implements hook_CMODEL_PID_islandora_derivative().
+ */
+function lib4ridora_ir_citationcmodel_islandora_derivative() {
+  return array(
+    array(
+      'source_dsid' => 'RELS-INT',
+      'destination_dsid' => 'RELS-EXT',
+      'weight' => '0',
+      'function' => array(
+        'lib4ridora_update_full_text',
+      ),
+      'file' => drupal_get_path('module', 'lib4ridora') . '/includes/full_text.inc',
+    ),
+  );
 }
