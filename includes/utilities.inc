@@ -211,7 +211,7 @@ function lib4ridora_determine_form_name(AbstractObject $object) {
   $xpath = new DOMXPath($mods);
   $xpath->registerNamespace('mods', 'http://www.loc.gov/mods/v3');
 
-  foreach ($xpath->query('//mods:mods/mods:genre[@authorityURI="info:eu-repo/semantics" and @valueURI="info:eu-repo/semantics/article"]') as $genre) {
+  foreach ($xpath->query('//mods:mods/mods:genre[@authorityURI="info:eu-repo/semantics"]') as $genre) {
     $genre_text = $genre->nodeValue;
     foreach ($types as $type => $info) {
       if (in_array($info['genres'], $genre_text)) {
