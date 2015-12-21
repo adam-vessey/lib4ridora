@@ -995,6 +995,123 @@ function lib4ridora_ir_citationCModel_islandora_view_object_alter(AbstractObject
 }
 
 /**
+ * Implements hook_form_alter().
+ */
+function lib4ridora_form_islandora_solr_advanced_search_form_alter(&$form, &$form_state, $form_id) {
+  module_load_include('inc', 'lib4ridora', 'includes/advanced_search');
+  $form['year'] = array(
+    '#type' => 'markup',
+    '#id' => 'lib4ridora-year-range',
+    '#theme_wrappers' => array(
+      'container',
+    ),
+    '#tree' => TRUE,
+  );
+  $form['year']['select'] = array(
+    '#type' => 'select',
+    '#options' => array(
+      'publication year' => t('Publication Year'),
+      'reporting year' => t('Reporting Year'),
+    ),
+    '#title' => t("Year"),
+    '#tree' => TRUE,
+  );
+  $form['year']['from'] = array(
+    '#type' => 'textfield',
+    '#title' => t('From'),
+    '#tree' => TRUE,
+  );
+  $form['year']['to'] = array(
+    '#type' => 'textfield',
+    '#title' => t('To'),
+    '#tree' => TRUE,
+  );
+
+  $form['pub_type'] = array(
+    '#type' => 'checkboxes',
+    '#options' => lib4ridora_get_all_publication_types(),
+    '#title' => t('Publication Type'),
+    // XXX: Wrapping element desired to counteract core CSS at this level, and
+    // #theme_wrappers do not quite cut it.
+    '#prefix' => '<div id="lib4ri-advanced-search-pub-type">',
+    '#suffix' => '</div>',
+  );
+
+  $form['org_unit'] = array(
+    '#type' => 'select',
+    '#options' => lib4ridora_get_all_organizational_units(),
+    '#title' => t('Organizational Unit'),
+    // XXX: Wrapping element desired to counteract core CSS at this level, and
+    // #theme_wrappers do not quite cut it.
+    '#prefix' => '<div id="lib4ri-advanced-search-org-unit">',
+    '#suffix' => '</div>',
+  );
+
+  $form['peer_review'] = array(
+    '#type' => 'checkboxes',
+    '#options' => array(
+      'yes' => t('Yes'),
+      'no' => t('No'),
+      'not specified' => t('Not Specified'),
+    ),
+    '#title' => t('Peer Reviewed'),
+    // XXX: Wrapping element desired to counteract core CSS at this level, and
+    // #theme_wrappers do not quite cut it.
+    '#prefix' => '<div id="lib4ri-advanced-search-peer-review">',
+    '#suffix' => '</div>',
+  );
+
+  $form['full_text'] = array(
+    '#type' => 'checkboxes',
+    '#options' => array(
+      'open access' => t('Open Access'),
+      'restricted' => t('Restricted'),
+      'no full text' => t('No Full Text'),
+    ),
+    '#title' => t('Full Text'),
+    // XXX: Wrapping element desired to counteract core CSS at this level, and
+    // #theme_wrappers do not quite cut it.
+    '#prefix' => '<div id="lib4ri-advanced-search-full-text">',
+    '#suffix' => '</div>',
+  );
+
+  $form['controls']['#weight'] = 100;
+  $form['#submit'][] = 'lib4ridora_solr_advanced_search_form_submit';
+}
+
+/**
+ * Altered Islandora Solr advanced search form submit callback.
+ *
+ * @param array $form
+ *   An associative array containing form structure.
+ * @param array $form_state
+ *   An associative array containing form state.
+ *
+ * @see islandora_solr_advanced_search_form()
+ */
+function lib4ridora_solr_advanced_search_form_submit($form, &$form_state) {
+  module_load_include('inc', 'lib4ridora', 'includes/advanced_search');
+
+  $filters = array(
+    lib4ridora_construct_year_filter($form_state),
+    lib4ridora_construct_publication_type_filter($form_state),
+    lib4ridora_construct_organization_unit_filter($form_state),
+    lib4ridora_construct_peer_reviewed_filter($form_state),
+    lib4ridora_construct_full_text_filter($form_state),
+  );
+  $filters = array_filter($filters);
+
+  if ($filters) {
+    // Jam our filters into the redirect.
+    $form_state['redirect'][1] = array_merge_recursive($form_state['redirect'][1], array(
+      'query' => array(
+        'f' => $filters,
+      ),
+    ));
+  }
+}
+
+/**
  * Implements hook_preprocess_islandora_solr_metadata_display().
  */
 function lib4ridora_preprocess_islandora_solr_metadata_display(&$variables) {

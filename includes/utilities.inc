@@ -151,7 +151,6 @@ function lib4ridora_get_custom_citation_form_associations() {
   return $form_associations;
 }
 
-
 /**
  * Retrieve PDFs.
  *
