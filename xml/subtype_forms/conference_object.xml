@@ -409,6 +409,7 @@
                       <tree>TRUE</tree>
                       <user_data>
                         <islandora_authority_solr_search_field>MADS_fullname_et</islandora_authority_solr_search_field>
+                        <islandora_authority_solr_validate_field>MADS_fullname_ms</islandora_authority_solr_validate_field>
                         <islandora_authority_mapping>!label</islandora_authority_mapping>
                       </user_data>
                       <actions>
@@ -520,6 +521,7 @@
                       <tree>TRUE</tree>
                       <user_data>
                         <islandora_authority_solr_search_field>MADS_department_et</islandora_authority_solr_search_field>
+                        <islandora_authority_solr_validate_field>MADS_department_ms</islandora_authority_solr_validate_field>
                         <islandora_authority_mapping>!label</islandora_authority_mapping>
                       </user_data>
                       <actions>

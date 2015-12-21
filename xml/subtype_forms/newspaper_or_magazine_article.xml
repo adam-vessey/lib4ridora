@@ -406,6 +406,7 @@
                       <tree>TRUE</tree>
                       <user_data>
                         <islandora_authority_solr_search_field>MADS_fullname_et</islandora_authority_solr_search_field>
+                        <islandora_authority_solr_validate_field>MADS_fullname_ms</islandora_authority_solr_validate_field>
                         <islandora_authority_mapping>!label</islandora_authority_mapping>
                       </user_data>
                       <actions>
@@ -517,6 +518,7 @@
                       <tree>TRUE</tree>
                       <user_data>
                         <islandora_authority_solr_search_field>MADS_department_et</islandora_authority_solr_search_field>
+                        <islandora_authority_solr_validate_field>MADS_department_ms</islandora_authority_solr_validate_field>
                         <islandora_authority_mapping>!label</islandora_authority_mapping>
                       </user_data>
                       <actions>
@@ -666,6 +668,7 @@
                   <tree>TRUE</tree>
                   <user_data>
                     <islandora_authority_solr_search_field>mods_titleInfo_title_et</islandora_authority_solr_search_field>
+                    <islandora_authority_solr_validate_field>mods_titleInfo_title_ms</islandora_authority_solr_validate_field>
                     <islandora_authority_mapping>!label</islandora_authority_mapping>
                   </user_data>
                   <actions>
@@ -711,6 +714,7 @@
                     <lib4ridora_field_filter_role_re>repo manager</lib4ridora_field_filter_role_re>
                     <lib4ridora_field_filter_role>administrator</lib4ridora_field_filter_role>
                     <islandora_authority_solr_search_field>mods_titleInfo_abbreviated_title_ms</islandora_authority_solr_search_field>
+                    <islandora_authority_solr_validate_field>mods_titleInfo_abbreviated_title_ms</islandora_authority_solr_validate_field>
                   </user_data>
                   <actions>
                     <create>
@@ -796,6 +800,7 @@
                     <lib4ridora_field_filter_role_ed>editor</lib4ridora_field_filter_role_ed>
                     <lib4ridora_field_filter_role>administrator</lib4ridora_field_filter_role>
                     <islandora_authority_solr_search_field>mods_originInfo_publisher_ms</islandora_authority_solr_search_field>
+                    <islandora_authority_solr_validate_field>mods_originInfo_publisher_ms</islandora_authority_solr_validate_field>
                   </user_data>
                   <actions>
                     <create>
@@ -840,6 +845,7 @@
                     <lib4ridora_field_filter_role_ed>editor</lib4ridora_field_filter_role_ed>
                     <lib4ridora_field_filter_role>administrator</lib4ridora_field_filter_role>
                     <islandora_authority_solr_search_field>mods_identifier_issn_t</islandora_authority_solr_search_field>
+                    <islandora_authority_solr_validate_field>mods_identifier_issn_s</islandora_authority_solr_validate_field>
                   </user_data>
                   <actions>
                     <create>
@@ -884,6 +890,7 @@
                     <lib4ridora_field_filter_role_ed>editor</lib4ridora_field_filter_role_ed>
                     <lib4ridora_field_filter_role>administrator</lib4ridora_field_filter_role>
                     <islandora_authority_solr_search_field>mods_identifier_e-issn_ms</islandora_authority_solr_search_field>
+                    <islandora_authority_solr_validate_field>mods_identifier_e-issn_ms</islandora_authority_solr_validate_field>
                   </user_data>
                   <actions>
                     <create>
