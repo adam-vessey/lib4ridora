@@ -76,10 +76,23 @@ function lib4ridora_citation_subtypes() {
     );
     $form_map = variable_get('lib4ridora_citation_subtype_form_associations', array());
     $display_map = variable_get('lib4ridora_islandora_solr_metadata_mappings', array());
+    $test_form_association = function ($form_name) {
+      // Test that an association exists for the given form (and it is a MODS
+      // form).
+      module_load_include('inc', 'xml_form_builder', 'includes/associations');
+      return xml_form_builder_get_associations(array($form_name), array(), array('MODS'));
+    };
     foreach ($map as $name => &$info) {
       $info['genres'] = array_keys($genre_map, $name);
-      $info['form'] = isset($form_map[$name]) ? $form_map[$name] : NULL;
       $info['display'] = isset($display_map[$name]) ? $display_map[$name] : NULL;
+
+      // Use the previously configured form name; otherwise, default to the form
+      // with the same human-readable name.
+      $info['form'] = isset($form_map[$name]) ? $form_map[$name] : $info['name'];
+      if (!$test_form_association($info['form'])) {
+        // Association for the form does not exist: Wipe it.
+        $info['form'] = NULL;
+      }
     }
     // XXX: Deal with leaked reference.
     unset($info);
