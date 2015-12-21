@@ -30,6 +30,8 @@ function lib4ridora_uninstall() {
     'lib4ridora_organization_block_organization_field',
     'lib4ridora_recent_additions_block_sort_parameter',
     'lib4ridora_organization_block_results_to_omit',
+    'lib4ridora_citation_subtype_form_associations',
+    'lib4ridora_islandora_solr_metadata_mappings',
   );
   array_walk($variables, 'variable_del');
 }
