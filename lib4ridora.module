@@ -1311,11 +1311,11 @@ function lib4ridora_ir_citationcmodel_islandora_derivative() {
 }
 
 /**
- * Implements hook_preprocess_islandora_solr_facet().
+ * Implements hook_process_islandora_solr_facet().
  *
  * Overrides the link content to be the MADS name rather than PID for author.
  */
-function lib4ridora_preprocess_islandora_solr_facet(&$variables) {
+function lib4ridora_process_islandora_solr_facet(&$variables) {
   if ($variables['pid'] == variable_get('lib4ridora_author_solr_field', 'mods_name_personal_author_authority_marcrelator_nameIdentifier_authorId_ms')) {
     foreach ($variables['buckets'] as &$bucket) {
       $markup_dom = new DOMDocument();

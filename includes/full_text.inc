@@ -12,20 +12,18 @@ const LIB4RIDORA_FULL_TEXT_RELATIONSHIP = 'fullText';
  * Update an object's full text relationship with the information from RELS-INT.
  */
 function lib4ridora_update_full_text(AbstractObject $object) {
-  module_load_include('inc', 'lib4ridora', 'includes/embargo.form');
+  module_load_include('inc', 'lib4ridora', 'includes/utilities');
 
   $is_open = NULL;
-  $pdf_datastreams = array_filter(iterator_to_array($object), 'lib4ridora_multi_embargo_pdf_filter');
-  $has_pdf = $pdf_datastreams ? TRUE : FALSE;
+  $pdf_datastreams = lib4ridora_retrieve_filtered_pdfs($object);
   foreach ($pdf_datastreams as $datastream) {
-    $has_pdf = TRUE;
     $info = lib4ridora_get_embargo_info($datastream);
     if (is_null($info['availability']) && in_array($info['document_version'], array('accepted version', 'published version'))) {
       $is_open = TRUE;
       break;
     }
   }
-  if (!$has_pdf) {
+  if (!$pdf_datastreams) {
     $relationship_value = 'No Full Text';
   }
   elseif ($is_open) {
