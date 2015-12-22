@@ -5,6 +5,7 @@
  * Ingest step form and friends.
  */
 
+@include_once 'sites/all/libraries/tuque/FedoraRelationships.php';
 define('LIB4RIDORA_RELS_URI', ISLANDORA_RELS_INT_URI);
 
 /**

@@ -1180,3 +1180,39 @@ function lib4ridora_ir_citationcmodel_islandora_derivative() {
     ),
   );
 }
+
+/**
+ * Implements hook_preprocess_islandora_solr_facet().
+ *
+ * Overrides the link content to be the MADS name rather than PID for author.
+ */
+function lib4ridora_preprocess_islandora_solr_facet(&$variables) {
+  if ($variables['pid'] == variable_get('lib4ridora_author_solr_field', 'mods_name_personal_author_authority_marcrelator_nameIdentifier_authorId_ms')) {
+    foreach ($variables['buckets'] as &$bucket) {
+      $markup_dom = new DOMDocument();
+      $markup_dom->loadHTML($bucket['link']);
+
+      $link_node = $markup_dom->getElementsByTagName('a')->item(0);
+      $author_pid = $link_node->nodeValue;
+      $author_object = islandora_object_load($author_pid);
+
+      if ($author_object && isset($author_object['MADS'])) {
+        $mads_dom = new DOMDocument();
+        $mads_dom->loadXML($author_object['MADS']->content);
+        $mads_xpath = new DOMXpath($mads_dom);
+        $mads_xpath->registerNamespace('mads', 'http://www.loc.gov/mads/v2');
+
+        $elements = $mads_xpath->query('/mads:mads/mads:authority/mads:name[@type="personal"]');
+        if ($elements->length) {
+          $author_node = $elements->item(0);
+          $author_array = array();
+          foreach ($author_node->childNodes as $node) {
+            $author_array[] = $node->nodeValue;
+          }
+          $link_node->nodeValue = implode(' ', $author_array);
+          $bucket['link'] = $markup_dom->saveHTML($link_node);
+        }
+      }
+    }
+  }
+}
