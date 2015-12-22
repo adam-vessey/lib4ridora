@@ -21,6 +21,7 @@ function lib4ridora_uninstall() {
   module_load_include('inc', 'islandora', 'includes/solution_packs');
   islandora_install_solution_pack('lib4ridora', 'uninstall');
   $variables = array(
+    'lib4ridora_author_solr_field',
     'lib4ridora_issn_solr_field',
     'lib4ridora_e_issn_solr_field',
     'lib4ridora_solr_field_article_host_journal',
