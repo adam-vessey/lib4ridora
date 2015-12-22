@@ -92,7 +92,7 @@ function lib4ridora_islandora_solr_query_blocks() {
  * Implements hook_islandora_xml_form_builder_form_associations().
  */
 function lib4ridora_islandora_xml_form_builder_form_associations() {
-  return array(
+  $associations = array(
     'lib4ridora_journal_mods_form' => array(
       'content_model' => LIB4RIDORA_JOURNAL_CONTENT_MODEL,
       'form_name' => LIB4RIDORA_JOURNAL_FORM,
@@ -110,6 +110,22 @@ function lib4ridora_islandora_xml_form_builder_form_associations() {
       'template' => FALSE,
     ),
   );
+
+  $base = array(
+    'content_model' => 'ir:citationCModel',
+    'dsid' => 'MODS',
+    'title_field' => array('titleInfo', 'title'),
+    'transform' => 'mods_to_dc.xsl',
+    'template' => FALSE,
+  );
+  module_load_include('inc', 'lib4ridora', 'includes/citation.subtypes');
+  foreach (lib4ridora_citation_subtypes() as $type => $info) {
+    $associations["lib4ridora_{$type}_form"] = $base + array(
+      'form_name' => $info['name'],
+    );
+  }
+
+  return $associations;
 }
 
 /**
@@ -133,7 +149,8 @@ function lib4ridora_islandora_solr_primary_display() {
  */
 function lib4ridora_islandora_xml_form_builder_forms() {
   $module_path = drupal_get_path('module', 'lib4ridora');
-  return array(
+
+  $forms = array(
     LIB4RIDORA_JOURNAL_FORM => array(
       'form_file' => "$module_path/xml/journal_mods_form.xml",
     ),
@@ -141,6 +158,15 @@ function lib4ridora_islandora_xml_form_builder_forms() {
       'form_file' => "$module_path/xml/citation_mods_form.xml",
     ),
   );
+
+  module_load_include('inc', 'lib4ridora', 'includes/citation.subtypes');
+  foreach (lib4ridora_citation_subtypes() as $type => $info) {
+    $forms[$info['name']] = array(
+      'form_file' => "$module_path/xml/subtype_forms/{$type}.xml",
+    );
+  }
+
+  return $forms;
 }
 
 /**
@@ -377,13 +403,13 @@ function lib4ridora_menu() {
     'description' => 'Configure lib4ridora.',
     'type' => MENU_DEFAULT_LOCAL_TASK,
   );
-  $items['admin/islandora/solution_pack_config/lib4ridora/solr_metadata'] = array(
-    'title' => 'Metadata Mappings',
-    'description' => 'Configure lib4ridora citation metadata displays.',
+  $items['admin/islandora/solution_pack_config/lib4ridora/publication_types'] = array(
+    'title' => 'Publication Type Mappings',
+    'description' => 'Configure lib4ridora publication type mappings.',
     'page callback' => 'drupal_get_form',
     'access arguments' => array('administer site configuration'),
-    'page arguments' => array('lib4ridora_islandora_solr_metadata_mapping_form'),
-    'file' => 'includes/admin.form.inc',
+    'page arguments' => array('lib4ridora_citation_subtype_mapping_form'),
+    'file' => 'includes/citation.subtypes.inc',
     'type' => MENU_LOCAL_TASK,
   );
   $items['islandora/object/%/lib4ridora_edit_factors'] = array(
@@ -1242,19 +1268,17 @@ function lib4ridora_form_islandora_solr_metadata_config_field_form_alter(&$form,
  */
 function lib4ridora_islandora_solr_metadata_display_elements_alter(&$elements) {
   if (in_array('ir:citationCModel', $elements['islandora_object']->models)) {
-    module_load_include('inc', 'lib4ridora', 'includes/utilities');
-    $type = lib4ridora_determine_form_name($elements['islandora_object']);
-    if (!$type) {
-      // No mapping; do nothing.
+    module_load_include('inc', 'lib4ridora', 'includes/citation.subtypes');
+    $display = NULL;
+    foreach (lib4ridora_determine_subtypes($elements['islandora_object']) as $type => $info) {
+      if ($info['display'] !== NULL) {
+        $display = $info['display'];
+        break;
+      }
+    }
+    if ($display === NULL) {
       return;
     }
-
-    $displays = variable_get('lib4ridora_islandora_solr_metadata_mappings', array());
-    if (!array_key_exists($type, $displays)) {
-      // No/default configuration selected; do nothing.
-      return;
-    }
-    $display = $displays[$type];
 
     module_load_include('inc', 'islandora_solr_metadata', 'includes/db');
     $config_id = islandora_solr_metadata_retrieve_configuration_from_machine_name($display);

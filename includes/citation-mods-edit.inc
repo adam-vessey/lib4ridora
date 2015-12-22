@@ -21,30 +21,27 @@
 function lib4ridora_citation_select_mods_edit_form($form, &$form_state, AbstractObject $object) {
   form_load_include($form_state, 'inc', 'xml_form_builder', 'includes/associations');
   form_load_include($form_state, 'inc', 'lib4ridora', 'includes/utilities');
-  $associations = xml_form_builder_get_associations();
   $form_state['pid'] = $object->id;
 
   $form_name = lib4ridora_determine_form_name($object);
   if (empty($form_name) && isset($form_state['form_name'])) {
     $form_name = $form_state['form_name'];
   }
-  if (isset($form_name) && $form_name) {
-    foreach ($associations as $key => $association) {
-      if ($association['form_name'] == $form_name) {
-        // Update the content_model to be ir:citationCModel so that regardless
-        // of the form used it will only have the ir:citationCModel.
-        $association['content_model'] = "ir:citationCModel";
-        // Load the form builder form.
-        $metadata_form = xml_form_builder_get_form(array(), $form_state, $association['form_name'], $object['MODS']->content, array());
-        // Need to make the #type markup because forms within forms are bad.
-        $metadata_form['#type'] = 'markup';
-        $metadata_form['submit'] = array(
-          '#type' => 'submit',
-          '#value' => t('Update'),
-        );
-        $form_state['association'] = $association;
-        return $metadata_form;
-      }
+  if ($form_name) {
+    foreach (xml_form_builder_get_associations(array($form_name), array(), array('MODS')) as $key => $association) {
+      // Update the content_model to be ir:citationCModel so that regardless
+      // of the form used it will only have the ir:citationCModel.
+      $association['content_model'] = "ir:citationCModel";
+      // Load the form builder form.
+      $metadata_form = xml_form_builder_get_form(array(), $form_state, $association['form_name'], $object['MODS']->content, array());
+      // Need to make the #type markup because forms within forms are bad.
+      $metadata_form['#type'] = 'markup';
+      $metadata_form['submit'] = array(
+        '#type' => 'submit',
+        '#value' => t('Update'),
+      );
+      $form_state['association'] = $association;
+      return $metadata_form;
     }
     drupal_set_message(t('The XML form could not be loaded. Verify that the %form_name form has an association.', array(
       '%form_name' => $form_name,
@@ -68,7 +65,9 @@ function lib4ridora_citation_select_mods_edit_form($form, &$form_state, Abstract
  */
 function lib4ridora_citation_select_mods_edit_form_submit($form, &$form_state) {
   if (isset($form_state['values']['ingest_selector'])) {
-    $form_state['form_name'] = $form_state['values']['ingest_selector'];
+    $subtype = $form_state['values']['ingest_selector'];
+    $subtypes = lib4ridora_citation_subtypes();
+    $form_state['form_name'] = $subtypes[$subtype]['form'];
     $form_state['rebuild'] = TRUE;
   }
   else {

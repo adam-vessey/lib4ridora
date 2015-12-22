@@ -125,33 +125,6 @@ function lib4ridora_get_factor_with_fallback(AbstractObject $object, $issued_yea
 }
 
 /**
- * An array of XML form association for the corresponds to the publication type.
- *
- * @return array
- *   Returns an array of publication types with the corresponding form name.
- * Format: key => value; publication type option => "form name".
- */
-function lib4ridora_get_custom_citation_form_associations() {
-  $form_associations = array(
-    "Journal Article" => "Journal Article",
-    "Book Chapter" => "Book Chapter",
-    "Book" => "Book",
-    "Edited Book" => "Book",
-    "Newspaper or Magazine Article" => "Newspaper or Magazine Article",
-    "Conference Item" => "Conference Object",
-    "Proceedings Paper" => "Conference Object",
-    "Other Conference Item" => "Conference Object",
-    "Report" => "Report",
-    "Thesis" => "Thesis",
-    "dissertation" => "Thesis",
-    "master thesis" => "Thesis",
-    "bachelor thesis" => "Thesis",
-    "Patent" => "Patent",
-  );
-  return $form_associations;
-}
-
-/**
  * Retrieve PDFs.
  *
  * @param AbstractObject $object
@@ -229,18 +202,9 @@ function lib4ridora_determine_form_name(AbstractObject $object) {
     ));
     return;
   }
-  $form_associations = lib4ridora_get_custom_citation_form_associations();
 
-  // Read Genre from MODS to determine what form to use for editing.
-  $mods = new DOMDocument();
-  $mods->loadXML($object['MODS']->content);
-  $xpath = new DOMXPath($mods);
-  $xpath->registerNamespace('mods', 'http://www.loc.gov/mods/v3');
-
-  foreach ($xpath->query('//mods:mods/mods:genre[@authorityURI="info:eu-repo/semantics" and @valueURI="info:eu-repo/semantics/article"]') as $genre) {
-    $genre_text = $genre->nodeValue;
-    if (isset($form_associations[$genre_text])) {
-      return $form_associations[$genre_text];
-    }
-  }
+  module_load_include('inc', 'lib4ridora', 'includes/citation.subtypes');
+  $subtypes = lib4ridora_determine_subtypes($object);
+  $first = reset($subtypes);
+  return $first ? $first['form'] : NULL;
 }
