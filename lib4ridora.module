@@ -1270,3 +1270,15 @@ function lib4ridora_islandora_solr_metadata_display_elements_alter(&$elements) {
     $elements['associations'] = array($config_id);
   }
 }
+
+/**
+ * Implements hook_form_islandora_bookmark_results_form_alter().
+ */
+function lib4ridora_form_islandora_bookmark_results_form_alter(&$form, &$form_state) {
+  $options =& $form['islandora_bookmark_export']['fieldset']['export_options']['#options'];
+  if (isset($options['Bibliography']) && is_array($options['Bibliography'])) {
+    // Get rid of the 'Bibliography' entry and move its contents up one.
+    $options = array_merge($options, $options['Bibliography']);
+    unset($options['Bibliography']);
+  }
+}
