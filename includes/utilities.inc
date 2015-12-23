@@ -266,4 +266,5 @@ function lib4ridora_get_author_from_pid($pid) {
       return implode(' ', $author_array);
     }
   }
+  return $pid;
 }
