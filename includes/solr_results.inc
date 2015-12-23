@@ -237,13 +237,15 @@ class IslandoraSolrResultsLib4riBookmark extends IslandoraSolrResultsBookmark {
         drupal_alter($hooks, $attributes, $islandora_solr_query);
 
         // Append the human readable labels to the front of
-        // the facet removeal link, in the
-        // 'current_query_facet_name' block.
+        // the facet removal link, in the 'current_query_facet_name' block.
         foreach ($records as $key => $value) {
+          // Re-write author PIDs to name strings.
           if (strpos($filter, $value['solr_field']) !== FALSE) {
-            // XXX: We are not using l() because of active classes:
+            if ($value['solr_field'] == variable_get('lib4ridora_author_solr_field', 'mods_name_personal_author_authority_marcrelator_nameIdentifier_authorId_ms')) {
+              $filter_string = lib4ridora_get_author_from_pid($filter_string);
+            }
+            // @XXX: We are not using l() because of active classes:
             // @see http://drupal.org/node/41595
-
             // The following differs from the default
             // islandora_query block currentQuery().
             $filter_list[] = '<a' . drupal_attributes($attributes['minus']['attr']) . '>(-)</a>' . " {$value['solr_field_settings']['label']}: " . $symbol . " " . check_plain($filter_string);
@@ -257,7 +259,7 @@ class IslandoraSolrResultsLib4riBookmark extends IslandoraSolrResultsBookmark {
         'items' => $filter_list,
         'title' => t("Enabled Filters"),
         'type' => 'ul',
-        'attributes' => array('class' => 'islandora-solr-filter-list filter-list booger'),
+        'attributes' => array('class' => 'islandora-solr-filter-list filter-list'),
       ));
       $output .= '</div>';
     }
