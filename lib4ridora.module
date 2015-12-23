@@ -181,7 +181,7 @@ function lib4ridora_ir_citationCModel_islandora_ingest_steps_alter(array &$steps
 /**
  * Implements hook_CMODEL_PID_islandora_ingest_steps().
  */
-function lib4ridora_ir_citationCModel_islandora_ingest_steps(array $form_state) {
+function lib4ridora_ir_citationCModel_islandora_ingest_steps(array &$form_state) {
   $steps = array();
 
   $steps['lib4ridora_ingest_selector'] = array(
@@ -190,6 +190,16 @@ function lib4ridora_ir_citationCModel_islandora_ingest_steps(array $form_state) 
     'form_id' => 'lib4ridora_ingest_selector_form',
     'module' => 'lib4ridora',
     'file' => 'includes/ingest-selector.form.inc',
+  );
+
+  $steps['lib4ridora_default_relations'] = array(
+    'weight' => 7,
+    'type' => 'callback',
+    'do_function' => array(
+      'function' => 'lib4ridora_update_full_text_ingest_step',
+    ),
+    'module' => 'lib4ridora',
+    'file' => 'includes/full_text.inc',
   );
 
   $steps['lib4ridora_multi_pdf_upload'] = array(
@@ -1304,5 +1314,43 @@ function lib4ridora_form_islandora_bookmark_results_form_alter(&$form, &$form_st
     // Get rid of the 'Bibliography' entry and move its contents up one.
     $options = array_merge($options, $options['Bibliography']);
     unset($options['Bibliography']);
+  }
+}
+
+/**
+ * Implements hook_CMODEL_PID_islandora_derivative().
+ */
+function lib4ridora_ir_citationcmodel_islandora_derivative() {
+  return array(
+    array(
+      'source_dsid' => 'RELS-INT',
+      'destination_dsid' => 'RELS-EXT',
+      'weight' => '0',
+      'function' => array(
+        'lib4ridora_update_full_text',
+      ),
+      'file' => drupal_get_path('module', 'lib4ridora') . '/includes/full_text.inc',
+    ),
+  );
+}
+
+/**
+ * Implements hook_process_islandora_solr_facet().
+ *
+ * Overrides the link content to be the MADS name rather than PID for author.
+ */
+function lib4ridora_process_islandora_solr_facet(&$variables) {
+  module_load_include('inc', 'lib4ridora', 'include/utilities');
+  if ($variables['pid'] == variable_get('lib4ridora_author_solr_field', 'mods_name_personal_author_authority_marcrelator_nameIdentifier_authorId_ms')) {
+    foreach ($variables['buckets'] as &$bucket) {
+      $markup_dom = new DOMDocument();
+      $markup_dom->loadHTML($bucket['link']);
+
+      $link_node = $markup_dom->getElementsByTagName('a')->item(0);
+      $author_pid = $link_node->nodeValue;
+
+      $link_node->nodeValue = lib4ridora_get_author_from_pid($author_pid);
+      $bucket['link'] = $markup_dom->saveHTML($link_node);
+    }
   }
 }

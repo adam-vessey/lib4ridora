@@ -208,3 +208,27 @@ function lib4ridora_determine_form_name(AbstractObject $object) {
   $first = reset($subtypes);
   return $first ? $first['form'] : NULL;
 }
+
+/**
+ * Retrieve the author string from a PID.
+ */
+function lib4ridora_get_author_from_pid($pid) {
+  $author_object = islandora_object_load($pid);
+  if ($author_object && isset($author_object['MADS'])) {
+    $mads_dom = new DOMDocument();
+    $mads_dom->loadXML($author_object['MADS']->content);
+    $mads_xpath = new DOMXpath($mads_dom);
+    $mads_xpath->registerNamespace('mads', 'http://www.loc.gov/mads/v2');
+
+    $elements = $mads_xpath->query('/mads:mads/mads:authority/mads:name[@type="personal"]');
+    if ($elements->length) {
+      $author_node = $elements->item(0);
+      $author_array = array();
+      foreach ($author_node->childNodes as $node) {
+        $author_array[] = $node->nodeValue;
+      }
+      return implode(' ', $author_array);
+    }
+  }
+  return $pid;
+}

@@ -9,6 +9,12 @@
  */
 function lib4ridora_admin(array $form, array &$form_state) {
 
+  $form['lib4ridora_author_solr_field'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Author Solr Field'),
+    '#default_value' => variable_get('lib4ridora_author_solr_field', 'mods_name_personal_author_authority_marcrelator_nameIdentifier_authorId_ms'),
+    '#required' => TRUE,
+  );
   $form['lib4ridora_issn_solr_field'] = array(
     '#type' => 'textfield',
     '#title' => t('ISSN Solr Field'),
