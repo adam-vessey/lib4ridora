@@ -940,8 +940,6 @@ function lib4ridora_ir_citationCModel_islandora_view_object_alter(AbstractObject
       '#markup' => $xpath->evaluate('string(//mods:abstract)'),
       '#weight' => -9,
     );
-    $rendered['citation.tab']['citation']['#type'] = 'item';
-    $rendered['citation.tab']['citation']['#title'] = t('Citation');
     // Decode for human readability.
     $persistent_url = urldecode(url("islandora/object/{$object->id}", array('absolute' => TRUE)));
     $rendered['citation.tab']['persistent_url'] = array(
@@ -952,5 +950,12 @@ function lib4ridora_ir_citationCModel_islandora_view_object_alter(AbstractObject
       ),
       '#weight' => 3,
     );
+    $rendered['citation.tab']['citation_wrapper'] = array(
+      '#type' => 'item',
+      '#title' => t('Citation'),
+      '#weight' => 2,
+      'citation' => $rendered['citation.tab']['citation'],
+    );
+    unset($rendered['citation.tab']['citation']);
   }
 }
