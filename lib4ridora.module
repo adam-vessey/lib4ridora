@@ -989,7 +989,7 @@ function lib4ridora_ir_citationCModel_islandora_view_object_alter(AbstractObject
           '@lastname' => $family,
         ));
         if (!empty($entity)) {
-          $author_string = l($author_string, format_string('islandora/search/mods_name_personal_author_authority_marcrelator_nameIdentifier_authorId_s:"@entity_pid"', array('@entity_pid' => $entity)));
+          $author_string = l($author_string, format_string('islandora/search/mods_name_personal_author_authority_marcrelator_nameIdentifier_authorId_ms:"@entity_pid"', array('@entity_pid' => $entity)));
         }
         $author_list[] = $author_string;
       }
