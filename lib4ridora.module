@@ -907,7 +907,7 @@ function lib4ridora_block_view($delta) {
       if ($object && in_array('ir:citationCModel', $object->models)) {
         $results = lib4ridora_get_related_research_data($object);
         if ($results && !empty($results)) {
-          $block['subject'] = t('Related Research');
+          $block['subject'] = t('Research Data');
           $block['content'] = array(
             'related_research_data' => lib4ridora_get_related_research_data_block_content($results),
           );
