@@ -131,7 +131,7 @@ function lib4ridora_recent_additions_block_configuration_form() {
 function lib4ridora_get_organization_facets() {
   $org_fields = explode(', ', variable_get('lib4ridora_organization_block_organization_field', 'mods_name_personal_affiliation_ms, mods_name_corporate_affiliation_ms'));
   $facets = array();
-  $omitted_facets = explode(PHP_EOL, variable_get('lib4ridora_organization_block_results_to_omit', ''));
+  $omitted_facets = array_map('trim', explode(PHP_EOL, variable_get('lib4ridora_organization_block_results_to_omit', '')));
   $qp = new IslandoraSolrQueryProcessor();
   $qp->buildQuery('*:*');
   $qp->solrParams['fl'] = "PID, {$org_fields}";
