@@ -291,7 +291,7 @@ function lib4ridora_islandora_datastream_access($op, AbstractDatastream $datastr
       $embargo_date = $datastream->relationships->get(LIB4RIDORA_RELS_URI, lib4ridora_multi_embargo_build_predicate('embargo_date'));
       $embargo_date = reset($embargo_date);
       if ($embargo_date) {
-        $result['lib4ridora_embargo_date'] = REQUEST_TIME > strtotime($embargo_date['object']['value']);
+        $result['lib4ridora_embargo_date'] = REQUEST_TIME > strtotime($embargo_date['object']['value']) || lib4ridora_check_ip(ip_address());
       }
     }
   }
