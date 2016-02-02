@@ -81,7 +81,7 @@ function lib4ridora_trim_and_solr_escape($str) {
 /**
  * Issues a facet query to solr for the provided fields.
  *
- * @return array $facet_fields
+ * @param array $facet_fields
  *   Array of fields to generate facets.
  *
  * @return array
@@ -116,17 +116,20 @@ function lib4ridora_construct_year_filter($form_state) {
   $year_type = $form_state['values']['year']['select'];
   $to = empty($form_state['values']['year']['to']) ? "*" : $form_state['values']['year']['to'];
   $from = empty($form_state['values']['year']['from']) ? "*" : $form_state['values']['year']['from'];
-
   // If nothing was entered in the date fields, exit early.
   if ($to == "*" && $from == "*") {
     return "";
   }
 
   // Convert to proper format for solr.
-  $to_date = new DateTime($to);
-  $to = $to_date->format('Y-m-d\TH:i:s\Z');
-  $from_date = new DateTime($from);
-  $from = $from_date->format('Y-m-d\TH:i:s\Z');
+  if ($to != '*') {
+    $to_date = new DateTime();
+    $to = date_format($to_date->createFromFormat('Y/m/d/G:i:s', "$to/01/01/0:00:00"), 'Y-m-d\TH:i:s\Z');
+  }
+  if ($from != '*') {
+    $from_date = new DateTime();
+    $from = date_format($from_date->createFromFormat('Y/m/d/G:i:s', "$from/01/01/0:00:00"), 'Y-m-d\TH:i:s\Z');
+  }
 
   // Return fq string.
   module_load_include("inc", "islandora_solr", "includes/utilities");

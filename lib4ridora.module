@@ -706,7 +706,13 @@ function lib4ridora_ir_citationcmodel_mods_islandora_datastream_alter(AbstractOb
   }
   else {
     // When object is in Fedora.
-    $mods_doc->loadXML($context['params']['dsString']);
+    if (isset($context['params']['dsString'])) {
+      $content = $context['params']['dsString'];
+    }
+    else {
+      $content = file_get_contents($context['params']['dsFile']);
+    }
+    $mods_doc->loadXML($content);
   }
   $mods_xpath = new DOMXPath($mods_doc);
   $mods_xpath->registerNamespace('mods', 'http://www.loc.gov/mods/v3');
@@ -1061,11 +1067,13 @@ function lib4ridora_form_islandora_solr_advanced_search_form_alter(&$form, &$for
     '#type' => 'textfield',
     '#title' => t('From'),
     '#tree' => TRUE,
+    '#element_validate' => array('element_validate_integer_positive'),
   );
   $form['year']['to'] = array(
     '#type' => 'textfield',
     '#title' => t('To'),
     '#tree' => TRUE,
+    '#element_validate' => array('element_validate_integer_positive'),
   );
 
   $form['pub_type'] = array(
@@ -1117,7 +1125,42 @@ function lib4ridora_form_islandora_solr_advanced_search_form_alter(&$form, &$for
   );
 
   $form['controls']['#weight'] = 100;
+  $form['#validate'][] = 'lib4ridora_solr_advanced_search_form_validate';
   $form['#submit'][] = 'lib4ridora_solr_advanced_search_form_submit';
+}
+
+/**
+ * Validation for the advanced search form.
+ *
+ * @param array $form
+ *   An array representing a form within Drupal.
+ * @param array $form_state
+ *   An array containing the Drupal form state.
+ */
+function lib4ridora_solr_advanced_search_form_validate($form, &$form_state) {
+  module_load_include('inc', 'lib4ridora', 'includes/utilities');
+  $errors = form_get_errors();
+  if (empty($errors) && !empty($form_state['values']['year']['to']) && !empty($form_state['values']['year']['from'])) {
+    if ($form_state['values']['year']['from'] >= $form_state['values']['year']['to']) {
+      form_error($form['year']['from'], t('The from value must be less than the to value.'));
+    }
+  }
+
+  // If the "Eawag Author" field has been selected need to convert the value
+  // of the field into a PID if one exists,
+  foreach ($form_state['values']['terms'] as $key => &$values) {
+    if ($values['field'] == variable_get('lib4ridora_author_solr_field', 'mods_name_personal_author_authority_marcrelator_nameIdentifier_authorId_ms')) {
+      $author_exists = lib4ridora_get_pid_from_author($values['search']);
+      if (!$author_exists) {
+        form_error($form['terms'][$key], t('An author by the name of @name does not exist.', array('@name' => $values['search'])));
+      }
+      // Need to modify the terms array, blah.
+      else {
+        $values['field'] = variable_get('lib4ridora_author_solr_field', 'mods_name_personal_author_authority_marcrelator_nameIdentifier_authorId_ms');
+        $values['search'] = format_string('"@author"', array('@author' => $author_exists));
+      }
+    }
+  }
 }
 
 /**
