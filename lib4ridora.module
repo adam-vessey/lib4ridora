@@ -977,17 +977,22 @@ function lib4ridora_ir_citationCModel_islandora_view_object_alter(AbstractObject
     $xpath->registerPhpFunctions('strtolower');
     $simple = simplexml_load_string($mods_content);
     $author_json = convert_mods_to_citeproc_json_names($simple);
+    // Structure our custom style into a form that citeproc likes.
+    $path = drupal_get_path('module', 'lib4ridora');
+    $style = array(
+      'name' => t('LIB4Ri Authors'),
+      'data' => file_get_contents("$path/xml/csl/lib4ri_author.csl"),
+    );
+    $authors = citeproc_bibliography_from_mods($style, $object['MODS']->content);
+    $csled_authors = explode(',', strip_tags($authors));
     if (isset($author_json['author'])) {
       $authors = $author_json['author'];
       $author_list = array();
-      foreach ($authors as &$author) {
+      foreach ($authors as $key => &$author) {
         $family = $author['family'];
-        $given = $author['given'];
-        $entity = $xpath->evaluate('string(//mods:name[@type="personal"][php:functionString("strtolower", mods:namePart[@type="family"]) = "' . strtolower($family) . '"]/mods:nameIdentifier[@type="authorId"])');
-        $author_string = t('@lastname, @firstname', array(
-          '@firstname' => $given,
-          '@lastname' => $family,
-        ));
+        $entity = $xpath->evaluate('string(//mods:name[@type="personal"][php:functionString("strtolower", mods:namePart[@type="family"]) = "' . strtolower($family) . '" and php:functionString("strtolower", mods:namePart[@type="family"]) = "' . strtolower($family) . '"]/mods:nameIdentifier[@type="authorId"])');
+        // Grab from our parsed CSL style string.
+        $author_string = $csled_authors[$key];
         if (!empty($entity)) {
           $author_string = l($author_string, format_string('islandora/search/mods_name_personal_author_authority_marcrelator_nameIdentifier_authorId_ms:"@entity_pid"', array('@entity_pid' => $entity)));
         }
