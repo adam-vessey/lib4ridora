@@ -232,3 +232,28 @@ function lib4ridora_get_author_from_pid($pid) {
   }
   return $pid;
 }
+
+/**
+ * Retrieves the PID from an author string.
+ *
+ * @param string $author
+ *   The full name of the author to be searched for.
+ *
+ * @return bool|string
+ *   FALSE if an author cannot be found or the PID otherwise.
+ */
+function lib4ridora_get_pid_from_author($author) {
+  $qp = new IslandoraSolrQueryProcessor();
+  $qp->buildQuery(format_string('@query:"@author"', array(
+    '@query' => variable_get('lib4ridora_author_fullname_solr_field', 'MADS_fullname_ms'),
+    '@author' => $author,
+  )));
+  $qp->executeQuery(FALSE);
+  if ($qp->islandoraSolrResult['response']['numFound'] != 0) {
+    $result = reset($qp->islandoraSolrResult['response']['objects']);
+    return $result['PID'];
+  }
+  else {
+    return FALSE;
+  }
+}
