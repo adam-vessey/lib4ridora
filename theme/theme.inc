@@ -59,12 +59,11 @@ function template_process_lib4ridora_pdf_link(&$variables) {
       $availability_text = t('Intranet Only');
     }
     elseif ($availability == 'date') {
-      // Need to get a huamn readable month.
+      // Need to get a human readable month.
       $date = new DateTime();
-      $date->createFromFormat('!m', $values['embargo_date']['month']);
       $availability_text = t('Intranet Only until @day @month @year', array(
         '@day' => $values['embargo_date']['day'],
-        '@month' => $date->format('F'),
+        '@month' => date_format($date->createFromFormat('!m', $values['embargo_date']['month']), 'F'),
         '@year' => $values['embargo_date']['year'],
       ));
     }
