@@ -703,7 +703,10 @@ function lib4ridora_ir_citationcmodel_mods_islandora_datastream_alter(AbstractOb
   if ($context['action'] == 'ingest') {
     $mods_doc->loadXML($datastream->content);
   }
-  else {
+  // There is a case where an inline XML datastream is changing to manage where
+  // the first alter will trigger when the MIME type is changed to managed and
+  // will be no content actually present.
+  elseif (isset($context['params']['dsString']) || isset($context['params']['dsFile'])) {
     // When object is in Fedora.
     if (isset($context['params']['dsString'])) {
       $content = $context['params']['dsString'];
@@ -713,36 +716,39 @@ function lib4ridora_ir_citationcmodel_mods_islandora_datastream_alter(AbstractOb
     }
     $mods_doc->loadXML($content);
   }
-  $mods_xpath = new DOMXPath($mods_doc);
-  $mods_xpath->registerNamespace('mods', 'http://www.loc.gov/mods/v3');
+  // Ensure there's content before doing anything else.
+  if ($mods_doc->hasChildNodes()) {
+    $mods_xpath = new DOMXPath($mods_doc);
+    $mods_xpath->registerNamespace('mods', 'http://www.loc.gov/mods/v3');
 
-  $journal_results = $mods_xpath->query('/mods:mods/mods:relatedItem[@type="host"]/mods:identifier[not(@type) and node()]');
-  // Bail out if no journal linked.
-  if (!$journal_results->length) {
-    return;
-  }
-
-  $journal_item = $journal_results->item(0);
-  $journal = islandora_object_load($journal_item->nodeValue);
-  $label_results = $mods_xpath->query('/mods:mods/mods:relatedItem[@type="host"]/mods:titleInfo/mods:title[not(@type)]');
-
-  $journal_mods_doc = new DOMDocument();
-  // Assumes journal has MODS.
-  $journal_mods_doc->loadXML($journal['MODS']->content);
-  $journal_mods_xpath = new DOMXPath($journal_mods_doc);
-  $journal_mods_xpath->registerNamespace('mods', 'http://www.loc.gov/mods/v3');
-  $journal_label_results = $journal_mods_xpath->query('/mods:mods/mods:titleInfo/mods:title');
-  // Destroy link if necessary.
-  if (!$label_results->length || !$journal_label_results->length ||
-      $label_results->item(0)->nodeValue != $journal_label_results->item(0)->nodeValue) {
-    $journal_item->parentNode->removeChild($journal_item);
-    $mods = $mods_doc->saveXML();
-    if ($context['action'] == 'ingest') {
-      $datastream->content = $mods;
+    $journal_results = $mods_xpath->query('/mods:mods/mods:relatedItem[@type="host"]/mods:identifier[not(@type) and node()]');
+    // Bail out if no journal linked.
+    if (!$journal_results->length) {
+      return;
     }
-    else {
-      // When object is in Fedora.
-      $context['params']['dsString'] = $mods;
+
+    $journal_item = $journal_results->item(0);
+    $journal = islandora_object_load($journal_item->nodeValue);
+    $label_results = $mods_xpath->query('/mods:mods/mods:relatedItem[@type="host"]/mods:titleInfo/mods:title[not(@type)]');
+
+    $journal_mods_doc = new DOMDocument();
+    // Assumes journal has MODS.
+    $journal_mods_doc->loadXML($journal['MODS']->content);
+    $journal_mods_xpath = new DOMXPath($journal_mods_doc);
+    $journal_mods_xpath->registerNamespace('mods', 'http://www.loc.gov/mods/v3');
+    $journal_label_results = $journal_mods_xpath->query('/mods:mods/mods:titleInfo/mods:title');
+    // Destroy link if necessary.
+    if (!$label_results->length || !$journal_label_results->length ||
+        $label_results->item(0)->nodeValue != $journal_label_results->item(0)->nodeValue) {
+      $journal_item->parentNode->removeChild($journal_item);
+      $mods = $mods_doc->saveXML();
+      if ($context['action'] == 'ingest') {
+        $datastream->content = $mods;
+      }
+      else {
+        // When object is in Fedora.
+        $context['params']['dsString'] = $mods;
+      }
     }
   }
 }
@@ -999,7 +1005,16 @@ function lib4ridora_ir_citationCModel_islandora_view_object_alter(AbstractObject
         // Grab from our parsed CSL style string.
         $author_string = $csled_authors[$key];
         if (!empty($entity)) {
-          $author_string = l($author_string, format_string('islandora/search/mods_name_personal_author_authority_marcrelator_nameIdentifier_authorId_ms:"@entity_pid"', array('@entity_pid' => $entity)));
+          $author_string = l($author_string, 'islandora/search', array(
+            'query' => array(
+              'f' => array(
+                format_string('!field:"!value"', array(
+                  '!field' => islandora_solr_lesser_escape(variable_get('lib4ridora_author_solr_field', 'mods_name_personal_author_authority_marcrelator_nameIdentifier_authorId_ms')),
+                  '!value' => $entity,
+                )),
+              ),
+            ),
+          ));
         }
         $author_list[] = $author_string;
       }
