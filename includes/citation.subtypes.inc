@@ -35,6 +35,10 @@ function lib4ridora_citation_subtypes() {
         'name' => t('Book'),
         'description' => t('A monograph, edited volume or textbook.'),
       ),
+      'edited_book' => array(
+        'name' => t('Edited Book'),
+        'description' => t('An edited book.'),
+      ),
       'newspaper_or_magazine_article' => array(
         'name' => t('Newspaper or Magazine Article'),
         'description' => t('An article in a newspaper or magazine. Not peer-reviewed.'),
@@ -42,6 +46,14 @@ function lib4ridora_citation_subtypes() {
       'conference_object' => array(
         'name' => t('Conference Item'),
         'description' => t('A paper, poster or presentation given at a conference. If the conference item has been published in a journal or book please use "Journal Article" or "Book Chapter" instead.'),
+      ),
+      'proceedings_paper' => array(
+        'name' => t('Proceedings Paper'),
+        'description' => t('A proceedings paper.'),
+      ),
+      'other_conference_item' => array(
+        'name' => t('Other Conference Item'),
+        'description' => t('Other conference item.'),
       ),
       'thesis' => array(
         'name' => t('Thesis'),
@@ -74,11 +86,11 @@ function lib4ridora_citation_subtypes() {
       'Journal Article' => 'journal_article',
       'Book Chapter' => 'book_chapter',
       'Book' => 'book',
-      'Edited Book' => 'book',
+      'Edited Book' => 'edited_book',
       'Newspaper or Magazine Article' => 'newspaper_or_magazine_article',
       'Conference Item' => 'conference_object',
-      'Proceedings Paper' => 'conference_object',
-      'Other Conference Item' => 'conference_object',
+      'Proceedings Paper' => 'proceedings_paper',
+      'Other Conference Item' => 'other_conference_item',
       'Report' => 'report',
       'Thesis' => 'thesis',
       'Dissertation' => 'dissertation',
