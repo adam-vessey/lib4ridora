@@ -47,6 +47,18 @@ function lib4ridora_citation_subtypes() {
         'name' => t('Thesis'),
         'description' => t('A thesis or disseration.'),
       ),
+      'master_thesis' => array(
+        'name' => t('Master Thesis'),
+        'description' => t('A master thesis.'),
+      ),
+      'bachelor_thesis' => array(
+        'name' => t('Bachelor Thesis'),
+        'description' => t('A bachelor thesis.'),
+      ),
+      'dissertation' => array(
+        'name' => t('Dissertation'),
+        'description' => t('A dissertation.'),
+      ),
       'patent' => array(
         'name' => t('Patent'),
         'description' => t('A published patent.  Do not include as yet unpublished patent applications.'),
@@ -69,9 +81,9 @@ function lib4ridora_citation_subtypes() {
       'Other Conference Item' => 'conference_object',
       'Report' => 'report',
       'Thesis' => 'thesis',
-      'dissertation' => 'thesis',
-      'master thesis' => 'thesis',
-      'bachelor thesis' => 'thesis',
+      'Dissertation' => 'dissertation',
+      'Master Thesis' => 'master_thesis',
+      'Bachelor Thesis' => 'bachelor_thesis',
       'Patent' => 'patent',
     );
     $form_map = variable_get('lib4ridora_citation_subtype_form_associations', array());
