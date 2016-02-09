@@ -117,7 +117,7 @@ function template_preprocess_lib4ridora_islandora_solr_metadata_injected_author_
         'query' => array(
           'f' => array(
             format_string('!field:"!value"', array(
-              '!field' => islandora_solr_lesser_escape('mods_name_personal_author_authority_marcrelator_nameIdentifier_authorId_ms'),
+              '!field' => islandora_solr_lesser_escape(variable_get('lib4ridora_author_solr_field', 'mods_name_personal_author_authority_marcrelator_nameIdentifier_authorId_ms')),
               '!value' => $variables['info']['author']['id'],
             )),
           ),
