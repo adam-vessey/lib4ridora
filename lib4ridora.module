@@ -973,7 +973,7 @@ function lib4ridora_block_save($delta = '', $edit = array()) {
  * Implements hook_CMODEL_PID_islandora_view_object().
  */
 function lib4ridora_ir_citationCModel_islandora_view_object_alter(AbstractObject $object, &$rendered) {
-$tab = lib4ridora_romeo_access($object);
+  $tab = lib4ridora_romeo_access($object);
   // Lib4RI does not want the PDF preview or download links.
   unset($rendered['citation.tab']['preview']);
   unset($rendered['citation.tab']['pdf_download']);
@@ -1016,7 +1016,6 @@ $tab = lib4ridora_romeo_access($object);
             ),
           ));
         }
-
         $author_list[] = $author_string;
       }
 
