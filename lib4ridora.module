@@ -1170,14 +1170,14 @@ function lib4ridora_solr_advanced_search_form_validate($form, &$form_state) {
   // If the "Eawag Author" field has been selected need to convert the value
   // of the field into a PID if one exists,
   foreach ($form_state['values']['terms'] as $key => &$values) {
-    if ($values['field'] == variable_get('lib4ridora_author_solr_field', 'mods_name_personal_author_authority_marcrelator_nameIdentifier_authorId_ms')) {
+    if ($values['field'] == variable_get('lib4ridora_author_solr_field', 'mods_name_personal_nameIdentifier_authorId_ms')) {
       $author_exists = lib4ridora_get_pid_from_author($values['search']);
       if (!$author_exists) {
         form_error($form['terms'][$key], t('An author by the name of @name does not exist.', array('@name' => $values['search'])));
       }
       // Need to modify the terms array, blah.
       else {
-        $values['field'] = variable_get('lib4ridora_author_solr_field', 'mods_name_personal_author_authority_marcrelator_nameIdentifier_authorId_ms');
+        $values['field'] = variable_get('lib4ridora_author_solr_field', 'mods_name_personal_nameIdentifier_authorId_ms');
         $values['search'] = format_string('"@author"', array('@author' => $author_exists));
       }
     }
@@ -1410,7 +1410,7 @@ function lib4ridora_ir_citationcmodel_islandora_derivative() {
  */
 function lib4ridora_process_islandora_solr_facet(&$variables) {
   module_load_include('inc', 'lib4ridora', 'include/utilities');
-  if ($variables['pid'] == variable_get('lib4ridora_author_solr_field', 'mods_name_personal_author_authority_marcrelator_nameIdentifier_authorId_ms')) {
+  if ($variables['pid'] == variable_get('lib4ridora_author_solr_field', 'mods_name_personal_nameIdentifier_authorId_ms')) {
     foreach ($variables['buckets'] as &$bucket) {
       $markup_dom = new DOMDocument();
       $markup_dom->loadHTML($bucket['link']);
