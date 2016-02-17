@@ -1009,7 +1009,7 @@ function lib4ridora_ir_citationCModel_islandora_view_object_alter(AbstractObject
             'query' => array(
               'f' => array(
                 format_string('!field:"!value"', array(
-                  '!field' => islandora_solr_lesser_escape(variable_get('lib4ridora_author_solr_field', 'mods_name_personal_author_authority_marcrelator_nameIdentifier_authorId_ms')),
+                  '!field' => islandora_solr_lesser_escape(variable_get('lib4ridora_author_solr_field', 'mods_name_personal_nameIdentifier_authorId_ms')),
                   '!value' => $entity_query->item(0)->nodeValue,
                 )),
               ),
