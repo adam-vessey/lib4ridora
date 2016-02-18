@@ -5,7 +5,7 @@
  */
 
 /**
- * Get information about the different subtypes.
+ * Get information about the different display subtypes.
  *
  * @return array
  *   An associative array mapping a stable machine name to an associative array
@@ -55,10 +55,6 @@ function lib4ridora_citation_subtypes() {
         'name' => t('Other Conference Item'),
         'description' => t('Other conference item.'),
       ),
-      'thesis' => array(
-        'name' => t('Thesis'),
-        'description' => t('A thesis or disseration.'),
-      ),
       'master_thesis' => array(
         'name' => t('Master Thesis'),
         'description' => t('A master thesis.'),
@@ -96,6 +92,107 @@ function lib4ridora_citation_subtypes() {
       'Dissertation' => 'dissertation',
       'Master Thesis' => 'master_thesis',
       'Bachelor Thesis' => 'bachelor_thesis',
+      'Patent' => 'patent',
+    );
+    $form_map = variable_get('lib4ridora_citation_subtype_form_associations', array());
+    $display_map = variable_get('lib4ridora_islandora_solr_metadata_mappings', array());
+    $test_form_association = function ($form_name) {
+      // Test that an association exists for the given form (and it is a MODS
+      // form).
+      module_load_include('inc', 'xml_form_builder', 'includes/associations');
+      return xml_form_builder_get_associations(array($form_name), array(), array('MODS'));
+    };
+    foreach ($map as $name => &$info) {
+      $info['genres'] = array_keys($genre_map, $name);
+      $info['display'] = isset($display_map[$name]) ? $display_map[$name] : NULL;
+
+      // Use the previously configured form name; otherwise, default to the form
+      // with the same human-readable name.
+      $info['form'] = isset($form_map[$name]) ? $form_map[$name] : $info['name'];
+      if (!$test_form_association($info['form'])) {
+        // Association for the form does not exist: Wipe it.
+        $info['form'] = NULL;
+      }
+    }
+    // XXX: Deal with leaked reference.
+    unset($info);
+  }
+
+  return $map;
+}
+
+/**
+ * Get information about the different form subtypes.
+ *
+ * @return array
+ *   An associative array mapping a stable machine name to an associative array
+ *   containing:
+ *   - name: A human-readable name for the given type.
+ *   - description: A verbose description of the given type.
+ *   - genres: An array of genres which map to the given type.
+ *   - form: The name of the form to use for the given type. NOTE: May be NULL
+ *     if there is none mapped for the given type.
+ *   - display: The machine name of the Solr metadata display to use for the
+ *     given type. NOTE: May be NULL if there is none mapped for the given
+ *     type.
+ */
+function lib4ridora_citation_form_subtypes() {
+  static $map = NULL;
+  if ($map === NULL) {
+    $map = array(
+      'journal_article' => array(
+        'name' => t('Journal Article'),
+        'description' => t('An article in a scientific journal.  Not necessarily peer-reviewed. May be an electronic-only medium such as online journal.'),
+      ),
+      'book_chapter' => array(
+        'name' => t('Book Chapter'),
+        'description' => t('A chapter or contribution in a book.'),
+      ),
+      'book' => array(
+        'name' => t('Book'),
+        'description' => t('A monograph, edited volume or textbook.'),
+      ),
+      'newspaper_or_magazine_article' => array(
+        'name' => t('Newspaper or Magazine Article'),
+        'description' => t('An article in a newspaper or magazine. Not peer-reviewed.'),
+      ),
+      'conference_object' => array(
+        'name' => t('Conference Item'),
+        'description' => t('A paper, poster or presentation given at a conference. If the conference item has been published in a journal or book please use "Journal Article" or "Book Chapter" instead.'),
+      ),
+      'other_conference_object' => array(
+        'name' => t('Other Conference Item'),
+        'description' => t('Proceedings papers or other conference items'),
+      ),
+      'thesis' => array(
+        'name' => t('Thesis'),
+        'description' => t('A thesis or dissertation.'),
+      ),
+      'patent' => array(
+        'name' => t('Patent'),
+        'description' => t('A published patent.  Do not include as yet unpublished patent applications.'),
+      ),
+      'report' => array(
+        'name' => t('Report'),
+        'description' => t('A report or expert opinion.'),
+      ),
+    );
+
+    // Map MODS genres to our machine names...
+    $genre_map = array(
+      'Journal Article' => 'journal_article',
+      'Book Chapter' => 'book_chapter',
+      'Book' => 'book',
+      'Edited Book' => 'book',
+      'Newspaper or Magazine Article' => 'newspaper_or_magazine_article',
+      'Conference Item' => 'conference_object',
+      'Proceedings Paper' => 'other_conference_object',
+      'Other Conference Item' => 'other_conference_object',
+      'Report' => 'report',
+      'Thesis' => 'thesis',
+      'dissertation' => 'thesis',
+      'master thesis' => 'thesis',
+      'bachelor thesis' => 'thesis',
       'Patent' => 'patent',
     );
     $form_map = variable_get('lib4ridora_citation_subtype_form_associations', array());
@@ -167,6 +264,7 @@ function lib4ridora_citation_subtype_mapping_form($form, &$form_state) {
   );
 
   $subtypes = lib4ridora_citation_subtypes();
+  $form_subtypes = lib4ridora_citation_form_subtypes();
   $map_for_forms = function ($subtype) {
     return $subtype['name'];
   };
@@ -187,7 +285,7 @@ function lib4ridora_citation_subtype_mapping_form($form, &$form_state) {
         'mapping_title' => t('Mapping for @type'),
       ),
       // Matches present defaults with explicitly matching form names.
-      'defaults' => array_map($map_for_forms, $subtypes),
+      'defaults' => array_map($map_for_forms, $form_subtypes),
     ),
   );
   foreach ($variables as $variable => $info) {
@@ -207,20 +305,39 @@ function lib4ridora_citation_subtype_mapping_form($form, &$form_state) {
       '#title' => filter_xss($info['strings']['title']),
       '#description' => filter_xss($info['strings']['description']),
     );
-    foreach ($subtypes as $type => $type_info) {
-      $form['settings'][$variable][$type] = $base_select + array(
-        '#title' => filter_xss(format_string($info['strings']['mapping_title'], array(
-          '@type' => $type_info['name'],
-        ))),
-        '#description' => filter_xss($type_info['description']),
-        // Current value, defined default, or NULL.
-        '#default_value' => ((isset($current_value[$type]) && isset($info['options'][$current_value[$type]])) ?
-          $current_value[$type] :
-          ((isset($defaults[$type]) && isset($info['options'][$defaults[$type]])) ?
-            $defaults[$type] :
-            NULL)),
-      );
+    if ($variable == 'lib4ridora_islandora_solr_metadata_mappings') {
+      foreach ($subtypes as $type => $type_info) {
+        $form['settings'][$variable][$type] = $base_select + array(
+            '#title' => filter_xss(format_string($info['strings']['mapping_title'], array(
+              '@type' => $type_info['name'],
+            ))),
+            '#description' => filter_xss($type_info['description']),
+            // Current value, defined default, or NULL.
+            '#default_value' => ((isset($current_value[$type]) && isset($info['options'][$current_value[$type]])) ?
+              $current_value[$type] :
+              ((isset($defaults[$type]) && isset($info['options'][$defaults[$type]])) ?
+                $defaults[$type] :
+                NULL)),
+          );
+      }
     }
+    else {
+      foreach ($form_subtypes as $type => $type_info) {
+        $form['settings'][$variable][$type] = $base_select + array(
+            '#title' => filter_xss(format_string($info['strings']['mapping_title'], array(
+              '@type' => $type_info['name'],
+            ))),
+            '#description' => filter_xss($type_info['description']),
+            // Current value, defined default, or NULL.
+            '#default_value' => ((isset($current_value[$type]) && isset($info['options'][$current_value[$type]])) ?
+              $current_value[$type] :
+              ((isset($defaults[$type]) && isset($info['options'][$defaults[$type]])) ?
+                $defaults[$type] :
+                NULL)),
+          );
+      }
+    }
+
   }
 
   $form['actions'] = array(
