@@ -47,7 +47,7 @@ function lib4ridora_ingest_selector_form(array $form, array &$form_state, $editi
     module_load_include('inc', 'xml_form_builder', 'includes/associate');
     return xml_form_builder_get_associations(array($form_name), array(), array('MODS'));
   };
-  foreach (lib4ridora_citation_subtypes() as $type => $info) {
+  foreach (lib4ridora_citation_form_subtypes() as $type => $info) {
     $form['ingest_selector']['#options'][$type] = $info['name'];
     $form['ingest_selector'][$type]['#description'] = $info['description'];
     if ($info['form'] === NULL || !$test_form_association($info['form'])) {
@@ -154,7 +154,7 @@ function lib4ridora_ingest_selector_form_submit(array $form, array &$form_state)
   $association_step_storage['ingest_selector'] = $form_state['values']['ingest_selector'];
 
   $subtype = $form_state['values']['ingest_selector'];
-  $subtypes = lib4ridora_citation_subtypes();
+  $subtypes = lib4ridora_citation_form_subtypes();
   $form_name = $subtypes[$subtype]['form'];
   foreach (xml_form_builder_get_associations(array($form_name), array(), array('MODS')) as $key => $association) {
     // Update the content_model to be ir:citationCModel so that regardless of
