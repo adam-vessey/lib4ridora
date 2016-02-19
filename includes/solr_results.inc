@@ -134,6 +134,7 @@ class IslandoraSolrResultsLib4riBookmark extends IslandoraSolrResultsBookmark {
    */
   public function currentQuery($islandora_solr_query) {
     module_load_include('inc', 'islandora', 'includes/utilities');
+    module_load_include('inc', 'lib4ridora', 'includes/utilities');
 
     $output = '';
     $path = current_path();
@@ -248,7 +249,7 @@ class IslandoraSolrResultsLib4riBookmark extends IslandoraSolrResultsBookmark {
             // @see http://drupal.org/node/41595
             // The following differs from the default
             // islandora_query block currentQuery().
-            $filter_list[] = '<a' . drupal_attributes($attributes['minus']['attr']) . '>(-)</a>' . " {$value['solr_field_settings']['label']}: " . $symbol . " " . check_plain($filter_string);
+            $filter_list[] = '<a' . drupal_attributes($attributes['minus']['attr']) . '>(-)</a>' . " {$value['solr_field_settings']['label']} " . $symbol . " " . check_plain($filter_string);
           }
         }
       }
