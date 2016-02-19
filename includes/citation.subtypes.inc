@@ -308,33 +308,33 @@ function lib4ridora_citation_subtype_mapping_form($form, &$form_state) {
     if ($variable == 'lib4ridora_islandora_solr_metadata_mappings') {
       foreach ($subtypes as $type => $type_info) {
         $form['settings'][$variable][$type] = $base_select + array(
-            '#title' => filter_xss(format_string($info['strings']['mapping_title'], array(
-              '@type' => $type_info['name'],
-            ))),
-            '#description' => filter_xss($type_info['description']),
-            // Current value, defined default, or NULL.
-            '#default_value' => ((isset($current_value[$type]) && isset($info['options'][$current_value[$type]])) ?
-              $current_value[$type] :
-              ((isset($defaults[$type]) && isset($info['options'][$defaults[$type]])) ?
-                $defaults[$type] :
-                NULL)),
-          );
+          '#title' => filter_xss(format_string($info['strings']['mapping_title'], array(
+            '@type' => $type_info['name'],
+          ))),
+          '#description' => filter_xss($type_info['description']),
+          // Current value, defined default, or NULL.
+          '#default_value' => ((isset($current_value[$type]) && isset($info['options'][$current_value[$type]])) ?
+            $current_value[$type] :
+            ((isset($defaults[$type]) && isset($info['options'][$defaults[$type]])) ?
+              $defaults[$type] :
+              NULL)),
+        );
       }
     }
     else {
       foreach ($form_subtypes as $type => $type_info) {
         $form['settings'][$variable][$type] = $base_select + array(
-            '#title' => filter_xss(format_string($info['strings']['mapping_title'], array(
-              '@type' => $type_info['name'],
-            ))),
-            '#description' => filter_xss($type_info['description']),
-            // Current value, defined default, or NULL.
-            '#default_value' => ((isset($current_value[$type]) && isset($info['options'][$current_value[$type]])) ?
-              $current_value[$type] :
-              ((isset($defaults[$type]) && isset($info['options'][$defaults[$type]])) ?
-                $defaults[$type] :
-                NULL)),
-          );
+          '#title' => filter_xss(format_string($info['strings']['mapping_title'], array(
+            '@type' => $type_info['name'],
+          ))),
+          '#description' => filter_xss($type_info['description']),
+          // Current value, defined default, or NULL.
+          '#default_value' => ((isset($current_value[$type]) && isset($info['options'][$current_value[$type]])) ?
+            $current_value[$type] :
+            ((isset($defaults[$type]) && isset($info['options'][$defaults[$type]])) ?
+              $defaults[$type] :
+              NULL)),
+        );
       }
     }
 
