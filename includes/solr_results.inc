@@ -42,7 +42,7 @@ class IslandoraSolrResultsLib4riBookmark extends IslandoraSolrResultsBookmark {
         ),
       ),
       'info:fedora/islandora:collectionCModel' => array(
-        "dc.title",
+        "fgs_label_s",
         "prefix" => array(
           "Collection",
         ),
@@ -54,8 +54,7 @@ class IslandoraSolrResultsLib4riBookmark extends IslandoraSolrResultsBookmark {
         ),
       ),
       'info:fedora/islandora:personCModel' => array(
-        'MADS_given_mt',
-        'MADS_family_mt',
+        'fgs_label_s',
         "prefix" => array(
           "Author",
         ),
