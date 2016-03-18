@@ -133,6 +133,7 @@ class IslandoraSolrResultsLib4riBookmark extends IslandoraSolrResultsBookmark {
    */
   public function currentQuery($islandora_solr_query) {
     module_load_include('inc', 'islandora', 'includes/utilities');
+    module_load_include('inc', 'lib4ridora', 'includes/utilities');
 
     $output = '';
     $path = current_path();
@@ -240,14 +241,14 @@ class IslandoraSolrResultsLib4riBookmark extends IslandoraSolrResultsBookmark {
         foreach ($records as $key => $value) {
           // Re-write author PIDs to name strings.
           if (strpos($filter, $value['solr_field']) !== FALSE) {
-            if ($value['solr_field'] == variable_get('lib4ridora_author_solr_field', 'mods_name_personal_author_authority_marcrelator_nameIdentifier_authorId_ms')) {
+            if ($value['solr_field'] == variable_get('lib4ridora_author_solr_field', 'mods_name_personal_nameIdentifier_authorId_ms')) {
               $filter_string = lib4ridora_get_author_from_pid($filter_string);
             }
             // @XXX: We are not using l() because of active classes:
             // @see http://drupal.org/node/41595
             // The following differs from the default
             // islandora_query block currentQuery().
-            $filter_list[] = '<a' . drupal_attributes($attributes['minus']['attr']) . '>(-)</a>' . " {$value['solr_field_settings']['label']}: " . $symbol . " " . check_plain($filter_string);
+            $filter_list[] = '<a' . drupal_attributes($attributes['minus']['attr']) . '>(-)</a>' . " {$value['solr_field_settings']['label']} " . $symbol . " " . check_plain($filter_string);
           }
         }
       }

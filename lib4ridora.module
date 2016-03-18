@@ -978,39 +978,39 @@ function lib4ridora_ir_citationCModel_islandora_view_object_alter(AbstractObject
   unset($rendered['citation.tab']['preview']);
   unset($rendered['citation.tab']['pdf_download']);
   if (isset($object['MODS'])) {
-    module_load_include('inc', 'citeproc', 'includes/converter');
     $mods_content = $object['MODS']->content;
     $dom = new DOMDocument();
     $dom->loadXML($mods_content);
     $xpath = new DOMXPath($dom);
     $xpath->registerNamespace('mods', 'http://loc.gov/mods/v3');
-    $xpath->registerNamespace('php', 'http://php.net/xpath');
-    $xpath->registerPhpFunctions('strtolower');
-    $simple = simplexml_load_string($mods_content);
-    $author_json = convert_mods_to_citeproc_json_names($simple);
-    // Structure our custom style into a form that citeproc likes.
-    $path = drupal_get_path('module', 'lib4ridora');
-    $style = array(
-      'name' => t('LIB4Ri Authors'),
-      'data' => file_get_contents("$path/xml/csl/lib4ri_author.csl"),
-    );
-    $authors = citeproc_bibliography_from_mods($style, $object['MODS']->content);
-    $csled_authors = explode(',', strip_tags($authors));
-    if (isset($author_json['author'])) {
-      $authors = $author_json['author'];
-      $author_list = array();
-      foreach ($authors as $key => &$author) {
-        $family = $author['family'];
-        $entity = $xpath->evaluate('string(//mods:name[@type="personal"][php:functionString("strtolower", mods:namePart[@type="family"]) = "' . strtolower($family) . '" and php:functionString("strtolower", mods:namePart[@type="family"]) = "' . strtolower($family) . '"]/mods:nameIdentifier[@type="authorId"])');
-        // Grab from our parsed CSL style string.
-        $author_string = $csled_authors[$key];
-        if (!empty($entity)) {
+
+    $authors = $xpath->query('//mods:name[@type="personal"]');
+    $author_list = array();
+    if ($authors->length) {
+      foreach ($authors as $author) {
+        $family_name = $given_name = '';
+        $family_query = $xpath->query('.//mods:namePart[@type="family"]/text()', $author);
+        if ($family_query->length) {
+          $family_name = $family_query->item(0)->nodeValue;
+        }
+        $given_query = $xpath->query('.//mods:namePart[@type="given"]/text()', $author);
+        if ($given_query->length) {
+          $given_name = $given_query->item(0)->nodeValue;
+          if (!empty($given_name)) {
+            $given_name = substr($given_name, 0, 1) . '.';
+          }
+        }
+
+        $author_string = $family_name . ' ' . $given_name;
+
+        $entity_query = $xpath->query('.//mods:nameIdentifier[@type="authorId"]/text()', $author);
+        if ($entity_query->length) {
           $author_string = l($author_string, 'islandora/search', array(
             'query' => array(
               'f' => array(
                 format_string('!field:"!value"', array(
-                  '!field' => islandora_solr_lesser_escape(variable_get('lib4ridora_author_solr_field', 'mods_name_personal_author_authority_marcrelator_nameIdentifier_authorId_ms')),
-                  '!value' => $entity,
+                  '!field' => islandora_solr_lesser_escape(variable_get('lib4ridora_author_solr_field', 'mods_name_personal_nameIdentifier_authorId_ms')),
+                  '!value' => $entity_query->item(0)->nodeValue,
                 )),
               ),
             ),
@@ -1018,6 +1018,7 @@ function lib4ridora_ir_citationCModel_islandora_view_object_alter(AbstractObject
         }
         $author_list[] = $author_string;
       }
+
       if (!empty($author_list)) {
         // Pop the last author off for APA styleness.
         $last_author = array_pop($author_list);
@@ -1035,6 +1036,7 @@ function lib4ridora_ir_citationCModel_islandora_view_object_alter(AbstractObject
         );
       }
     }
+
     $rendered['citation.tab']['abstract'] = array(
       '#type' => 'item',
       '#markup' => $xpath->evaluate('string(//mods:abstract)'),
@@ -1168,14 +1170,14 @@ function lib4ridora_solr_advanced_search_form_validate($form, &$form_state) {
   // If the "Eawag Author" field has been selected need to convert the value
   // of the field into a PID if one exists,
   foreach ($form_state['values']['terms'] as $key => &$values) {
-    if ($values['field'] == variable_get('lib4ridora_author_solr_field', 'mods_name_personal_author_authority_marcrelator_nameIdentifier_authorId_ms')) {
+    if ($values['field'] == variable_get('lib4ridora_author_solr_field', 'mods_name_personal_nameIdentifier_authorId_ms')) {
       $author_exists = lib4ridora_get_pid_from_author($values['search']);
       if (!$author_exists) {
         form_error($form['terms'][$key], t('An author by the name of @name does not exist.', array('@name' => $values['search'])));
       }
       // Need to modify the terms array, blah.
       else {
-        $values['field'] = variable_get('lib4ridora_author_solr_field', 'mods_name_personal_author_authority_marcrelator_nameIdentifier_authorId_ms');
+        $values['field'] = variable_get('lib4ridora_author_solr_field', 'mods_name_personal_nameIdentifier_authorId_ms');
         $values['search'] = format_string('"@author"', array('@author' => $author_exists));
       }
     }
@@ -1408,7 +1410,7 @@ function lib4ridora_ir_citationcmodel_islandora_derivative() {
  */
 function lib4ridora_process_islandora_solr_facet(&$variables) {
   module_load_include('inc', 'lib4ridora', 'include/utilities');
-  if ($variables['pid'] == variable_get('lib4ridora_author_solr_field', 'mods_name_personal_author_authority_marcrelator_nameIdentifier_authorId_ms')) {
+  if ($variables['pid'] == variable_get('lib4ridora_author_solr_field', 'mods_name_personal_nameIdentifier_authorId_ms')) {
     foreach ($variables['buckets'] as &$bucket) {
       $markup_dom = new DOMDocument();
       $markup_dom->loadHTML($bucket['link']);
