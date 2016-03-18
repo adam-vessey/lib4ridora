@@ -984,7 +984,7 @@ function lib4ridora_ir_citationCModel_islandora_view_object_alter(AbstractObject
     $xpath = new DOMXPath($dom);
     $xpath->registerNamespace('mods', 'http://loc.gov/mods/v3');
 
-    $authors = $xpath->query('//mods:name[@type="personal"]');
+    $authors = $xpath->query('//mods:name[@type="personal"][mods:role/mods:roleTerm[@authority="marcrelator"] = "author"]');
     $author_list = array();
     if ($authors->length) {
       foreach ($authors as $author) {
