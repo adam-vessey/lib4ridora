@@ -267,10 +267,10 @@ function lib4ridora_construct_peer_reviewed_filter(&$form_state) {
 
   $filters = array();
   if ($form_state['values']['peer_review']['yes']) {
-    $filters[] = "$peer_review_field:yes";
+    $filters[] = "$peer_review_field:Yes";
   }
   if ($form_state['values']['peer_review']['no']) {
-    $filters[] = "$peer_review_field:no";
+    $filters[] = "$peer_review_field:No";
   }
   if ($form_state['values']['peer_review']['not specified']) {
     $filters[] = "(*:* NOT $peer_review_field:*)";
