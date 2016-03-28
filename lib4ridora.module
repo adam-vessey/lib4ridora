@@ -997,7 +997,7 @@ function lib4ridora_ir_citationCModel_islandora_view_object_alter(AbstractObject
         if ($given_query->length) {
           $given_name = $given_query->item(0)->nodeValue;
           if (!empty($given_name)) {
-            $given_name = substr($given_name, 0, 1) . '.';
+            $given_name = mb_substr($given_name, 0, 1) . '.';
           }
         }
 
