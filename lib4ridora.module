@@ -192,16 +192,6 @@ function lib4ridora_ir_citationCModel_islandora_ingest_steps(array &$form_state)
     'file' => 'includes/ingest-selector.form.inc',
   );
 
-  $steps['lib4ridora_default_relations'] = array(
-    'weight' => 7,
-    'type' => 'callback',
-    'do_function' => array(
-      'function' => 'lib4ridora_update_full_text_ingest_step',
-    ),
-    'module' => 'lib4ridora',
-    'file' => 'includes/full_text.inc',
-  );
-
   $steps['lib4ridora_multi_pdf_upload'] = array(
     'weight' => 8,
     'type' => 'form',
@@ -1422,4 +1412,12 @@ function lib4ridora_process_islandora_solr_facet(&$variables) {
       $bucket['link'] = $markup_dom->saveHTML();
     }
   }
+}
+
+/**
+ * Implements hook_CMODEL_PID_islandora_object_ingested().
+ */
+function lib4ridora_ir_citationCModel_islandora_object_ingested($object) {
+  module_load_include('inc', 'lib4ridora', 'includes/full_text');
+  lib4ridora_update_full_text($object);
 }
