@@ -119,7 +119,7 @@ function lib4ridora_islandora_xml_form_builder_form_associations() {
     'template' => FALSE,
   );
   module_load_include('inc', 'lib4ridora', 'includes/citation.subtypes');
-  foreach (lib4ridora_citation_subtypes() as $type => $info) {
+  foreach (lib4ridora_citation_form_subtypes() as $type => $info) {
     $associations["lib4ridora_{$type}_form"] = $base + array(
       'form_name' => $info['name'],
     );
