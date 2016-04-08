@@ -101,14 +101,14 @@ function lib4ridora_admin(array $form, array &$form_state) {
     '#type' => 'textfield',
     '#title' => t('Document Version Solr Field'),
     '#description' => t('A field we use to determine peer review status in Solr.  Is used by the advanced search block.'),
-    '#default_value' => variable_get('lib4ridora_solr_field_peer_review', 'RELS_INT_lib4ridora-multi-embargo-document_version_literal_ms'),
+    '#default_value' => variable_get('lib4ridora_solr_field_document_version', 'RELS_INT_lib4ridora-multi-embargo-document_version_literal_ms'),
     '#required' => TRUE,
   );
   $form['lib4ridora_solr_field_document_availability'] = array(
     '#type' => 'textfield',
     '#title' => t('Document Availability Solr Field'),
     '#description' => t('A field we use to determine document availability in Solr.  Is used by the advanced search block.'),
-    '#default_value' => variable_get('lib4ridora_solr_field_peer_review', 'RELS_INT_lib4ridora-multi-embargo-availability_literal_ms'),
+    '#default_value' => variable_get('lib4ridora_solr_field_document_availability', 'RELS_INT_lib4ridora-multi-embargo-availability_literal_ms'),
     '#required' => TRUE,
   );
   return system_settings_form($form);

@@ -124,7 +124,7 @@ function lib4ridora_construct_year_filter($form_state) {
   // Convert to proper format for solr.
   if ($to != '*') {
     $to_date = new DateTime();
-    $to = date_format($to_date->createFromFormat('Y/m/d/G:i:s', "$to/01/01/0:00:00"), 'Y-m-d\TH:i:s\Z');
+    $to = date_format($to_date->createFromFormat('Y/m/d/G:i:s', "$to/12/31/23:59:59"), 'Y-m-d\TH:i:s\Z');
   }
   if ($from != '*') {
     $from_date = new DateTime();

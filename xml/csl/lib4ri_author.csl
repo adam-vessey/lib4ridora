@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<style xmlns="http://purl.org/net/xbiblio/csl" class="in-text" version="1.0" demote-non-dropping-particle="sort-only">
+    <info>
+        <title>LIB4RI Author CSL</title>
+        <id>http://www.lib4ri.ch</id>
+        <link href="http://www.zotero.org/styles/nlm" rel="template"/>
+        <author>
+            <name>discoverygarden inc.</name>
+            <email>dev@discoverygarden.ca</email>
+        </author>
+        <category field="generic-base"/>
+        <category citation-format="numeric"/>
+        <updated>2016-02-03T10:56:08-04:00</updated>
+        <rights>This work is licensed under a Creative Commons Attribution-Share Alike 3.0 License: http://creativecommons.org/licenses/by-sa/3.0/</rights>
+    </info>
+    <locale xml:lang="en">
+        <terms>
+            <term name="no date" form="long">date unknown</term>
+        </terms>
+    </locale>
+    <macro name="author">
+        <names variable="author" suffix=". ">
+            <name sort-separator=" " initialize-with="" name-as-sort-order="all" delimiter=", " delimiter-precedes-last="always"/>
+            <label form="long" prefix=", " suffix="." text-case="lowercase"/>
+            <substitute>
+                <names variable="editor"/>
+                <names variable="translator"/>
+            </substitute>
+        </names>
+    </macro>
+    <macro name="editor">
+        <names variable="editor">
+            <name sort-separator=" " initialize-with="" name-as-sort-order="all" delimiter=", " delimiter-precedes-last="always"/>
+            <label form="long" prefix=", " suffix=". " text-case="lowercase"/>
+        </names>
+    </macro>
+    <citation collapse="citation-number">
+        <sort>
+            <key variable="citation-number"/>
+        </sort>
+        <layout prefix="(" suffix=")" delimiter="; ">
+            <text variable="citation-number"/>
+        </layout>
+    </citation>
+    <bibliography second-field-align="flush">
+        <layout>
+            <text macro="author"/>
+        </layout>
+    </bibliography>
+</style>

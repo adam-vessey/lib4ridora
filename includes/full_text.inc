@@ -15,6 +15,7 @@ function lib4ridora_update_full_text(AbstractObject $object) {
   module_load_include('inc', 'lib4ridora', 'includes/utilities');
 
   $is_open = NULL;
+  $accepted_or_published = FALSE;
   $pdf_datastreams = lib4ridora_retrieve_filtered_pdfs($object);
   foreach ($pdf_datastreams as $datastream) {
     $info = lib4ridora_get_embargo_info($datastream);
@@ -22,8 +23,11 @@ function lib4ridora_update_full_text(AbstractObject $object) {
       $is_open = TRUE;
       break;
     }
+    elseif (in_array($info['document_version'], array('accepted version', 'published version'))) {
+      $accepted_or_published = TRUE;
+    }
   }
-  if (!$pdf_datastreams) {
+  if (!$pdf_datastreams || !$accepted_or_published) {
     $relationship_value = 'No Full Text';
   }
   elseif ($is_open) {
