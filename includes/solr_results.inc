@@ -238,6 +238,7 @@ class IslandoraSolrResultsLib4riBookmark extends IslandoraSolrResultsBookmark {
 
         // Append the human readable labels to the front of
         // the facet removal link, in the 'current_query_facet_name' block.
+        $updated_filter = FALSE;
         foreach ($records as $key => $value) {
           // Re-write author PIDs to name strings.
           if (strpos($filter, $value['solr_field']) !== FALSE) {
@@ -248,8 +249,13 @@ class IslandoraSolrResultsLib4riBookmark extends IslandoraSolrResultsBookmark {
             // @see http://drupal.org/node/41595
             // The following differs from the default
             // islandora_query block currentQuery().
+            $updated_filter = TRUE;
             $filter_list[] = '<a' . drupal_attributes($attributes['minus']['attr']) . '>(-)</a>' . " {$value['solr_field_settings']['label']} " . $symbol . " " . check_plain($filter_string);
           }
+        }
+        // Default to old behavior.
+        if (!$updated_filter) {
+          $filter_list[] = '<a' . drupal_attributes($attributes['minus']['attr']) . '>(-)</a> ' . $symbol . ' ' . check_plain($filter_string);
         }
       }
 
@@ -265,7 +271,7 @@ class IslandoraSolrResultsLib4riBookmark extends IslandoraSolrResultsBookmark {
     }
     return $output;
   }
-  
+
   /**
    * Formats the passed in filter into a human readable form.
    *
@@ -280,6 +286,39 @@ class IslandoraSolrResultsLib4riBookmark extends IslandoraSolrResultsBookmark {
   public function formatFilter($filter, $islandora_solr_query) {
     // @todo See how this interacts with multiple date filters.
     // Check if there are operators in the filter.
+    // XXX: Hardcode list of things for advanced search for LIB. These mappings
+    // are based around the advanced search customizations.
+    $document_version_field = islandora_solr_lesser_escape(variable_get('lib4ridora_solr_field_document_version', 'RELS_INT_lib4ridora-multi-embargo-document_version_literal_ms'));
+    $document_availability_field = islandora_solr_lesser_escape(variable_get('lib4ridora_solr_field_document_availability', 'RELS_INT_lib4ridora-multi-embargo-availability_literal_ms'));
+    $peer_review_field = islandora_solr_lesser_escape(variable_get('lib4ridora_solr_field_peer_review', 'mods_note_peer review_ms'));
+    $full_text_open = format_string('(fedora_datastreams_ms:PDF AND (!document_version:"published version" OR !document_version:"accepted version") AND (*:* NOT !availability:*))', array(
+      '!document_version' => $document_version_field,
+      '!availability' => $document_availability_field,
+    ));
+    $full_text_restricted = format_string('(fedora_datastreams_ms:PDF AND (!document_version:"published version" OR !document_version:"accepted version") AND !availability:*)', array(
+      '!document_version' => $document_version_field,
+      '!availability' => $document_availability_field,
+    ));
+
+    $mapping = array(
+      $full_text_open => t('Full Text: Open Access'),
+      $full_text_restricted => t('Full Text: Restricted'),
+      '(*:* NOT fedora_datastreams_ms:PDF)' => t('Full Text: None'),
+      "{$peer_review_field}:Yes" => t('Peer Reviewed: Yes'),
+      "{$peer_review_field}:No" => t('Peer Reviewed: No'),
+      "(*:* NOT {$peer_review_field}:*)" => t('Peer Reviewed: Not Specified'),
+    );
+    $replacements = array();
+    $searches = array();
+    foreach ($mapping as $search => $replace) {
+      if (strpos($filter, $search) !== FALSE) {
+        $searches[] = $search;
+        $replacements[] = $replace;
+      }
+    }
+    if (!empty($replacements) && !empty($searches)) {
+      return stripslashes(str_replace($searches, $replacements, $filter));
+    }
     $fq_split = preg_split('/ (OR|AND) /', $filter);
     if (count($fq_split) > 1) {
       $operator_split = preg_split(ISLANDORA_SOLR_QUERY_SPLIT_REGEX, $filter);
