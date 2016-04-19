@@ -238,6 +238,7 @@ class IslandoraSolrResultsLib4riBookmark extends IslandoraSolrResultsBookmark {
 
         // Append the human readable labels to the front of
         // the facet removal link, in the 'current_query_facet_name' block.
+        $updated_filter = FALSE;
         foreach ($records as $key => $value) {
           // Re-write author PIDs to name strings.
           if (strpos($filter, $value['solr_field']) !== FALSE) {
@@ -248,8 +249,13 @@ class IslandoraSolrResultsLib4riBookmark extends IslandoraSolrResultsBookmark {
             // @see http://drupal.org/node/41595
             // The following differs from the default
             // islandora_query block currentQuery().
+            $updated_filter = TRUE;
             $filter_list[] = '<a' . drupal_attributes($attributes['minus']['attr']) . '>(-)</a>' . " {$value['solr_field_settings']['label']} " . $symbol . " " . check_plain($filter_string);
           }
+        }
+        // Default to old behavior.
+        if (!$updated_filter) {
+          $filter_list[] = '<a' . drupal_attributes($attributes['minus']['attr']) . '>(-)</a> ' . $symbol . ' ' . check_plain($filter_string);
         }
       }
 
@@ -265,7 +271,7 @@ class IslandoraSolrResultsLib4riBookmark extends IslandoraSolrResultsBookmark {
     }
     return $output;
   }
-  
+
   /**
    * Formats the passed in filter into a human readable form.
    *
