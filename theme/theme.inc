@@ -66,12 +66,12 @@ function template_process_lib4ridora_pdf_link(&$variables) {
       if (REQUEST_TIME > $embargo) {
         $availability_text = t('Open Access');
       }
-      else{
+      else {
         $availability_text = t('Intranet Only until @day @month @year', array(
-        '@day' => $values['embargo_date']['day'],
-        '@month' => date_format($date->createFromFormat('!m', $values['embargo_date']['month']), 'F'),
-        '@year' => $values['embargo_date']['year'],
-      ));
+          '@day' => $values['embargo_date']['day'],
+          '@month' => date_format($date->createFromFormat('!m', $values['embargo_date']['month']), 'F'),
+          '@year' => $values['embargo_date']['year'],
+        ));
       }
     }
     elseif ($availability == 'private') {
