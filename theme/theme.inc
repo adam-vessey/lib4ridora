@@ -61,7 +61,7 @@ function template_process_lib4ridora_pdf_link(&$variables) {
     elseif ($availability == 'date') {
       // Need to get a human readable month.
       $date = new DateTime();
-      $embargo =  gmdate('Y-m-d\TH:i:s\Z', gmmktime(0, 0, 0,  $values['embargo_date']['month'], $values['embargo_date']['day'], $values['embargo_date']['year']));
+      $embargo =  gmmktime(0, 0, 0,  $values['embargo_date']['month'], $values['embargo_date']['day'], $values['embargo_date']['year']);
       // Check if embargo date has passed.
       if (REQUEST_TIME > $embargo) {
         $availability_text = t('Open Access');
