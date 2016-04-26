@@ -1422,7 +1422,9 @@ function lib4ridora_ir_citationCModel_islandora_object_ingested($object) {
  */
 function lib4ridora_ir_citationCModel_islandora_datastream_modified($object, $datastream) {
   module_load_include('inc', 'lib4ridora', 'includes/full_text');
-  lib4ridora_update_full_text($object);
+  if ($datastream->mimetype == 'application/pdf') {
+    lib4ridora_update_full_text($object);
+  }
 }
 /**
  * Implements hook_cmodel_pid_dsid_islandora_datastream_ingested().
