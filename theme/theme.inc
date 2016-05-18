@@ -51,6 +51,8 @@ function template_preprocess_lib4ridora_pdf_link(&$variables) {
  * Implements hook_process_lib4ridora_pdf_link().
  */
 function template_process_lib4ridora_pdf_link(&$variables) {
+  $object = islandora_object_load($variables['datastream']->parent->id);
+  module_load_include('inc', 'lib4ridora', 'includes/full_text');
   module_load_include('inc', 'lib4ridora', 'includes/embargo.form');
   $values = $variables['pdf_link'];
   if ($variables['statement']) {
@@ -65,6 +67,14 @@ function template_process_lib4ridora_pdf_link(&$variables) {
       // Check if embargo date has passed.
       if (REQUEST_TIME > $embargo) {
         $availability_text = t('Open Access');
+        // Will update RELS-EXT on view if not updated yet since date passed.
+        $value = ($object->relationships->get(LIB4RIDORA_RELS_EXT_NAMESPACE, LIB4RIDORA_FULL_TEXT_RELATIONSHIP));
+        $value = reset($value);
+        if ($value) {
+          if ($value['object']['value'] == "Restricted") {
+            lib4ridora_update_full_text($object);
+          }
+        }
       }
       else {
         $availability_text = t('Intranet Only until @day @month @year', array(

@@ -17,31 +17,40 @@ function lib4ridora_update_full_text(AbstractObject $object) {
   $is_open = NULL;
   $accepted_or_published = FALSE;
   $pdf_datastreams = lib4ridora_retrieve_filtered_pdfs($object);
-  foreach ($pdf_datastreams as $datastream) {
-    $info = lib4ridora_get_embargo_info($datastream);
-    if (in_array($info['document_version'], array('accepted version', 'published version'))) {
-      $accepted_or_published = TRUE;
-    }
-    if (is_null($info['availability']) && $accepted_or_published) {
-      $is_open = TRUE;
-    }
-    if($info['availability'] == 'date') {
-      $embargo_date = $datastream->relationships->get(LIB4RIDORA_RELS_URI, lib4ridora_multi_embargo_build_predicate('embargo_date'));
-      $embargo_date = reset($embargo_date);
-      // Check if embargo date has passed.
-      if (REQUEST_TIME > strtotime($embargo_date['object']['value'])) {
+  dsm($pdf_datastreams);
+  if (!empty($pdf_datastreams)) {
+    foreach ($pdf_datastreams as $datastream) {
+      $info = lib4ridora_get_embargo_info($datastream);
+      if (in_array($info['document_version'], array('accepted version', 'published version'))) {
+        $accepted_or_published = TRUE;
+      }
+      if (is_null($info['availability']) && $accepted_or_published) {
         $is_open = TRUE;
+      }
+      if ($info['availability'] == 'date') {
+        $embargo_date = $datastream->relationships->get(LIB4RIDORA_RELS_URI, lib4ridora_multi_embargo_build_predicate('embargo_date'));
+        $embargo_date = reset($embargo_date);
+        // Check if embargo date has passed.
+        if (REQUEST_TIME > strtotime($embargo_date['object']['value'])) {
+          $is_open = TRUE;
+        }
+      }
+      if (!$pdf_datastreams || !$accepted_or_published) {
+        $relationship_value = 'No Full Text';
+      }
+      elseif ($is_open) {
+        $relationship_value = 'Open Access';
+      }
+      else {
+        $relationship_value = 'Restricted';
+        // For multi PDF objects, break here if any PDFs are restricted.
+        break;
       }
     }
   }
-  if (!$pdf_datastreams || !$accepted_or_published) {
-    $relationship_value = 'No Full Text';
-  }
-  elseif ($is_open) {
-    $relationship_value = 'Open Access';
-  }
   else {
-    $relationship_value = 'Restricted';
+    // There are no PDF datastreams.
+    $relationship_value = 'No Full Text';
   }
   $object->relationships->autoCommit = FALSE;
   $object->relationships->remove(
