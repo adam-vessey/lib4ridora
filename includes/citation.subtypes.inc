@@ -147,6 +147,10 @@ function lib4ridora_citation_form_subtypes() {
         'name' => t('Book'),
         'description' => t('A monograph, edited volume or textbook.'),
       ),
+      'edited_book' => array(
+        'name' => t('Edited Book'),
+        'description' => t('An edited book.'),
+      ),
       'newspaper_or_magazine_article' => array(
         'name' => t('Newspaper or Magazine Article'),
         'description' => t('An article in a newspaper or magazine. Not peer-reviewed.'),
@@ -155,9 +159,21 @@ function lib4ridora_citation_form_subtypes() {
         'name' => t('Conference Item'),
         'description' => t('A paper, poster or presentation given at a conference. If the conference item has been published in a journal or book please use "Journal Article" or "Book Chapter" instead.'),
       ),
-      'thesis' => array(
-        'name' => t('Thesis'),
-        'description' => t('A thesis or dissertation.'),
+      'proceedings_paper' => array(
+        'name' => t('Proceedings Paper'),
+        'description' => t('A proceedings paper.'),
+      ),
+      'master_thesis' => array(
+        'name' => t('Master Thesis'),
+        'description' => t('A master thesis.'),
+      ),
+      'bachelor_thesis' => array(
+        'name' => t('Bachelor Thesis'),
+        'description' => t('A bachelor thesis.'),
+      ),
+      'dissertation' => array(
+        'name' => t('Dissertation'),
+        'description' => t('A dissertation.'),
       ),
       'patent' => array(
         'name' => t('Patent'),
