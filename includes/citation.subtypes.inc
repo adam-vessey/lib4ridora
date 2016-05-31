@@ -5,6 +5,89 @@
  */
 
 /**
+ * Helper function to get info about genre mappings.
+ *
+ * @return array
+ *   An associative array of info about genre mappings.
+ */
+function lib4ridora_get_citation_mapping_info() {
+  return array(
+    'journal_article' => array(
+      'name' => t('Journal Article'),
+      'description' => t('An article in a scientific journal.  Not necessarily peer-reviewed. May be an electronic-only medium such as online journal.'),
+    ),
+    'book_chapter' => array(
+      'name' => t('Book Chapter'),
+      'description' => t('A chapter or contribution in a book.'),
+    ),
+    'book' => array(
+      'name' => t('Book'),
+      'description' => t('A monograph, edited volume or textbook.'),
+    ),
+    'edited_book' => array(
+      'name' => t('Edited Book'),
+      'description' => t('An edited book.'),
+    ),
+    'newspaper_or_magazine_article' => array(
+      'name' => t('Newspaper or Magazine Article'),
+      'description' => t('An article in a newspaper or magazine. Not peer-reviewed.'),
+    ),
+    'conference_object' => array(
+      'name' => t('Conference Item'),
+      'description' => t('A paper, poster or presentation given at a conference. If the conference item has been published in a journal or book please use "Journal Article" or "Book Chapter" instead.'),
+    ),
+    'proceedings_paper' => array(
+      'name' => t('Proceedings Paper'),
+      'description' => t('A proceedings paper.'),
+    ),
+    'master_thesis' => array(
+      'name' => t('Master Thesis'),
+      'description' => t('A master thesis.'),
+    ),
+    'bachelor_thesis' => array(
+      'name' => t('Bachelor Thesis'),
+      'description' => t('A bachelor thesis.'),
+    ),
+    'dissertation' => array(
+      'name' => t('Dissertation'),
+      'description' => t('A dissertation.'),
+    ),
+    'patent' => array(
+      'name' => t('Patent'),
+      'description' => t('A published patent.  Do not include as yet unpublished patent applications.'),
+    ),
+    'report' => array(
+      'name' => t('Report'),
+      'description' => t('A report or expert opinion.'),
+    ),
+  );
+}
+
+/**
+ * Helper function to get the mapping of genres to machine names.
+ *
+ * @return array
+ *   An associative array pairing genres to machine names.
+ */
+function lib4ridora_citation_get_genre_map() {
+  return array(
+    'Journal Article' => 'journal_article',
+    'Book Chapter' => 'book_chapter',
+    'Book' => 'book',
+    'Edited Book' => 'edited_book',
+    'Newspaper or Magazine Article' => 'newspaper_or_magazine_article',
+    'Conference Item' => 'conference_object',
+    'Proceedings Paper' => 'proceedings_paper',
+    'Report' => 'report',
+    'Thesis' => 'thesis',
+    'Dissertation' => 'dissertation',
+    'Master Thesis' => 'master_thesis',
+    'Bachelor Thesis' => 'bachelor_thesis',
+    'Patent' => 'patent',
+  );
+}
+
+/**
  * Get information about the different display subtypes.
  *
  * @return array
@@ -22,73 +105,8 @@
 function lib4ridora_citation_subtypes() {
   static $map = NULL;
   if ($map === NULL) {
-    $map = array(
-      'journal_article' => array(
-        'name' => t('Journal Article'),
-        'description' => t('An article in a scientific journal.  Not necessarily peer-reviewed. May be an electronic-only medium such as online journal.'),
-      ),
-      'book_chapter' => array(
-        'name' => t('Book Chapter'),
-        'description' => t('A chapter or contribution in a book.'),
-      ),
-      'book' => array(
-        'name' => t('Book'),
-        'description' => t('A monograph, edited volume or textbook.'),
-      ),
-      'edited_book' => array(
-        'name' => t('Edited Book'),
-        'description' => t('An edited book.'),
-      ),
-      'newspaper_or_magazine_article' => array(
-        'name' => t('Newspaper or Magazine Article'),
-        'description' => t('An article in a newspaper or magazine. Not peer-reviewed.'),
-      ),
-      'conference_object' => array(
-        'name' => t('Conference Item'),
-        'description' => t('A paper, poster or presentation given at a conference. If the conference item has been published in a journal or book please use "Journal Article" or "Book Chapter" instead.'),
-      ),
-      'proceedings_paper' => array(
-        'name' => t('Proceedings Paper'),
-        'description' => t('A proceedings paper.'),
-      ),
-      'master_thesis' => array(
-        'name' => t('Master Thesis'),
-        'description' => t('A master thesis.'),
-      ),
-      'bachelor_thesis' => array(
-        'name' => t('Bachelor Thesis'),
-        'description' => t('A bachelor thesis.'),
-      ),
-      'dissertation' => array(
-        'name' => t('Dissertation'),
-        'description' => t('A dissertation.'),
-      ),
-      'patent' => array(
-        'name' => t('Patent'),
-        'description' => t('A published patent.  Do not include as yet unpublished patent applications.'),
-      ),
-      'report' => array(
-        'name' => t('Report'),
-        'description' => t('A report or expert opinion.'),
-      ),
-    );
-
-    // Map MODS genres to our machine names...
-    $genre_map = array(
-      'Journal Article' => 'journal_article',
-      'Book Chapter' => 'book_chapter',
-      'Book' => 'book',
-      'Edited Book' => 'edited_book',
-      'Newspaper or Magazine Article' => 'newspaper_or_magazine_article',
-      'Conference Item' => 'conference_object',
-      'Proceedings Paper' => 'proceedings_paper',
-      'Report' => 'report',
-      'Thesis' => 'thesis',
-      'Dissertation' => 'dissertation',
-      'Master Thesis' => 'master_thesis',
-      'Bachelor Thesis' => 'bachelor_thesis',
-      'Patent' => 'patent',
-    );
+    $map = lib4ridora_get_citation_mapping_info();
+    $genre_map = lib4ridora_citation_get_genre_map();
     $form_map = variable_get('lib4ridora_citation_subtype_form_associations', array());
     $display_map = variable_get('lib4ridora_islandora_solr_metadata_mappings', array());
     $test_form_association = function ($form_name) {
@@ -134,73 +152,8 @@ function lib4ridora_citation_subtypes() {
 function lib4ridora_citation_form_subtypes() {
   static $map = NULL;
   if ($map === NULL) {
-    $map = array(
-      'journal_article' => array(
-        'name' => t('Journal Article'),
-        'description' => t('An article in a scientific journal.  Not necessarily peer-reviewed. May be an electronic-only medium such as online journal.'),
-      ),
-      'book_chapter' => array(
-        'name' => t('Book Chapter'),
-        'description' => t('A chapter or contribution in a book.'),
-      ),
-      'book' => array(
-        'name' => t('Book'),
-        'description' => t('A monograph, edited volume or textbook.'),
-      ),
-      'edited_book' => array(
-        'name' => t('Edited Book'),
-        'description' => t('An edited book.'),
-      ),
-      'newspaper_or_magazine_article' => array(
-        'name' => t('Newspaper or Magazine Article'),
-        'description' => t('An article in a newspaper or magazine. Not peer-reviewed.'),
-      ),
-      'conference_object' => array(
-        'name' => t('Conference Item'),
-        'description' => t('A paper, poster or presentation given at a conference. If the conference item has been published in a journal or book please use "Journal Article" or "Book Chapter" instead.'),
-      ),
-      'proceedings_paper' => array(
-        'name' => t('Proceedings Paper'),
-        'description' => t('A proceedings paper.'),
-      ),
-      'master_thesis' => array(
-        'name' => t('Master Thesis'),
-        'description' => t('A master thesis.'),
-      ),
-      'bachelor_thesis' => array(
-        'name' => t('Bachelor Thesis'),
-        'description' => t('A bachelor thesis.'),
-      ),
-      'dissertation' => array(
-        'name' => t('Dissertation'),
-        'description' => t('A dissertation.'),
-      ),
-      'patent' => array(
-        'name' => t('Patent'),
-        'description' => t('A published patent.  Do not include as yet unpublished patent applications.'),
-      ),
-      'report' => array(
-        'name' => t('Report'),
-        'description' => t('A report or expert opinion.'),
-      ),
-    );
-
-    // Map MODS genres to our machine names...
-    $genre_map = array(
-      'Journal Article' => 'journal_article',
-      'Book Chapter' => 'book_chapter',
-      'Book' => 'book',
-      'Edited Book' => 'book',
-      'Newspaper or Magazine Article' => 'newspaper_or_magazine_article',
-      'Conference Item' => 'conference_object',
-      'Proceedings Paper' => 'conference_object',
-      'Report' => 'report',
-      'Thesis' => 'thesis',
-      'dissertation' => 'thesis',
-      'master thesis' => 'thesis',
-      'bachelor thesis' => 'thesis',
-      'Patent' => 'patent',
-    );
+    $map = lib4ridora_get_citation_mapping_info();
+    $genre_map = lib4ridora_citation_get_genre_map();
     $form_map = variable_get('lib4ridora_citation_subtype_form_associations', array());
     $display_map = variable_get('lib4ridora_islandora_solr_metadata_mappings', array());
     $test_form_association = function ($form_name) {

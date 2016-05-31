@@ -25,7 +25,7 @@ function lib4ridora_update_full_text(AbstractObject $object) {
     if (is_null($info['availability']) && $accepted_or_published) {
       $is_open = TRUE;
     }
-    if($info['availability'] == 'date') {
+    if ($info['availability'] == 'date') {
       $embargo_date = $datastream->relationships->get(LIB4RIDORA_RELS_URI, lib4ridora_multi_embargo_build_predicate('embargo_date'));
       $embargo_date = reset($embargo_date);
       // Check if embargo date has passed.
