@@ -40,6 +40,10 @@ function lib4ridora_get_citation_mapping_info() {
       'name' => t('Proceedings Paper'),
       'description' => t('A proceedings paper.'),
     ),
+    'thesis' => array(
+      'name' => t('Thesis'),
+      'description' => t('A thesis.'),
+    ),
     'master_thesis' => array(
       'name' => t('Master Thesis'),
       'description' => t('A master thesis.'),
@@ -66,29 +70,33 @@ function lib4ridora_get_citation_mapping_info() {
 /**
  * Helper function to get the mapping of genres to machine names.
  *
+ * @param bool $metadata_display
+ *   Whether or not the subtype mapping should use genre aliases for determining
+ *   the correct metadata display. Leave FALSE to use the regular form mapping.
+ *
  * @return array
  *   An associative array pairing genres to machine names.
  */
-function lib4ridora_citation_get_genre_map() {
+function lib4ridora_citation_get_genre_map($metadata_display = FALSE) {
   return array(
     'Journal Article' => 'journal_article',
     'Book Chapter' => 'book_chapter',
     'Book' => 'book',
-    'Edited Book' => 'edited_book',
+    'Edited Book' => $metadata_display ? 'book' : 'edited_book',
     'Newspaper or Magazine Article' => 'newspaper_or_magazine_article',
     'Conference Item' => 'conference_object',
-    'Proceedings Paper' => 'proceedings_paper',
+    'Proceedings Paper' => $metadata_display ? 'conference_object' : 'proceedings_paper',
     'Report' => 'report',
     'Thesis' => 'thesis',
-    'Dissertation' => 'dissertation',
-    'Master Thesis' => 'master_thesis',
-    'Bachelor Thesis' => 'bachelor_thesis',
+    'Dissertation' => $metadata_display ? 'thesis' : 'dissertation',
+    'Master Thesis' => $metadata_display ? 'thesis' : 'master_thesis',
+    'Bachelor Thesis' => $metadata_display ? 'thesis' : 'bachelor_thesis',
     'Patent' => 'patent',
   );
 }
 
 /**
- * Get information about the different display subtypes.
+ * Get information about the different subtypes for forms.
  *
  * @return array
  *   An associative array mapping a stable machine name to an associative array
@@ -98,17 +106,13 @@ function lib4ridora_citation_get_genre_map() {
  *   - genres: An array of genres which map to the given type.
  *   - form: The name of the form to use for the given type. NOTE: May be NULL
  *     if there is none mapped for the given type.
- *   - display: The machine name of the Solr metadata display to use for the
- *     given type. NOTE: May be NULL if there is none mapped for the given
- *     type.
  */
-function lib4ridora_citation_subtypes() {
+function lib4ridora_citation_form_subtypes() {
   static $map = NULL;
   if ($map === NULL) {
     $map = lib4ridora_get_citation_mapping_info();
-    $genre_map = lib4ridora_citation_get_genre_map();
+    $genre_map = lib4ridora_citation_get_genre_map(FALSE);
     $form_map = variable_get('lib4ridora_citation_subtype_form_associations', array());
-    $display_map = variable_get('lib4ridora_islandora_solr_metadata_mappings', array());
     $test_form_association = function ($form_name) {
       // Test that an association exists for the given form (and it is a MODS
       // form).
@@ -117,7 +121,6 @@ function lib4ridora_citation_subtypes() {
     };
     foreach ($map as $name => &$info) {
       $info['genres'] = array_keys($genre_map, $name);
-      $info['display'] = isset($display_map[$name]) ? $display_map[$name] : NULL;
 
       // Use the previously configured form name; otherwise, default to the form
       // with the same human-readable name.
@@ -135,7 +138,7 @@ function lib4ridora_citation_subtypes() {
 }
 
 /**
- * Get information about the different form subtypes.
+ * Get information about the different subtypes for metadata display.
  *
  * @return array
  *   An associative array mapping a stable machine name to an associative array
@@ -143,42 +146,25 @@ function lib4ridora_citation_subtypes() {
  *   - name: A human-readable name for the given type.
  *   - description: A verbose description of the given type.
  *   - genres: An array of genres which map to the given type.
- *   - form: The name of the form to use for the given type. NOTE: May be NULL
- *     if there is none mapped for the given type.
  *   - display: The machine name of the Solr metadata display to use for the
  *     given type. NOTE: May be NULL if there is none mapped for the given
  *     type.
  */
-function lib4ridora_citation_form_subtypes() {
-  static $map = NULL;
-  if ($map === NULL) {
-    $map = lib4ridora_get_citation_mapping_info();
-    $genre_map = lib4ridora_citation_get_genre_map();
-    $form_map = variable_get('lib4ridora_citation_subtype_form_associations', array());
-    $display_map = variable_get('lib4ridora_islandora_solr_metadata_mappings', array());
-    $test_form_association = function ($form_name) {
-      // Test that an association exists for the given form (and it is a MODS
-      // form).
-      module_load_include('inc', 'xml_form_builder', 'includes/associations');
-      return xml_form_builder_get_associations(array($form_name), array(), array('MODS'));
-    };
-    foreach ($map as $name => &$info) {
-      $info['genres'] = array_keys($genre_map, $name);
-      $info['display'] = isset($display_map[$name]) ? $display_map[$name] : NULL;
-
-      // Use the previously configured form name; otherwise, default to the form
-      // with the same human-readable name.
-      $info['form'] = isset($form_map[$name]) ? $form_map[$name] : $info['name'];
-      if (!$test_form_association($info['form'])) {
-        // Association for the form does not exist: Wipe it.
-        $info['form'] = NULL;
-      }
-    }
-    // XXX: Deal with leaked reference.
-    unset($info);
+function lib4ridora_citation_display_subtypes() {
+  $map = lib4ridora_get_citation_mapping_info();
+  $genre_map = lib4ridora_citation_get_genre_map(TRUE);
+  $display_map = variable_get('lib4ridora_islandora_solr_metadata_mappings', array());
+  foreach ($map as $name => &$info) {
+    $info['genres'] = array_keys($genre_map, $name);
+    $info['display'] = isset($display_map[$name]) ? $display_map[$name] : NULL;
   }
 
-  return $map;
+  // Some of the resultant subtypes have no genres and need to be removed.
+  $has_genres = function ($subtype) {
+    return !empty($subtype['genres']);
+  };
+  return array_filter($map, $has_genres);
+
 }
 
 /**
@@ -222,7 +208,6 @@ function lib4ridora_citation_subtype_mapping_form($form, &$form_state) {
     '#type' => 'vertical_tabs',
   );
 
-  $subtypes = lib4ridora_citation_subtypes();
   $form_subtypes = lib4ridora_citation_form_subtypes();
   $map_for_forms = function ($subtype) {
     return $subtype['name'];
@@ -265,7 +250,7 @@ function lib4ridora_citation_subtype_mapping_form($form, &$form_state) {
       '#description' => filter_xss($info['strings']['description']),
     );
     if ($variable == 'lib4ridora_islandora_solr_metadata_mappings') {
-      foreach ($subtypes as $type => $type_info) {
+      foreach (lib4ridora_citation_display_subtypes() as $type => $type_info) {
         $form['settings'][$variable][$type] = $base_select + array(
           '#title' => filter_xss(format_string($info['strings']['mapping_title'], array(
             '@type' => $type_info['name'],
@@ -324,18 +309,22 @@ function lib4ridora_citation_subtype_mapping_form_submit(&$form, &$form_state) {
  *
  * @param AbstractObject $object
  *   The object to test.
+ * @param bool $metadata_display
+ *   Whether types should be determined using the metadata display aliased
+ *   mapping. FALSE to use the form subtype mapping.
  *
  * @return array
- *   An associative array similar to lib4ridora_citation_subtypes().
+ *   An associative array similar to lib4ridora_citation_form_subtypes() or
+ *   lib4ridora_citation_display_subtypes(), depending on $metadata_display.
  */
-function lib4ridora_determine_subtypes(AbstractObject $object) {
+function lib4ridora_determine_subtypes(AbstractObject $object, $metadata_display = FALSE) {
   if (!isset($object['MODS'])) {
     watchdog('lib4ridora', 'Attempted to determine the subtype of an object without MODS: @object_id', array(
       '@object_id' => $object->id,
     ));
     return;
   }
-  $types = lib4ridora_citation_subtypes();
+  $types = $metadata_display ? lib4ridora_citation_display_subtypes() : lib4ridora_citation_form_subtypes();
 
   // Read Genre from MODS to determine what form to use for editing.
   $mods = new DOMDocument();

@@ -66,7 +66,7 @@ function lib4ridora_citation_select_mods_edit_form($form, &$form_state, Abstract
 function lib4ridora_citation_select_mods_edit_form_submit($form, &$form_state) {
   if (isset($form_state['values']['ingest_selector'])) {
     $subtype = $form_state['values']['ingest_selector'];
-    $subtypes = lib4ridora_citation_subtypes();
+    $subtypes = lib4ridora_citation_form_subtypes();
     $form_state['form_name'] = $subtypes[$subtype]['form'];
     $form_state['rebuild'] = TRUE;
   }
