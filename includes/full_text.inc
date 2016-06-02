@@ -42,8 +42,6 @@ function lib4ridora_update_full_text(AbstractObject $object) {
   }
   else {
     $relationship_value = 'Restricted';
-    // For multi PDF objects, break here if any PDFs are restricted.
-    break;
   }
   $object->relationships->autoCommit = FALSE;
   $object->relationships->remove(
