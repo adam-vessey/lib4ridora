@@ -293,19 +293,22 @@ function lib4ridora_construct_full_text_filter(&$form_state) {
 
   // Deal with the advanced search full text same as facet functionality.
   $availability_field = islandora_solr_lesser_escape('RELS_EXT_fullText_literal_ms');
+  $open = islandora_solr_lesser_escape('Open Access');
+  $restricted = islandora_solr_lesser_escape('Restricted');
+  $no_full_text = islandora_solr_lesser_escape('No Full Text');
 
   $filters = array();
 
   if ($form_state['values']['full_text']['open access']) {
-    $filters[] = islandora_solr_lesser_escape($availability_field.":Open Access");
+    $filters[] = $availability_field.":".$open;
   }
 
   if ($form_state['values']['full_text']['restricted']) {
-    $filters[] = islandora_solr_lesser_escape($availability_field.":Restricted");
+    $filters[] = $availability_field.":".$restricted;
   }
 
   if ($form_state['values']['full_text']['no full text']) {
-    $filters[] = islandora_solr_lesser_escape($availability_field.":No Full Text)";
+    $filters[] = $availability_field.":".$no_full_text;
   }
 
   return lib4ridora_construct_filter_string_from_array($filters);
