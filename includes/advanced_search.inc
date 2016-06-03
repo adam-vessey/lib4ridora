@@ -297,15 +297,15 @@ function lib4ridora_construct_full_text_filter(&$form_state) {
   $filters = array();
 
   if ($form_state['values']['full_text']['open access']) {
-    $filters[] = "($availability_field:\"Open Access\")";
+    $filters[] = islandora_solr_lesser_escape($availability_field.":Open Access");
   }
 
   if ($form_state['values']['full_text']['restricted']) {
-    $filters[] = "($availability_field:\"Restricted\")";
+    $filters[] = islandora_solr_lesser_escape($availability_field.":Restricted");
   }
 
   if ($form_state['values']['full_text']['no full text']) {
-    $filters[] = "($availability_field:\"No Full Text\")";
+    $filters[] = islandora_solr_lesser_escape($availability_field.":No Full Text)";
   }
 
   return lib4ridora_construct_filter_string_from_array($filters);
