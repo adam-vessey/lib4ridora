@@ -334,9 +334,11 @@ function lib4ridora_determine_subtypes(AbstractObject $object, $metadata_display
 
   $subtypes = array();
   foreach ($xpath->query('//mods:mods/mods:genre[@authorityURI="info:eu-repo/semantics"]') as $genre) {
-    $genre_text = $genre->nodeValue;
+
+    // Match against the lower-case value, as this can be either-or.
+    $genre_text = strtolower($genre->nodeValue);
     $test_match = function ($genres) use ($genre_text) {
-      return in_array($genre_text, $genres['genres']);
+      return in_array($genre_text, array_map('strtolower', $genres['genres']));
     };
     $subtypes += array_filter($types, $test_match);
   }
