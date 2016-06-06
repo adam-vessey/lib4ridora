@@ -19,13 +19,16 @@ function lib4ridora_update_full_text(AbstractObject $object) {
   $pdf_datastreams = lib4ridora_retrieve_filtered_pdfs($object);
   foreach ($pdf_datastreams as $datastream) {
     $info = lib4ridora_get_embargo_info($datastream);
-    if (in_array($info['document_version'], array('accepted version', 'published version'))) {
+    if (in_array($info['document_version'], array(
+      'accepted version',
+      'published version',
+    ))) {
       $accepted_or_published = TRUE;
     }
     if (is_null($info['availability']) && $accepted_or_published) {
       $is_open = TRUE;
     }
-    if($info['availability'] == 'date') {
+    if ($info['availability'] == 'date') {
       $embargo_date = $datastream->relationships->get(LIB4RIDORA_RELS_URI, lib4ridora_multi_embargo_build_predicate('embargo_date'));
       $embargo_date = reset($embargo_date);
       // Check if embargo date has passed.
@@ -43,18 +46,27 @@ function lib4ridora_update_full_text(AbstractObject $object) {
   else {
     $relationship_value = 'Restricted';
   }
-  $object->relationships->autoCommit = FALSE;
-  $object->relationships->remove(
+  $current_relationship_triples = $object->relationships->get(
     LIB4RIDORA_RELS_EXT_NAMESPACE,
     LIB4RIDORA_FULL_TEXT_RELATIONSHIP
   );
-  $object->relationships->add(
-    LIB4RIDORA_RELS_EXT_NAMESPACE,
-    LIB4RIDORA_FULL_TEXT_RELATIONSHIP,
-    $relationship_value,
-    RELS_TYPE_PLAIN_LITERAL
-  );
-  $object->relationships->commitRelationships();
+  $current_relationship_value = isset($current_relationship_triples[0]['object']['value']) ?
+    $current_relationship_triples[0]['object']['value'] :
+    NULL;
+  if ($relationship_value != $current_relationship_value) {
+    $object->relationships->autoCommit = FALSE;
+    $object->relationships->remove(
+      LIB4RIDORA_RELS_EXT_NAMESPACE,
+      LIB4RIDORA_FULL_TEXT_RELATIONSHIP
+    );
+    $object->relationships->add(
+      LIB4RIDORA_RELS_EXT_NAMESPACE,
+      LIB4RIDORA_FULL_TEXT_RELATIONSHIP,
+      $relationship_value,
+      RELS_TYPE_PLAIN_LITERAL
+    );
+    $object->relationships->commitRelationships();
+  }
 }
 
 /**
