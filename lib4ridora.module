@@ -264,7 +264,7 @@ function lib4ridora_islandora_datastream_access($op, AbstractDatastream $datastr
   $availability = reset($availability);
   if ($availability) {
     $availability = $availability['object']['value'];
-    if ($datastream->parent->owner == $user->name || user_access(LIB4RIDORA_ADMINISTRATOR_PERMISSION, $user)) {
+    if ((isset($user->name) && $datastream->parent->owner == $user->name) || user_access(LIB4RIDORA_ADMINISTRATOR_PERMISSION, $user)) {
       // Allow owner or admins.
       $result['lib4ridora_admin_or_owner'] = TRUE;
     }
