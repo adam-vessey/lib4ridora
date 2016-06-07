@@ -264,7 +264,7 @@ function lib4ridora_islandora_datastream_access($op, AbstractDatastream $datastr
   $availability = reset($availability);
   if ($availability) {
     $availability = $availability['object']['value'];
-    if ($datastream->parent->owner == $user->name || user_access(LIB4RIDORA_ADMINISTRATOR_PERMISSION, $user)) {
+    if ((isset($user->name) && $datastream->parent->owner == $user->name) || user_access(LIB4RIDORA_ADMINISTRATOR_PERMISSION, $user)) {
       // Allow owner or admins.
       $result['lib4ridora_admin_or_owner'] = TRUE;
     }
@@ -1424,43 +1424,5 @@ function lib4ridora_islandora_datastream_modified($object, $datastream) {
   if (in_array('ir:citationCModel', $object->models) && $datastream->mimetype == 'application/pdf') {
     module_load_include('inc', 'lib4ridora', 'includes/full_text');
     lib4ridora_update_full_text($object);
-  }
-}
-
-/**
- * Implements hook_cron().
- */
-function lib4ridora_cron() {
-  module_load_include('inc', 'lib4ridora', 'includes/full_text');
-  module_load_include('inc', 'lib4ridora', 'includes/embargo.form');
-  $now = gmdate("Y-m-d\TH:i:s\Z", time());
-  $rels_ext_namespace = LIB4RIDORA_RELS_EXT_NAMESPACE;
-  $rels_int_namespace = LIB4RIDORA_RELS_URI;
-  // Look for any embargo's which have expired, and update their RELS-EXT as
-  // appropriate.
-  // We don't limited this to a date range, as the default behaviour
-  // is to set the object's full text to 'Open Access', if any single PDF has an
-  // expired embargo.
-  $query = <<<EOT
-PREFIX lib4ridora-rels-ext: <$rels_ext_namespace>
-PREFIX lib4ridora-rels-int: <$rels_int_namespace>
-SELECT ?object WHERE {
-  ?object <fedora-model:state> <fedora-model:Active> ;
-          <lib4ridora-rels-ext:fullText> "Restricted" ;
-          <fedora-view:disseminates> ?ds .
-  ?ds <fedora-view:mimeType> "application/pdf" ;
-      <lib4ridora-rels-int:lib4ridora-multi-embargo-embargo_date> ?date .
-  FILTER(?date < '$now'^^xsd:dateTime)
-}
-EOT;
-  // Force the cron to run as user 1 so we don't get locked out of objects.
-  $user = user_load(1);
-  $repository = islandora_get_tuque_connection($user);
-  $results = $repository->repository->ri->sparqlQuery($query);
-  foreach ($results as $result) {
-    $object = islandora_object_load($result['object']['value']);
-    if ($object) {
-      lib4ridora_update_full_text($object);
-    }
   }
 }
