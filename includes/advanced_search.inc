@@ -291,22 +291,25 @@ function lib4ridora_construct_peer_reviewed_filter(&$form_state) {
 function lib4ridora_construct_full_text_filter(&$form_state) {
   module_load_include("inc", "islandora_solr", "includes/utilities");
 
-  // Get field names out of configuration.
-  $document_version_field = islandora_solr_lesser_escape(variable_get('lib4ridora_solr_field_document_version', 'RELS_INT_lib4ridora-multi-embargo-document_version_literal_ms'));
-  $document_availability_field = islandora_solr_lesser_escape(variable_get('lib4ridora_solr_field_document_availability', 'RELS_INT_lib4ridora-multi-embargo-availability_literal_ms'));
+  // Deal with the advanced search full text same as facet functionality.
+  $availability_field = islandora_solr_lesser_escape(variable_get('lib4ridora_solr_field_document_availability', 'RELS_EXT_fullText_literal_ms'));
+
+  $open = islandora_solr_lesser_escape('Open Access');
+  $restricted = islandora_solr_lesser_escape('Restricted');
+  $no_full_text = islandora_solr_lesser_escape('No Full Text');
 
   $filters = array();
 
   if ($form_state['values']['full_text']['open access']) {
-    $filters[] = "(fedora_datastreams_ms:PDF AND ($document_version_field:\"published version\" OR $document_version_field:\"accepted version\") AND (*:* NOT $document_availability_field:*))";
+    $filters[] = $availability_field . " : " . $open;
   }
 
   if ($form_state['values']['full_text']['restricted']) {
-    $filters[] = "(fedora_datastreams_ms:PDF AND ($document_version_field:\"published version\" OR $document_version_field:\"accepted version\") AND $document_availability_field:*)";
+    $filters[] = $availability_field . " : " . $restricted;
   }
 
   if ($form_state['values']['full_text']['no full text']) {
-    $filters[] = "(*:* NOT fedora_datastreams_ms:PDF)";
+    $filters[] = $availability_field . " : " . $no_full_text;
   }
 
   return lib4ridora_construct_filter_string_from_array($filters);

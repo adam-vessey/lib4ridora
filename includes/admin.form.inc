@@ -108,7 +108,7 @@ function lib4ridora_admin(array $form, array &$form_state) {
     '#type' => 'textfield',
     '#title' => t('Document Availability Solr Field'),
     '#description' => t('A field we use to determine document availability in Solr.  Is used by the advanced search block.'),
-    '#default_value' => variable_get('lib4ridora_solr_field_document_availability', 'RELS_INT_lib4ridora-multi-embargo-availability_literal_ms'),
+    '#default_value' => variable_get('lib4ridora_solr_field_document_availability', 'RELS_EXT_fullText_literal_ms'),
     '#required' => TRUE,
   );
   return system_settings_form($form);
