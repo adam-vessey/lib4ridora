@@ -159,9 +159,14 @@ function lib4ridora_islandora_xml_form_builder_forms() {
   );
 
   module_load_include('inc', 'lib4ridora', 'includes/citation.subtypes');
-  foreach (lib4ridora_citation_subtypes() as $type => $info) {
+  $genre_map = lib4ridora_citation_get_genre_map(TRUE);
+  foreach (lib4ridora_citation_form_subtypes() as $type => $info) {
+    $xml_path = "$module_path/xml/subtype_forms/$type.xml";
+    if (!file_exists($xml_path)) {
+      $xml_path = "$module_path/xml/subtype_forms/{$genre_map[$info['name']]}.xml";
+    }
     $forms[$info['name']] = array(
-      'form_file' => "$module_path/xml/subtype_forms/{$type}.xml",
+      'form_file' => $xml_path,
     );
   }
 
@@ -1334,7 +1339,7 @@ function lib4ridora_islandora_solr_metadata_display_elements_alter(&$elements) {
   if (in_array('ir:citationCModel', $elements['islandora_object']->models)) {
     module_load_include('inc', 'lib4ridora', 'includes/citation.subtypes');
     $display = NULL;
-    foreach (lib4ridora_determine_subtypes($elements['islandora_object']) as $type => $info) {
+    foreach (lib4ridora_determine_subtypes($elements['islandora_object'], TRUE) as $type => $info) {
       if ($info['display'] !== NULL) {
         $display = $info['display'];
         break;
