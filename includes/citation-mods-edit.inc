@@ -22,7 +22,6 @@ function lib4ridora_citation_select_mods_edit_form($form, &$form_state, Abstract
   form_load_include($form_state, 'inc', 'xml_form_builder', 'includes/associations');
   form_load_include($form_state, 'inc', 'lib4ridora', 'includes/utilities');
   $form_state['pid'] = $object->id;
-
   $form_name = lib4ridora_determine_form_name($object);
   if (empty($form_name) && isset($form_state['form_name'])) {
     $form_name = $form_state['form_name'];
@@ -41,6 +40,7 @@ function lib4ridora_citation_select_mods_edit_form($form, &$form_state, Abstract
         '#value' => t('Update'),
       );
       $form_state['association'] = $association;
+      dsm($form_state);
       return $metadata_form;
     }
     drupal_set_message(t('The XML form could not be loaded. Verify that the %form_name form has an association.', array(
@@ -73,12 +73,19 @@ function lib4ridora_citation_select_mods_edit_form_submit($form, &$form_state) {
   else {
     $pid = $form_state['pid'];
     $object = islandora_object_load($pid);
+    $association = $form_state['association'];
+    $label = NULL;
+    if ($association['title_field']) {
+      $title_field = drupal_array_get_nested_value($form, $association['title_field']);
+      $label = $title_field['#value'];
+    }
     // Handle all formbuilder things.
     $xml_form = new XMLForm($form_state, array());
     // Pass only the portion of the form that contains the formbuilder markup
     // and spoof the form_state['values'] so formbuilder operates as normal.
     $document = $xml_form->submit($form, $form_state);
-    xml_form_builder_update_object($object, $form_state['association'], $document);
+    // Update the label.
+    xml_form_builder_update_object($object, $form_state['association'], $document, $label);
     $form_state['redirect'] = "islandora/object/{$object->id}/manage";
   }
 }
