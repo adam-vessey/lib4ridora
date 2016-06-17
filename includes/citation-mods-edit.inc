@@ -40,7 +40,6 @@ function lib4ridora_citation_select_mods_edit_form($form, &$form_state, Abstract
         '#value' => t('Update'),
       );
       $form_state['association'] = $association;
-      dsm($form_state);
       return $metadata_form;
     }
     drupal_set_message(t('The XML form could not be loaded. Verify that the %form_name form has an association.', array(
