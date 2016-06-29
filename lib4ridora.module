@@ -714,7 +714,6 @@ function lib4ridora_ir_citationcmodel_mods_islandora_datastream_alter(AbstractOb
   if ($mods_doc->hasChildNodes()) {
     $mods_xpath = new DOMXPath($mods_doc);
     $mods_xpath->registerNamespace('mods', 'http://www.loc.gov/mods/v3');
-
     $journal_results = $mods_xpath->query('/mods:mods/mods:relatedItem[@type="host"]/mods:identifier[not(@type) and node()]');
     // Bail out if no journal linked.
     if (!$journal_results->length) {
@@ -724,7 +723,6 @@ function lib4ridora_ir_citationcmodel_mods_islandora_datastream_alter(AbstractOb
     $journal_item = $journal_results->item(0);
     $journal = islandora_object_load($journal_item->nodeValue);
     $label_results = $mods_xpath->query('/mods:mods/mods:relatedItem[@type="host"]/mods:titleInfo/mods:title[not(@type)]');
-
     $journal_mods_doc = new DOMDocument();
     // Assumes journal has MODS.
     $journal_mods_doc->loadXML($journal['MODS']->content);
@@ -1428,6 +1426,11 @@ function lib4ridora_ir_citationCModel_islandora_object_ingested($object) {
 function lib4ridora_islandora_datastream_modified($object, $datastream) {
   if (in_array('ir:citationCModel', $object->models) && $datastream->mimetype == 'application/pdf') {
     module_load_include('inc', 'lib4ridora', 'includes/full_text');
+    module_load_include('inc', 'lib4ridora', 'includes/embargo.form');
+    if (!isset($object['RELS-INT'])) {
+      $values = lib4ridora_multi_pdf_defaults_properties();
+      lib4ridora_update_datastream_relationships($datastream, $values);
+    }
     lib4ridora_update_full_text($object);
   }
 }
@@ -1438,6 +1441,11 @@ function lib4ridora_islandora_datastream_modified($object, $datastream) {
 function lib4ridora_islandora_datastream_ingested($object, $datastream) {
   if (in_array('ir:citationCModel', $object->models) && $datastream->mimetype == 'application/pdf') {
     module_load_include('inc', 'lib4ridora', 'includes/full_text');
+    module_load_include('inc', 'lib4ridora', 'includes/embargo.form');
+    if (!isset($object['RELS-INT'])) {
+      $values = lib4ridora_multi_pdf_defaults_properties();
+      lib4ridora_update_datastream_relationships($datastream, $values);
+    }
     lib4ridora_update_full_text($object);
   }
 }
@@ -1450,6 +1458,7 @@ function lib4ridora_islandora_datastream_purged($object, $dsid) {
   if (strpos($dsid, 'PDF') !== FALSE) {
     if (in_array('ir:citationCModel', $object->models)) {
       module_load_include('inc', 'lib4ridora', 'includes/full_text');
+      $object->purgeDatastream('RELS-INT');
       lib4ridora_update_full_text($object);
     }
   }
