@@ -13,7 +13,6 @@ const LIB4RIDORA_FULL_TEXT_RELATIONSHIP = 'fullText';
  */
 function lib4ridora_update_full_text(AbstractObject $object) {
   module_load_include('inc', 'lib4ridora', 'includes/utilities');
-
   $is_open = NULL;
   $accepted_or_published = FALSE;
   $pdf_datastreams = lib4ridora_retrieve_filtered_pdfs($object);
@@ -25,7 +24,7 @@ function lib4ridora_update_full_text(AbstractObject $object) {
     ))) {
       $accepted_or_published = TRUE;
     }
-    if (is_null($info['availability']) && $accepted_or_published) {
+    if (($info['availability'] == "public") && $accepted_or_published) {
       $is_open = TRUE;
     }
     if ($info['availability'] == 'date') {

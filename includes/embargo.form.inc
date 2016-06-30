@@ -113,7 +113,7 @@ function lib4ridora_get_embargo_info(AbstractDatastream $datastream) {
 
   foreach ($to_return as $pred => $default) {
     $value = $datastream->relationships->get(LIB4RIDORA_RELS_URI, lib4ridora_multi_embargo_build_predicate($pred));
-    // Should be at most on value... Just get it.
+    // Should be at most one value... Just get it.
     $value = reset($value);
     if ($value) {
       if ($pred == 'embargo_date') {
@@ -128,7 +128,6 @@ function lib4ridora_get_embargo_info(AbstractDatastream $datastream) {
       }
     }
   }
-
   return $to_return;
 }
 
@@ -345,7 +344,7 @@ function lib4ridora_multi_pdf_get_options($sort = FALSE) {
   }
   return array(
     'availability' => array(
-      NULL => t('Public'),
+      'public' => t('Public'),
       'intranet' => t('Intranet'),
       'date' => t('Embargo'),
       'private' => t('Private'),
