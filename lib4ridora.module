@@ -1425,8 +1425,8 @@ function lib4ridora_ir_citationCModel_islandora_object_ingested($object) {
  */
 function lib4ridora_islandora_datastream_modified($object, $datastream) {
   if (in_array('ir:citationCModel', $object->models) && $datastream->mimetype == 'application/pdf') {
-    module_load_include('inc', 'lib4ridora', 'includes/full_text');
     module_load_include('inc', 'lib4ridora', 'includes/embargo.form');
+    module_load_include('inc', 'lib4ridora', 'includes/full_text');
     if (!isset($object['RELS-INT'])) {
       $values = lib4ridora_multi_pdf_defaults_properties();
       lib4ridora_update_datastream_relationships($datastream, $values);
@@ -1440,8 +1440,8 @@ function lib4ridora_islandora_datastream_modified($object, $datastream) {
  */
 function lib4ridora_islandora_datastream_ingested($object, $datastream) {
   if (in_array('ir:citationCModel', $object->models) && $datastream->mimetype == 'application/pdf') {
-    module_load_include('inc', 'lib4ridora', 'includes/full_text');
     module_load_include('inc', 'lib4ridora', 'includes/embargo.form');
+    module_load_include('inc', 'lib4ridora', 'includes/full_text');
     if (!isset($object['RELS-INT'])) {
       $values = lib4ridora_multi_pdf_defaults_properties();
       lib4ridora_update_datastream_relationships($datastream, $values);
