@@ -5,8 +5,10 @@
  */
 
 // Relationships.
-const LIB4RIDORA_RELS_EXT_NAMESPACE = ISLANDORA_RELS_EXT_URI;
+@include_once 'sites/all/libraries/tuque/FedoraRelationships.php';
+define('LIB4RIDORA_RELS_EXT_NAMESPACE', ISLANDORA_RELS_EXT_URI);
 const LIB4RIDORA_FULL_TEXT_RELATIONSHIP = 'fullText';
+
 
 /**
  * Update an object's full text relationship with the information from RELS-INT.
