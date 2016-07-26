@@ -264,7 +264,7 @@ function lib4ridora_get_pid_from_author($author) {
  * @param array $elements
  *   A reference to an associative array as passed to
  *   hook_islandora_solr_metadata_display_elements_alter() and
- *   hook_islandora_solr_metadata_description_elements_alter(). 
+ *   hook_islandora_solr_metadata_description_elements_alter().
  *
  * @see hook_islandora_solr_metadata_display_elements_alter()
  * @see hook_islandora_solr_metadata_description_elements_alter()
