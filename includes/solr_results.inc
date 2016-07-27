@@ -36,25 +36,25 @@ class IslandoraSolrResultsLib4riBookmark extends IslandoraSolrResultsBookmark {
     // Custom display. These fields really should be configurable.
     $cmodels = array(
       'info:fedora/islandora:organizationCModel' => array(
-        "fgs_label_s",
+        0 => "fgs_label_s",
         "prefix" => array(
           "Organizational Unit",
         ),
       ),
       'info:fedora/islandora:collectionCModel' => array(
-        "fgs_label_s",
+        0 => "fgs_label_s",
         "prefix" => array(
           "Collection",
         ),
       ),
       'info:fedora/lib4ri:journalCModel' => array(
-        "fgs_label_s",
+        0 => "fgs_label_s",
         "prefix" => array(
           "Journal",
         ),
       ),
       'info:fedora/islandora:personCModel' => array(
-        'fgs_label_s',
+        0 => 'fgs_label_s',
         "prefix" => array(
           "Author",
         ),

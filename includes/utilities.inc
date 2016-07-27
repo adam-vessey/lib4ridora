@@ -257,3 +257,43 @@ function lib4ridora_get_pid_from_author($author) {
     return FALSE;
   }
 }
+
+/**
+ * Helper to determine the metadata association to use for a given object.
+ *
+ * @param array $elements
+ *   A reference to an associative array as passed to
+ *   hook_islandora_solr_metadata_display_elements_alter() and
+ *   hook_islandora_solr_metadata_description_elements_alter().
+ *
+ * @see hook_islandora_solr_metadata_display_elements_alter()
+ * @see hook_islandora_solr_metadata_description_elements_alter()
+ */
+function lib4ridora_metadata_display_elements(&$elements) {
+  if (in_array('ir:citationCModel', $elements['islandora_object']->models)) {
+    module_load_include('inc', 'lib4ridora', 'includes/citation.subtypes');
+    $display = NULL;
+    foreach (lib4ridora_determine_subtypes($elements['islandora_object'], TRUE) as $type => $info) {
+      if ($info['display'] !== NULL) {
+        $display = $info['display'];
+        break;
+      }
+    }
+    if ($display === NULL) {
+      return;
+    }
+
+    module_load_include('inc', 'islandora_solr_metadata', 'includes/db');
+    $config_id = islandora_solr_metadata_retrieve_configuration_from_machine_name($display);
+    if (!$config_id) {
+      // Config doesn't exist... Features out of whack?
+      watchdog('lib4ridora', 'The "@name" metadata display does not appear to exist, loading a "@type" object.', array(
+        '@name' => $display,
+        '@type' => $type,
+      ));
+      return;
+    }
+
+    $elements['associations'][] = array('configuration_id' => $config_id);
+  }
+}

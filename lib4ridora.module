@@ -1027,11 +1027,7 @@ function lib4ridora_ir_citationCModel_islandora_view_object_alter(AbstractObject
         );
       }
     }
-    $rendered['citation.tab']['abstract'] = array(
-      '#type' => 'item',
-      '#markup' => $xpath->evaluate('string(//mods:abstract)'),
-      '#weight' => -9,
-    );
+
     // Decode for human readability.
     $persistent_url = urldecode(url("islandora/object/{$object->id}", array('absolute' => TRUE)));
     $rendered['citation.tab']['persistent_url'] = array(
@@ -1268,7 +1264,7 @@ function lib4ridora_form_islandora_solr_metadata_config_form_alter(&$form, &$for
  */
 function lib4ridora_form_islandora_solr_metadata_config_form_validate(&$form, &$form_state) {
   if ($form_state['triggering_element']['#name'] == 'islandora-solr-metadata-add-field') {
-    module_load_include('inc', 'islandora_solr_search', 'includes/luke');
+    module_load_include('inc', 'islandora_solr', 'includes/luke');
     $solr_luke = islandora_solr_get_luke();
     $luke_fields = array_keys($solr_luke['fields']);
     $field = $form_state['values']['islandora_solr_metadata_fields']['table_wrapper']['add_fieldset']['available_solr_fields'];
@@ -1310,7 +1306,7 @@ function lib4ridora_form_islandora_solr_metadata_config_form_validate(&$form, &$
   if ($form_state['triggering_element']['#value'] == 'Save configuration') {
     $solr_field = $form_state['values']['islandora_solr_metadata_fields']['description_fieldset']['available_solr_fields'];
     if (!empty($solr_field)) {
-      module_load_include('inc', 'islandora_solr_search', 'includes/luke');
+      module_load_include('inc', 'islandora_solr', 'includes/luke');
       $solr_luke = islandora_solr_get_luke();
       $luke_fields = array_keys($solr_luke['fields']);
       if (!in_array($solr_field, $luke_fields)) {
@@ -1334,32 +1330,16 @@ function lib4ridora_form_islandora_solr_metadata_config_field_form_alter(&$form,
  * Implements hook_islandora_solr_metadata_display_elements_alter().
  */
 function lib4ridora_islandora_solr_metadata_display_elements_alter(&$elements) {
-  if (in_array('ir:citationCModel', $elements['islandora_object']->models)) {
-    module_load_include('inc', 'lib4ridora', 'includes/citation.subtypes');
-    $display = NULL;
-    foreach (lib4ridora_determine_subtypes($elements['islandora_object'], TRUE) as $type => $info) {
-      if ($info['display'] !== NULL) {
-        $display = $info['display'];
-        break;
-      }
-    }
-    if ($display === NULL) {
-      return;
-    }
+  module_load_include('inc', 'lib4ridora', 'includes/utilities');
+  lib4ridora_metadata_display_elements($elements);
+}
 
-    module_load_include('inc', 'islandora_solr_metadata', 'includes/db');
-    $config_id = islandora_solr_metadata_retrieve_configuration_from_machine_name($display);
-    if (!$config_id) {
-      // Config doesn't exist... Features out of whack?
-      watchdog('lib4ridora', 'The "@name" metadata display does not appear to exist, loading a "@type" object.', array(
-        '@name' => $display,
-        '@type' => $type,
-      ));
-      return;
-    }
-
-    $elements['associations'][] = array('configuration_id' => $config_id);
-  }
+/**
+ * Implements hook_islandora_solr_metadata_description_elements_alter().
+ */
+function lib4ridora_islandora_solr_metadata_description_elements_alter(&$elements) {
+  module_load_include('inc', 'lib4ridora', 'includes/utilities');
+  lib4ridora_metadata_display_elements($elements);
 }
 
 /**
