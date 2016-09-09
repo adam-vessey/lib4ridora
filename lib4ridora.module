@@ -1458,7 +1458,10 @@ function lib4ridora_islandora_datastream_purged($object, $dsid) {
   if (strpos($dsid, 'PDF') !== FALSE) {
     if (in_array('ir:citationCModel', $object->models)) {
       module_load_include('inc', 'lib4ridora', 'includes/full_text');
-      $object->purgeDatastream('RELS-INT');
+      $datastream = $object[$dsid];
+     if ($datastream) {
+       $datastream->relationships->remove();
+      }
       lib4ridora_update_full_text($object);
     }
   }
