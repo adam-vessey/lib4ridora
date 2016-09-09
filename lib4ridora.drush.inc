@@ -17,7 +17,7 @@ function lib4ridora_drush_command() {
         'lib4ridora',
       ),
       'bootstrap' => DRUSH_BOOTSTRAP_DRUPAL_LOGIN,
-    )
+    ),
   );
 }
 
