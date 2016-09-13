@@ -269,6 +269,7 @@ function lib4ridora_islandora_datastream_access($op, AbstractDatastream $datastr
   $availability = reset($availability);
   if ($availability) {
     $availability = $availability['object']['value'];
+
     if ((isset($user->name) && $datastream->parent->owner == $user->name) || user_access(LIB4RIDORA_ADMINISTRATOR_PERMISSION, $user)) {
       // Allow owner or admins.
       $result['lib4ridora_admin_or_owner'] = TRUE;
@@ -278,13 +279,13 @@ function lib4ridora_islandora_datastream_access($op, AbstractDatastream $datastr
       $result['lib4ridora_private'] = FALSE;
     }
     elseif ($availability == 'intranet') {
-      $result['lib4ridora_intranet'] = lib4ridora_check_ip(ip_address());
+      $result['lib4ridora_intranet'] = lib4ridora_check_ip();
     }
     elseif ($availability == 'date') {
       $embargo_date = $datastream->relationships->get(LIB4RIDORA_RELS_URI, lib4ridora_multi_embargo_build_predicate('embargo_date'));
       $embargo_date = reset($embargo_date);
       if ($embargo_date) {
-        $result['lib4ridora_embargo_date'] = REQUEST_TIME > strtotime($embargo_date['object']['value']) || lib4ridora_check_ip(ip_address());
+        $result['lib4ridora_embargo_date'] = REQUEST_TIME > strtotime($embargo_date['object']['value']) || lib4ridora_check_ip();
       }
     }
   }
@@ -301,7 +302,10 @@ function lib4ridora_islandora_datastream_access($op, AbstractDatastream $datastr
  * @return bool
  *   TRUE if the IP is in an allowed range; otherwise, FALSE.
  */
-function lib4ridora_check_ip($ip_address) {
+function lib4ridora_check_ip($ip_address = NULL) {
+  if (!$ip_address) {
+    $ip_address = ip_address();
+  }
   $cidr_ranges = array(
     '129.129.0.0/16',
     '152.88.0.0/16',
@@ -1434,11 +1438,15 @@ function lib4ridora_islandora_datastream_ingested($object, $datastream) {
  * Implements hook_islandora_datastream_purged().
  */
 function lib4ridora_islandora_datastream_purged($object, $dsid) {
-  // Check if the dsid contains PFD for objects with multiple PDF datastreams.
+  // Check if the dsid contains PDF for objects with multiple PDF datastreams.
   if (strpos($dsid, 'PDF') !== FALSE) {
     if (in_array('ir:citationCModel', $object->models)) {
       module_load_include('inc', 'lib4ridora', 'includes/full_text');
-      $object->purgeDatastream('RELS-INT');
+      module_load_include('inc', 'lib4ridora', 'includes/embargo.form');
+      $datastream = $object->constructDatastream($dsid, 'M');
+      foreach (lib4ridora_multi_pdf_defaults_properties() as $pred => $default) {
+        $datastream->relationships->remove(LIB4RIDORA_RELS_URI, lib4ridora_multi_embargo_build_predicate($pred));
+      }
       lib4ridora_update_full_text($object);
     }
   }
