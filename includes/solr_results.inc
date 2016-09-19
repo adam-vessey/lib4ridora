@@ -147,14 +147,11 @@ class IslandoraSolrResultsLib4riBookmark extends IslandoraSolrResultsBookmark {
     if (!in_array($islandora_solr_query->solrQuery, $islandora_solr_query->differentKindsOfNothing)) {
       // Get query value.
       $query_value = $islandora_solr_query->solrQuery;
-/*** BEGIN EDIT DP 2016-08-26 ***/
-      // We now generate a human-readable "$query-value"
       $query_value_human = $query_value;
       $search_fields = islandora_solr_get_fields("search_fields", FALSE, FALSE);
       foreach ($search_fields as $key => $value){
         $query_value_human = preg_replace("/" . $value['solr_field'] . "/", $value['solr_field_settings']['label'], $query_value_human);
       }
-/**** END EDIT DP 2016-08-26 ****/
       $query_list = array();
 
       // Remove link keeps all parameters (query gets removed instead).
@@ -183,10 +180,7 @@ class IslandoraSolrResultsLib4riBookmark extends IslandoraSolrResultsBookmark {
       // XXX: We are not using l() because of active classes:
       // @see http://drupal.org/node/41595
       // Create link.
-/*** BEGIN EDIT DP 2016-08-26 ***/
-//      $query_list[] = '<a' . drupal_attributes($attributes['minus']['attr']) . '>(-)</a> ' . check_plain($query_value);
       $query_list[] = '<a' . drupal_attributes($attributes['minus']['attr']) . '>(-)</a> ' . check_plain($query_value_human);
-/**** END EDIT DP 2016-08-26 ****/
 
       // Add wrap and list.
       $output .= '<div class="islandora-solr-query-wrap">';
@@ -247,38 +241,14 @@ class IslandoraSolrResultsLib4riBookmark extends IslandoraSolrResultsBookmark {
         $hooks = islandora_build_hook_list(ISLANDORA_SOLR_FACET_BUCKET_CLASSES_HOOK_BASE);
         drupal_alter($hooks, $attributes, $islandora_solr_query);
 
-//        // Append the human readable labels to the front of
-//        // the facet removal link, in the 'current_query_facet_name' block.
-//        $updated_filter = FALSE;
-//        foreach ($records as $key => $value) {
-//          // Re-write author PIDs to name strings.
-//          if (strpos($filter, $value['solr_field']) !== FALSE) {
-//            if ($value['solr_field'] == variable_get('lib4ridora_author_solr_field', 'mods_name_personal_nameIdentifier_authorId_ms')) {
-//              $filter_string = lib4ridora_get_author_from_pid($filter_string);
-//            }
-//            // @XXX: We are not using l() because of active classes:
-//            // @see http://drupal.org/node/41595
-//            // The following differs from the default
-//            // islandora_query block currentQuery().
-//            $updated_filter = TRUE;
-//            $filter_list[] = '<a' . drupal_attributes($attributes['minus']['attr']) . '>(-)</a>' . " {$value['solr_field_settings']['label']} " . $symbol . " " . check_plain($filter_string);
-//          }
-//        }
-//        // Default to old behavior.
-//        if (!$updated_filter) {
-//          $filter_list[] = '<a' . drupal_attributes($attributes['minus']['attr']) . '>(-)</a> ' . $symbol . ' ' . check_plain($filter_string);
-//        }
         // Append the human readable labels to the front of
         // the facet removal link, in the 'current_query_facet_name' block.
-        // [DP] do it solr-style (cf. /var/www/html/sites/all/modules/islandora_solr_search/includes/results.inc)
         $updated_filter = FALSE;
         foreach ($records as $key => $value) {
           // Re-write certain PIDs to name strings.
-////$filter_string=preg_replace('/\\\\ /', ' ',$filter).'/'.$key.'.'.$value['solr_field'];
           if (strpos(preg_replace('/\\\\ /', ' ', $filter), $value['solr_field']) !== FALSE) {
             $updated_filter = TRUE;
             if (isset($value['solr_field_settings']['pid_object_label']) && $value['solr_field_settings']['pid_object_label']) {
-              // from /var/www/html/sites/all/modules/islandora_solr_search/includes/results.inc, ll.925-1015
               $myqp = new IslandoraSolrQueryProcessor();
               $mylbl = NULL;
               $mypid = str_replace('info:fedora/', '', $filter_string);
@@ -334,23 +304,14 @@ class IslandoraSolrResultsLib4riBookmark extends IslandoraSolrResultsBookmark {
   public function formatFilter($filter, $islandora_solr_query) {
     // @todo See how this interacts with multiple date filters.
     // Check if there are operators in the filter.
-/*** BEGIN EDIT DP 2016-08-26 ***/
-//    $fq_split = preg_split('/ (OR|AND) /', $filter);
     $fq_split = preg_split('/ (OR|AND|NOT) /', $filter);
     $fq_split_full = preg_split('/( OR | AND | NOT |(?<!\\\)\ )/', $filter);
     if (count($fq_split) > 1) {
       $operator_split = preg_split(ISLANDORA_SOLR_QUERY_SPLIT_REGEX, $filter);
-////kpr($fq_split);
-////kpr($fq_split_full);
-////kpr($operator_split);
-//      $operator_split = array_diff($operator_split, $fq_split);
       $operator_split = array_diff($operator_split, $fq_split_full);
-////kpr($operator_split);
       $out_array = array();
       foreach ($fq_split as $fil) {
         $fil_split = preg_split(ISLANDORA_SOLR_QUERY_FIELD_VALUE_SPLIT_REGEX, $fil, 2);
-////kpr($fil_split);
-/**** BEGIN END DP 2016-08-26 ****/
         $out_str = str_replace(array('"', 'info:fedora/'), '', $fil_split[1]);
         $out_array[] = $out_str;
       }

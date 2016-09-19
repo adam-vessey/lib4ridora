@@ -12,7 +12,6 @@ function lib4ridora_admin(array $form, array &$form_state) {
   $lib4ridora_multi_pdf_options = lib4ridora_multi_pdf_get_options();
   $lib4ridora_multi_pdf_options_availability = $lib4ridora_multi_pdf_options['availability'];
   $lib4ridora_multi_pdf_options_availability_exclude = array('date' => $lib4ridora_multi_pdf_options_availability['date']);
-//kpr($lib4ridora_multi_pdf_options_availability_exclude);
   $lib4ridora_multi_pdf_options_availability_effective = array_diff_key($lib4ridora_multi_pdf_options_availability, $lib4ridora_multi_pdf_options_availability_exclude);
   $form['lib4ridora_multi_pdf_defaults_property_availability'] = array(
     '#type' => 'select',

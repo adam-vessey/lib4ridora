@@ -361,7 +361,6 @@ function lib4ridora_menu_alter(&$items) {
 function lib4ridora_preprocess_menu_link(&$vars) {
   $element = &$vars['element'];
   if ($element['#href'] == 'uuid/node/db02d4f6-92fc-4539-ac8a-77d5da620c8e') {
-//    $element['#href'] = 'mailto:feedback@lib4ri.ch?subject=DORA%20PROBLEM&body=PROBLEM%20REPORT%0D%0A%0D%0APAGE:%20' . urlencode($GLOBALS['base_url'].request_uri()) . '%0D%0AREFERRER:%20' . urlencode($_SERVER['HTTP_REFERER']) . '%0D%0A%0D%0ADESCRIPTION:%0D%0A%0D%0A%0D%0A';
     $element['#href'] = 'mailto:dora@lib4ri.ch?subject=DORA%20PROBLEM&body=PROBLEM%20REPORT%0D%0A%0D%0APAGE:%20' . urlencode($GLOBALS['base_url'].request_uri()) . '%0D%0AREFERRER:%20' . urlencode($_SERVER['HTTP_REFERER']) . '%0D%0A%0D%0ADESCRIPTION:%0D%0A%0D%0A%0D%0A';
   }
   if ($element['#href'] == 'http://www.lib4ri.ch/about/contact.html?pick_a_subject=submit') {
@@ -373,9 +372,7 @@ function lib4ridora_preprocess_menu_link(&$vars) {
  * Implements hook_block_view_alter().
  */
 function lib4ridora_block_view_alter(&$data, $block) {
-//kpr($data);
   if (isset($data['content']) && is_array($data['content']) && isset($data['content']['#markup']) && (strpos($data['content']['#markup'], '<a href="http://www.lib4ri.ch">') !== false)) {
-////      $data['content']['#localized_options']['attributes']['target'][] = '_blank';
     $data['content']['#markup'] = preg_replace('/<a href="http:\/\/www.lib4ri.ch">/', '<a href="http://www.lib4ri.ch" target="_blank">', $data['content']['#markup']);
   }
 }
@@ -473,14 +470,6 @@ function lib4ridora_menu() {
     'type' => MENU_LOCAL_TASK,
     'file' => 'includes/workflow.form.inc',
   );
-//  $items['islandora/object/%islandora_object/MODS/citation'] = array(
-//    'title' => 'Edit datastream',
-//    'page callback' => 'drupal_get_form',
-//    'page arguments' => array('lib4ridora_citation_select_mods_edit_form', 2),
-//    'type' => MENU_CALLBACK,
-//    'file' => 'includes/citation-mods-edit.inc',
-//    'access arguments' => array(ISLANDORA_METADATA_EDIT),
-//  );
   $items['islandora/object/%islandora_object/lib4ridora_edit_mods'] = array(
     'title' => 'Edit',
     'page callback' => 'drupal_get_form',
@@ -882,7 +871,6 @@ function lib4ridora_islandora_edit_datastream_registry_alter(&$edit_registry, $c
     // Add custom form to replace the removed form builder edit_form.
     $edit_registry['lib4ridora_citation_object_edit_form'] = array(
       'name' => t('Lib4ridora Citation Edit Form'),
-//      'url' => "islandora/object/{$object->id}/{$context['datastream']->id}/citation",
       'url' => "islandora/object/{$object->id}/lib4ridora_edit_mods",
     );
   }
@@ -1420,27 +1408,6 @@ function lib4ridora_ir_citationcmodel_islandora_derivative() {
   );
 }
 
-///**
-// * Implements hook_process_islandora_solr_facet().
-// *
-// * Overrides the link content to be the MADS name rather than PID for author.
-// */
-//function lib4ridora_process_islandora_solr_facet(&$variables) {
-//  module_load_include('inc', 'lib4ridora', 'include/utilities');
-//  if ($variables['pid'] == variable_get('lib4ridora_author_solr_field', 'mods_name_personal_nameIdentifier_authorId_ms')) {
-//    foreach ($variables['buckets'] as &$bucket) {
-//      $markup_dom = new DOMDocument();
-//      $markup_dom->loadHTML($bucket['link']);
-//
-//      $link_node = $markup_dom->getElementsByTagName('a')->item(0);
-//      $author_pid = $link_node->nodeValue;
-//
-//      $link_node->nodeValue = lib4ridora_get_author_from_pid($author_pid);
-//      $bucket['link'] = $markup_dom->saveHTML();
-//    }
-//  }
-//}
-
 /**
  * Implements hook_CMODEL_PID_islandora_object_ingested().
  */
@@ -1483,7 +1450,7 @@ function lib4ridora_islandora_datastream_ingested($object, $datastream) {
  * Implements hook_islandora_datastream_purged().
  */
 function lib4ridora_islandora_datastream_purged($object, $dsid) {
-  // Check if the dsid contains PFD for objects with multiple PDF datastreams.
+  // Check if the dsid contains PDF for objects with multiple PDF datastreams.
   if (strpos($dsid, 'PDF') !== FALSE) {
     if (in_array('ir:citationCModel', $object->models)) {
       module_load_include('inc', 'lib4ridora', 'includes/full_text');
