@@ -289,13 +289,13 @@ function lib4ridora_islandora_datastream_access($op, AbstractDatastream $datastr
       $result['lib4ridora_private'] = FALSE;
     }
     elseif ($availability == 'intranet') {
-      $result['lib4ridora_intranet'] = lib4ridora_check_ip(ip_address());
+      $result['lib4ridora_intranet'] = lib4ridora_check_ip();
     }
     elseif ($availability == 'date') {
       $embargo_date = $datastream->relationships->get(LIB4RIDORA_RELS_URI, lib4ridora_multi_embargo_build_predicate('embargo_date'));
       $embargo_date = reset($embargo_date);
       if ($embargo_date) {
-        $result['lib4ridora_embargo_date'] = REQUEST_TIME > strtotime($embargo_date['object']['value']) || lib4ridora_check_ip(ip_address());
+        $result['lib4ridora_embargo_date'] = REQUEST_TIME > strtotime($embargo_date['object']['value']) || lib4ridora_check_ip();
       }
     }
   }
@@ -312,7 +312,10 @@ function lib4ridora_islandora_datastream_access($op, AbstractDatastream $datastr
  * @return bool
  *   TRUE if the IP is in an allowed range; otherwise, FALSE.
  */
-function lib4ridora_check_ip($ip_address) {
+function lib4ridora_check_ip($ip_address = NULL) {
+  if (!$ip_address) {
+    $ip_address = ip_address();
+  }
   $cidr_ranges = array(
     '129.129.0.0/16',
     '152.88.0.0/16',
