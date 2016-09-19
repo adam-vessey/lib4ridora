@@ -470,19 +470,11 @@ function lib4ridora_menu() {
     'type' => MENU_LOCAL_TASK,
     'file' => 'includes/workflow.form.inc',
   );
-//  $items['islandora/object/%islandora_object/MODS/citation'] = array(
-//    'title' => 'Edit datastream',
-//    'page callback' => 'drupal_get_form',
-//    'page arguments' => array('lib4ridora_citation_select_mods_edit_form', 2),
-//    'type' => MENU_CALLBACK,
-//    'file' => 'includes/citation-mods-edit.inc',
-//    'access arguments' => array(ISLANDORA_METADATA_EDIT),
-//  );
-  $items['islandora/object/%islandora_object/lib4ridora_edit_mods'] = array(
-    'title' => 'Edit',
+  $items['islandora/object/%islandora_object/MODS/citation'] = array(
+    'title' => 'Edit datastream',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('lib4ridora_citation_select_mods_edit_form', 2),
-    'type' => MENU_LOCAL_TASK,
+    'type' => MENU_CALLBACK,
     'file' => 'includes/citation-mods-edit.inc',
     'access arguments' => array(ISLANDORA_METADATA_EDIT),
   );
@@ -879,8 +871,7 @@ function lib4ridora_islandora_edit_datastream_registry_alter(&$edit_registry, $c
     // Add custom form to replace the removed form builder edit_form.
     $edit_registry['lib4ridora_citation_object_edit_form'] = array(
       'name' => t('Lib4ridora Citation Edit Form'),
-//      'url' => "islandora/object/{$object->id}/{$context['datastream']->id}/citation",
-      'url' => "islandora/object/{$object->id}/lib4ridora_edit_mods",
+      'url' => "islandora/object/{$object->id}/{$context['datastream']->id}/citation",
     );
   }
 }
@@ -1484,11 +1475,7 @@ function lib4ridora_islandora_datastream_purged($object, $dsid) {
   if (strpos($dsid, 'PDF') !== FALSE) {
     if (in_array('ir:citationCModel', $object->models)) {
       module_load_include('inc', 'lib4ridora', 'includes/full_text');
-      module_load_include('inc', 'lib4ridora', 'includes/embargo.form');
-      $datastream = $object->constructDatastream($dsid, 'M');
-      foreach (lib4ridora_multi_pdf_defaults_properties() as $pred => $default) {
-        $datastream->relationships->remove(LIB4RIDORA_RELS_URI, lib4ridora_multi_embargo_build_predicate($pred));
-      }
+      $object->purgeDatastream('RELS-INT');
       lib4ridora_update_full_text($object);
     }
   }

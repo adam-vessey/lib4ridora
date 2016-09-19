@@ -8,28 +8,6 @@
  * Admin for for lib4ridora.
  */
 function lib4ridora_admin(array $form, array &$form_state) {
-  module_load_include('inc', 'lib4ridora', 'includes/embargo.form');
-  $lib4ridora_multi_pdf_options = lib4ridora_multi_pdf_get_options();
-  $lib4ridora_multi_pdf_options_availability = $lib4ridora_multi_pdf_options['availability'];
-  $lib4ridora_multi_pdf_options_availability_exclude = array('date' => $lib4ridora_multi_pdf_options_availability['date']);
-//kpr($lib4ridora_multi_pdf_options_availability_exclude);
-  $lib4ridora_multi_pdf_options_availability_effective = array_diff_key($lib4ridora_multi_pdf_options_availability, $lib4ridora_multi_pdf_options_availability_exclude);
-  $form['lib4ridora_multi_pdf_defaults_property_availability'] = array(
-    '#type' => 'select',
-    '#title' => t('Default PDF availability at ingest'),
-    '#options' => $lib4ridora_multi_pdf_options_availability_effective,
-    '#default_value' => variable_get('lib4ridora_multi_pdf_defaults_property_availability', 'intranet'),
-    '#description' => t("Choose the default availability of ingested PDFs. Default is \"" . $lib4ridora_multi_pdf_options_availability['intranet'] . "\"."),
-    '#multiple' => FALSE,
-    '#required' => TRUE,
-  );
-  $form['lib4ridora_restricted_datastreams'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Restricted DSIDs'),
-    '#default_value' => variable_get('lib4ridora_restricted_datastreams', 'RELS-INT,RELS-EXT,POLICY'),
-    '#description' => t("Comma separated list of datastream-IDs that should not be viewable for anonymous users. Default is: \"RELS-INT,RELS-EXT,POLICY\"."),
-    '#required' => FALSE,
-  );
   $form['lib4ridora_author_solr_field'] = array(
     '#type' => 'textfield',
     '#title' => t('Author PID Solr Field'),

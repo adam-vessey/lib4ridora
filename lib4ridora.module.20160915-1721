@@ -1484,11 +1484,7 @@ function lib4ridora_islandora_datastream_purged($object, $dsid) {
   if (strpos($dsid, 'PDF') !== FALSE) {
     if (in_array('ir:citationCModel', $object->models)) {
       module_load_include('inc', 'lib4ridora', 'includes/full_text');
-      module_load_include('inc', 'lib4ridora', 'includes/embargo.form');
-      $datastream = $object->constructDatastream($dsid, 'M');
-      foreach (lib4ridora_multi_pdf_defaults_properties() as $pred => $default) {
-        $datastream->relationships->remove(LIB4RIDORA_RELS_URI, lib4ridora_multi_embargo_build_predicate($pred));
-      }
+      $object->purgeDatastream('RELS-INT');
       lib4ridora_update_full_text($object);
     }
   }

@@ -147,14 +147,6 @@ class IslandoraSolrResultsLib4riBookmark extends IslandoraSolrResultsBookmark {
     if (!in_array($islandora_solr_query->solrQuery, $islandora_solr_query->differentKindsOfNothing)) {
       // Get query value.
       $query_value = $islandora_solr_query->solrQuery;
-/*** BEGIN EDIT DP 2016-08-26 ***/
-      // We now generate a human-readable "$query-value"
-      $query_value_human = $query_value;
-      $search_fields = islandora_solr_get_fields("search_fields", FALSE, FALSE);
-      foreach ($search_fields as $key => $value){
-        $query_value_human = preg_replace("/" . $value['solr_field'] . "/", $value['solr_field_settings']['label'], $query_value_human);
-      }
-/**** END EDIT DP 2016-08-26 ****/
       $query_list = array();
 
       // Remove link keeps all parameters (query gets removed instead).
@@ -183,10 +175,7 @@ class IslandoraSolrResultsLib4riBookmark extends IslandoraSolrResultsBookmark {
       // XXX: We are not using l() because of active classes:
       // @see http://drupal.org/node/41595
       // Create link.
-/*** BEGIN EDIT DP 2016-08-26 ***/
-//      $query_list[] = '<a' . drupal_attributes($attributes['minus']['attr']) . '>(-)</a> ' . check_plain($query_value);
-      $query_list[] = '<a' . drupal_attributes($attributes['minus']['attr']) . '>(-)</a> ' . check_plain($query_value_human);
-/**** END EDIT DP 2016-08-26 ****/
+      $query_list[] = '<a' . drupal_attributes($attributes['minus']['attr']) . '>(-)</a> ' . check_plain($query_value);
 
       // Add wrap and list.
       $output .= '<div class="islandora-solr-query-wrap">';
@@ -334,23 +323,13 @@ class IslandoraSolrResultsLib4riBookmark extends IslandoraSolrResultsBookmark {
   public function formatFilter($filter, $islandora_solr_query) {
     // @todo See how this interacts with multiple date filters.
     // Check if there are operators in the filter.
-/*** BEGIN EDIT DP 2016-08-26 ***/
-//    $fq_split = preg_split('/ (OR|AND) /', $filter);
-    $fq_split = preg_split('/ (OR|AND|NOT) /', $filter);
-    $fq_split_full = preg_split('/( OR | AND | NOT |(?<!\\\)\ )/', $filter);
+    $fq_split = preg_split('/ (OR|AND) /', $filter);
     if (count($fq_split) > 1) {
       $operator_split = preg_split(ISLANDORA_SOLR_QUERY_SPLIT_REGEX, $filter);
-////kpr($fq_split);
-////kpr($fq_split_full);
-////kpr($operator_split);
-//      $operator_split = array_diff($operator_split, $fq_split);
-      $operator_split = array_diff($operator_split, $fq_split_full);
-////kpr($operator_split);
+      $operator_split = array_diff($operator_split, $fq_split);
       $out_array = array();
       foreach ($fq_split as $fil) {
         $fil_split = preg_split(ISLANDORA_SOLR_QUERY_FIELD_VALUE_SPLIT_REGEX, $fil, 2);
-////kpr($fil_split);
-/**** BEGIN END DP 2016-08-26 ****/
         $out_str = str_replace(array('"', 'info:fedora/'), '', $fil_split[1]);
         $out_array[] = $out_str;
       }

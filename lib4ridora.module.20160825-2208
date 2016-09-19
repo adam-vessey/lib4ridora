@@ -234,23 +234,12 @@ function lib4ridora_islandora_datastream_access($op, AbstractDatastream $datastr
     'ir:citationCModel',
   );
 
-////kpr($datastream);
-//watchdog('lib4ridora', print_r($datastream, TRUE));
-  $lib4ridora_ds_viewable = !(($user->uid === 0) && ($op == ISLANDORA_VIEW_OBJECTS) && (in_array($datastream->id, array_map('trim', explode(',', variable_get('lib4ridora_restricted_datastreams', 'RELS-INT,RELS-EXT,POLICY'))))));
-
   if (!array_intersect($datastream->parent->models, $models)) {
     // Not a model we're interested in...
-    if (!$lib4ridora_ds_viewable) {
-      return FALSE;
-    }
     return;
   }
 
   $result = array();
-
-  if (!$lib4ridora_ds_viewable) {
-    $result['lib4ridora_ds_viewable'] = FALSE;
-  }
 
   module_load_include('inc', 'islandora', 'includes/derivatives');
   $options = array(
@@ -358,8 +347,7 @@ function lib4ridora_menu_alter(&$items) {
 function lib4ridora_preprocess_menu_link(&$vars) {
   $element = &$vars['element'];
   if ($element['#href'] == 'uuid/node/db02d4f6-92fc-4539-ac8a-77d5da620c8e') {
-//    $element['#href'] = 'mailto:feedback@lib4ri.ch?subject=DORA%20PROBLEM&body=PROBLEM%20REPORT%0D%0A%0D%0APAGE:%20' . urlencode($GLOBALS['base_url'].request_uri()) . '%0D%0AREFERRER:%20' . urlencode($_SERVER['HTTP_REFERER']) . '%0D%0A%0D%0ADESCRIPTION:%0D%0A%0D%0A%0D%0A';
-    $element['#href'] = 'mailto:dora@lib4ri.ch?subject=DORA%20PROBLEM&body=PROBLEM%20REPORT%0D%0A%0D%0APAGE:%20' . urlencode($GLOBALS['base_url'].request_uri()) . '%0D%0AREFERRER:%20' . urlencode($_SERVER['HTTP_REFERER']) . '%0D%0A%0D%0ADESCRIPTION:%0D%0A%0D%0A%0D%0A';
+    $element['#href'] = 'mailto:feedback@lib4ri.ch?subject=DORA%20PROBLEM&body=PROBLEM%20REPORT%0D%0A%0D%0APAGE:%20' . urlencode($GLOBALS['base_url'].request_uri()) . '%0D%0AREFERRER:%20' . urlencode($_SERVER['HTTP_REFERER']) . '%0D%0A%0D%0ADESCRIPTION:%0D%0A%0D%0A%0D%0A';
   }
   if ($element['#href'] == 'http://www.lib4ri.ch/about/contact.html?pick_a_subject=submit') {
       $element['#localized_options']['attributes']['target'][] = '_blank';
@@ -470,19 +458,11 @@ function lib4ridora_menu() {
     'type' => MENU_LOCAL_TASK,
     'file' => 'includes/workflow.form.inc',
   );
-//  $items['islandora/object/%islandora_object/MODS/citation'] = array(
-//    'title' => 'Edit datastream',
-//    'page callback' => 'drupal_get_form',
-//    'page arguments' => array('lib4ridora_citation_select_mods_edit_form', 2),
-//    'type' => MENU_CALLBACK,
-//    'file' => 'includes/citation-mods-edit.inc',
-//    'access arguments' => array(ISLANDORA_METADATA_EDIT),
-//  );
-  $items['islandora/object/%islandora_object/lib4ridora_edit_mods'] = array(
-    'title' => 'Edit',
+  $items['islandora/object/%islandora_object/MODS/citation'] = array(
+    'title' => 'Edit datastream',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('lib4ridora_citation_select_mods_edit_form', 2),
-    'type' => MENU_LOCAL_TASK,
+    'type' => MENU_CALLBACK,
     'file' => 'includes/citation-mods-edit.inc',
     'access arguments' => array(ISLANDORA_METADATA_EDIT),
   );
@@ -879,8 +859,7 @@ function lib4ridora_islandora_edit_datastream_registry_alter(&$edit_registry, $c
     // Add custom form to replace the removed form builder edit_form.
     $edit_registry['lib4ridora_citation_object_edit_form'] = array(
       'name' => t('Lib4ridora Citation Edit Form'),
-//      'url' => "islandora/object/{$object->id}/{$context['datastream']->id}/citation",
-      'url' => "islandora/object/{$object->id}/lib4ridora_edit_mods",
+      'url' => "islandora/object/{$object->id}/{$context['datastream']->id}/citation",
     );
   }
 }
@@ -1484,11 +1463,7 @@ function lib4ridora_islandora_datastream_purged($object, $dsid) {
   if (strpos($dsid, 'PDF') !== FALSE) {
     if (in_array('ir:citationCModel', $object->models)) {
       module_load_include('inc', 'lib4ridora', 'includes/full_text');
-      module_load_include('inc', 'lib4ridora', 'includes/embargo.form');
-      $datastream = $object->constructDatastream($dsid, 'M');
-      foreach (lib4ridora_multi_pdf_defaults_properties() as $pred => $default) {
-        $datastream->relationships->remove(LIB4RIDORA_RELS_URI, lib4ridora_multi_embargo_build_predicate($pred));
-      }
+      $object->purgeDatastream('RELS-INT');
       lib4ridora_update_full_text($object);
     }
   }
