@@ -234,8 +234,6 @@ function lib4ridora_islandora_datastream_access($op, AbstractDatastream $datastr
     'ir:citationCModel',
   );
 
-////kpr($datastream);
-//watchdog('lib4ridora', print_r($datastream, TRUE));
   $lib4ridora_ds_viewable = !(($user->uid === 0) && ($op == ISLANDORA_VIEW_OBJECTS) && (in_array($datastream->id, array_map('trim', explode(',', variable_get('lib4ridora_restricted_datastreams', 'RELS-INT,RELS-EXT,POLICY'))))));
 
   if (!array_intersect($datastream->parent->models, $models)) {
