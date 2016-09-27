@@ -243,6 +243,10 @@ class IslandoraSolrResultsLib4riBookmark extends IslandoraSolrResultsBookmark {
 
         // Append the human readable labels to the front of
         // the facet removal link, in the 'current_query_facet_name' block.
+        // @XXX: We are not using l() because of active classes:
+        // @see http://drupal.org/node/41595
+        // The following differs from the default
+        // islandora_query block currentQuery().
         $updated_filter = FALSE;
         foreach ($records as $key => $value) {
           // Re-write certain PIDs to name strings.
