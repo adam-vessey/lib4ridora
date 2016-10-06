@@ -307,7 +307,7 @@ function lib4ridora_multi_pdf_defaults_properties() {
     'day' => $date['mday'],
   );
   return array(
-    'availability' => 'intranet',
+    'availability' => variable_get('lib4ridora_multi_pdf_defaults_property_availability', 'intranet'),
     'embargo_date' => $embargo_date,
     'document_version' => 'published version',
     'use_permission' => NULL,
