@@ -14,15 +14,15 @@
 function lib4ridora_get_organizational_block_content() {
   module_load_include('inc', 'islandora_solr', 'includes/utilities');
   $facets = lib4ridora_get_organization_facets();
-  ksort($facets);
+  uasort($facets, 'lib4ridora_organizational_facet_sort');
   $items = array();
   foreach ($facets as $facet => $info) {
     $items[] = array(
-      'data' => l($facet, 'islandora/search/*:*', array(
+      'data' => l($info['label'], 'islandora/search/*:*', array(
         'query' => array(
           'f' => array(
             format_string('!field:"!value"', array(
-              '!field' => $info['field'],
+              '!field' => islandora_solr_lesser_escape($info['field']),
               '!value' => islandora_solr_facet_escape($facet),
             )),
           ),
@@ -39,6 +39,12 @@ function lib4ridora_get_organizational_block_content() {
       'class' => array('list-group'),
     ),
   );
+}
+/**
+ * Custom sort function used in lib4ridora_get_organizational_block_content()
+ */
+function lib4ridora_organizational_facet_sort($a, $b) {
+  return strcmp($a['label'], $b['label']);
 }
 
 /**
@@ -126,9 +132,11 @@ function lib4ridora_recent_additions_block_configuration_form() {
  *
  * @return array
  *   An associative array with facets as keys, each containing an array of
- *   'field' as the query field and 'count' as the facet count.
+ *   'field' as the query field, 'label' as the facet label and 'count' as the facet count.
  */
 function lib4ridora_get_organization_facets() {
+  // Let us build an index of search fields and see if we need to replace the pid with the label:
+  $myrecords = islandora_solr_get_fields("facet_fields", FALSE, FALSE); // get all facet fields...
   $org_fields = explode(', ', variable_get('lib4ridora_organization_block_organization_field', 'mods_name_personal_affiliation_ms, mods_name_corporate_affiliation_ms'));
   $facets = array();
   $omitted_facets = array_map('trim', explode(PHP_EOL, variable_get('lib4ridora_organization_block_results_to_omit', '')));
@@ -139,11 +147,31 @@ function lib4ridora_get_organization_facets() {
   $qp->solrParams['facet.mincount'] = 1;
   $qp->solrParams['facet.field'] = $org_fields;
   $qp->executeQuery(FALSE);
+  // Remark. Weird naming convention: '$organization' actually contains the search field, whereas '$facet' refers to the name... We keep it as is, although it probably should be the other way around...
   foreach ($qp->islandoraSolrResult['facet_counts']['facet_fields'] as $organization => $results) {
     foreach ($results as $facet => $count) {
       if (!in_array($facet, $omitted_facets)) {
+        $facet_alt = $facet;
+        // Check if we want to translate the pid into the label and do it
+        foreach ($myrecords as $mykey => $myval) {
+          if ((strpos($organization, $myval['solr_field']) !== FALSE) && islandora_is_valid_pid($facet) && isset($myval['solr_field_settings']['pid_object_label']) && $myval['solr_field_settings']['pid_object_label']) {
+            $myqp = new IslandoraSolrQueryProcessor();
+            $myqp->buildQuery("PID:\"$facet\"");
+            $myqp->solrParams['fl'] = "PID, " . variable_get('islandora_solr_object_label_field', 'fgs_label_s');
+            $myqp->executeQuery();
+            if (!empty($myqp->islandoraSolrResult) && !empty($myqp->islandoraSolrResult['response']['objects']) && !empty($myqp->islandoraSolrResult['response']['object'][0]['object_label'])) {
+              $facet_alt = $myqp->islandoraSolrResult['response']['objects'][0]['object_label'];
+            }
+            else {
+              if ($myobj = islandora_object_load($facet)) {
+                $facet_alt = $myobj->label;
+              }
+            }
+          }
+        }
         $facets[$facet] = array(
           'field' => $organization,
+          'label' => $facet_alt,
           'count' => $count,
         );
       }
