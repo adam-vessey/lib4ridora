@@ -570,7 +570,8 @@ function lib4ridora_form_islandora_ingest_form_alter(&$form, &$form_state) {
     if (array_key_exists('subtype_semantics', $form)){
       $genre_map = lib4ridora_citation_get_genre_map(FALSE);
       $this_genre = $genre_map[$publication_type_name];
-      $this_subtype_semantics = variable_get('lib4ridora_citation_subtype_semantics', array($publication_type_name => $form['subtype_semantics']));
+      $default_subtype_semantics = lib4ridora_citation_get_genre_semantics_map();
+      $this_subtype_semantics = variable_get('lib4ridora_citation_subtype_semantics', $default_subtype_semantics);
       $form['subtype_semantics']['#value'] = $this_subtype_semantics[$this_genre];
     }
   }
