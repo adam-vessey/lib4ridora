@@ -502,10 +502,11 @@ function lib4ri_access_denied() {
     $datastreams = iterator_to_array($object);
     $pdf_datastreams = array_filter($datastreams, 'lib4ridora_multi_embargo_pdf_filter');
     if (!empty($pdf_datastreams)) {
-      return t('You do not have access to this PDF. Return to the parent object: <a href="@url">@label</a>.', array(
+      $return_string = t('You do not have access to this PDF. Return to the parent object: <a href="@url">@label</a>.', array(
         '@url' => url("islandora/object/{$object->id}"),
         '@label' => $object->label,
       ));
+      return check_markup(decode_entities($return_string), 'filtered_html_for_title');
     }
   }
   return t('You are not authorized to access this page');
@@ -554,8 +555,25 @@ function lib4ridora_citation_model_access($op, $object) {
 
 /**
  * Alter ingest form to change ingest button label for citations.
+ * In addition, pre-select appropriate subtype.
  */
 function lib4ridora_form_islandora_ingest_form_alter(&$form, &$form_state) {
+  if ($form['form_step_id']['#value'] == 'xml_form_builder_metadata_step') {
+    $lib4ridora_association_step_storage = &islandora_ingest_form_get_step_storage($form_state, 'xml_form_builder_association_step');
+    module_load_include('inc', 'lib4ridora', 'includes/citation.subtypes');
+    $citation_map = lib4ridora_get_citation_mapping_info();
+    $publication_type_name = $citation_map[$lib4ridora_association_step_storage['ingest_selector']]['name'];
+    if (in_array($publication_type_name, $form['publication_type']['#options'])){
+      $form['publication_type']['#default_value'] = $publication_type_name;
+      $form['publication_type']['#disabled'] = TRUE;
+    }
+    if (array_key_exists('subtype_semantics', $form)){
+      $genre_map = lib4ridora_citation_get_genre_map(FALSE);
+      $this_genre = $genre_map[$publication_type_name];
+      $this_subtype_semantics = variable_get('lib4ridora_citation_subtype_semantics', array($publication_type_name => $form['subtype_semantics']));
+      $form['subtype_semantics']['#value'] = $this_subtype_semantics[$this_genre];
+    }
+  }
   if ($form['form_step_id']['#value'] == 'lib4ridora_license') {
     $form['next']['#value'] = t('I accept the terms of this license');
   }
@@ -1183,8 +1201,8 @@ function lib4ridora_solr_advanced_search_form_validate($form, &$form_state) {
   module_load_include('inc', 'lib4ridora', 'includes/utilities');
   $errors = form_get_errors();
   if (empty($errors) && !empty($form_state['values']['year']['to']) && !empty($form_state['values']['year']['from'])) {
-    if ($form_state['values']['year']['from'] >= $form_state['values']['year']['to']) {
-      form_error($form['year']['from'], t('The from value must be less than the to value.'));
+    if ($form_state['values']['year']['from'] > $form_state['values']['year']['to']) {
+      form_error($form['year']['from'], t('The from value must be less than or equal the to value.'));
     }
   }
 

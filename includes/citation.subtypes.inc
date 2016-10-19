@@ -40,10 +40,6 @@ function lib4ridora_get_citation_mapping_info() {
       'name' => t('Proceedings Paper'),
       'description' => t('A proceedings paper.'),
     ),
-    'thesis' => array(
-      'name' => t('Thesis'),
-      'description' => t('A thesis.'),
-    ),
     'master_thesis' => array(
       'name' => t('Master Thesis'),
       'description' => t('A master thesis.'),
@@ -87,13 +83,34 @@ function lib4ridora_citation_get_genre_map($metadata_display = FALSE) {
     'Conference Item' => 'conference_object',
     'Proceedings Paper' => $metadata_display ? 'conference_object' : 'proceedings_paper',
     'Report' => 'report',
-    'Thesis' => 'thesis',
     'Dissertation' => $metadata_display ? 'thesis' : 'dissertation',
     'Master Thesis' => $metadata_display ? 'thesis' : 'master_thesis',
     'Bachelor Thesis' => $metadata_display ? 'thesis' : 'bachelor_thesis',
     'Patent' => 'patent',
   );
 }
+
+/**
+ * Helper functions to get the mapping of genre machine names to genre semantics.
+ */
+function lib4ridora_citation_get_genre_semantics_map() {
+  $head = 'info:eu-repo/semantics/';
+  return array(
+    'journal_article' => $head . 'article',
+    'book_chapter' => $head . 'bookPart',
+    'book' => $head . 'book',
+    'edited_book' => $head . 'book',
+    'newspaper_or_magazine_article' => $head . 'contributionToPeriodical',
+    'conference_object' => $head . 'conferenceObject',
+    'proceedings_paper' => $head . 'conferenceObject',
+    'report' => $head . 'report',
+    'dissertation' => $head . 'doctoralThesis',
+    'master_thesis' => $head . 'masterThesis',
+    'bachelor_thesis' => $head . 'bachelorThesis',
+    'patent' => $head . 'patent',
+  );
+}
+
 
 /**
  * Get information about the different subtypes for forms.
@@ -112,6 +129,7 @@ function lib4ridora_citation_form_subtypes() {
   if ($map === NULL) {
     $map = lib4ridora_get_citation_mapping_info();
     $genre_map = lib4ridora_citation_get_genre_map(FALSE);
+    $genre_semantics_map = lib4ridora_citation_get_genre_semantics_map();
     $form_map = variable_get('lib4ridora_citation_subtype_form_associations', array());
     $test_form_association = function ($form_name) {
       // Test that an association exists for the given form (and it is a MODS
@@ -121,6 +139,11 @@ function lib4ridora_citation_form_subtypes() {
     };
     foreach ($map as $name => &$info) {
       $info['genres'] = array_keys($genre_map, $name);
+      $genre_semantics = array();
+      foreach ($info['genres'] as $genre_key) {
+        $genre_semantics[] = $genre_semantics_map[$genre_map[$genre_key]];
+      }
+      $info['genre_semantics'] = $genre_semantics;
 
       // Use the previously configured form name; otherwise, default to the form
       // with the same human-readable name.
@@ -212,6 +235,9 @@ function lib4ridora_citation_subtype_mapping_form($form, &$form_state) {
   $map_for_forms = function ($subtype) {
     return $subtype['name'];
   };
+  $map_for_semantics = function($subtype) {
+    return $subtype['genre_semantics'][0];
+  };
   $variables = array(
     'lib4ridora_islandora_solr_metadata_mappings' => array(
       'options' => lib4ridora_citation_subtype_islandora_solr_metadata_options(),
@@ -230,6 +256,16 @@ function lib4ridora_citation_subtype_mapping_form($form, &$form_state) {
       ),
       // Matches present defaults with explicitly matching form names.
       'defaults' => array_map($map_for_forms, $form_subtypes),
+    ),
+    'lib4ridora_citation_subtype_semantics' => array(
+      'options' => lib4ridora_citation_subtype_form_options(),
+      'strings' => array(
+        'title' => t('Genre Subtype Semantics'),
+        'description' => t('Set the appropriate genre subtype semantics (i.e., the valueURI-attribute of the &lt;genre&gt;-tag).'),
+        'mapping_title' => t('Attribute for @type'),
+      ),
+      // Matches present defaults with explicitly matching form names.
+      'defaults' => array_map($map_for_semantics, $form_subtypes),
     ),
   );
   foreach ($variables as $variable => $info) {
@@ -265,7 +301,7 @@ function lib4ridora_citation_subtype_mapping_form($form, &$form_state) {
         );
       }
     }
-    else {
+    elseif ($variable == 'lib4ridora_citation_subtype_form_associations') {
       foreach ($form_subtypes as $type => $type_info) {
         $form['settings'][$variable][$type] = $base_select + array(
           '#title' => filter_xss(format_string($info['strings']['mapping_title'], array(
@@ -281,7 +317,23 @@ function lib4ridora_citation_subtype_mapping_form($form, &$form_state) {
         );
       }
     }
-
+    elseif ($variable == 'lib4ridora_citation_subtype_semantics') {
+      foreach ($form_subtypes as $type => $type_info) {
+        $form['settings'][$variable][$type] = array(
+          '#type' => 'textfield',
+          ) + array(
+          '#title' => filter_xss(format_string($info['strings']['mapping_title'], array(
+            '@type' => $type_info['name'],
+          ))),
+          // Current value, defined default, or NULL.
+          '#default_value' => ((isset($current_value[$type])) ?
+            $current_value[$type] :
+            ((isset($defaults[$type])) ?
+              $defaults[$type] :
+              NULL)),
+        );
+      }
+    }
   }
 
   $form['actions'] = array(
