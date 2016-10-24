@@ -7,10 +7,14 @@
 /**
  * Helper function to get info about genre mappings.
  *
+ * @param bool $metadata_display
+ *   Whether or not the subtype mapping should use genre aliases for determining
+ *   the correct metadata display. Leave FALSE to use the regular form mapping.
+ *
  * @return array
  *   An associative array of info about genre mappings.
  */
-function lib4ridora_get_citation_mapping_info() {
+function lib4ridora_get_citation_mapping_info($metadata_display = FALSE) {
   return array(
     'journal_article' => array(
       'name' => t('Journal Article'),
@@ -40,6 +44,12 @@ function lib4ridora_get_citation_mapping_info() {
       'name' => t('Proceedings Paper'),
       'description' => t('A proceedings paper.'),
     ),
+    ) + ($metadata_display ? array(
+      'thesis' => array(
+        'name' => t('Thesis'),
+        'description' => t('A thesis.'),
+      ),
+    ) : array()) + array(
     'master_thesis' => array(
       'name' => t('Master Thesis'),
       'description' => t('A master thesis.'),
@@ -79,7 +89,7 @@ function lib4ridora_citation_get_genre_map($metadata_display = FALSE) {
     'Book Chapter' => 'book_chapter',
     'Book' => 'book',
     'Edited Book' => $metadata_display ? 'book' : 'edited_book',
-    'Newspaper or Magazine Article' => 'newspaper_or_magazine_article',
+    'Newspaper or Magazine Article' => $metadata_display ? 'journal_article' : 'newspaper_or_magazine_article',
     'Conference Item' => 'conference_object',
     'Proceedings Paper' => $metadata_display ? 'conference_object' : 'proceedings_paper',
     'Report' => 'report',
@@ -174,9 +184,16 @@ function lib4ridora_citation_form_subtypes() {
  *     type.
  */
 function lib4ridora_citation_display_subtypes() {
-  $map = lib4ridora_get_citation_mapping_info();
-  $genre_map = lib4ridora_citation_get_genre_map(TRUE);
+  $map = lib4ridora_get_citation_mapping_info(TRUE);
   $display_map = variable_get('lib4ridora_islandora_solr_metadata_mappings', array());
+  $subtype_metadata_mappings = FALSE;
+  if (isset($display_map['subtype_metadata_mappings'])) {
+    if ($display_map['subtype_metadata_mappings']) {
+      $subtype_metadata_mappings = TRUE;
+    }
+   unset($display_map['subtype_metadata_mappings']);
+  }
+  $genre_map = lib4ridora_citation_get_genre_map(!$subtype_metadata_mappings);
   foreach ($map as $name => &$info) {
     $info['genres'] = array_keys($genre_map, $name);
     $info['display'] = isset($display_map[$name]) ? $display_map[$name] : NULL;
@@ -286,6 +303,14 @@ function lib4ridora_citation_subtype_mapping_form($form, &$form_state) {
       '#description' => filter_xss($info['strings']['description']),
     );
     if ($variable == 'lib4ridora_islandora_solr_metadata_mappings') {
+      $form['settings'][$variable]['subtype_metadata_mappings'] = array(
+        '#type' => 'checkbox',
+        '#title' => t('Set metadata mappings for subtypes rather than types.'),
+        '#default_value' => (isset($current_value['subtype_metadata_mappings']) ? $current_value['subtype_metadata_mappings'] : (isset($defaults['subtype_metadata_mappings']) ? $defaults['subtype_metadata_mappings'] : 0)),
+        '#return_value' => 1,
+        '#description' => t('By default, you can set metadata mappings for publication types, but not for subtypes. Check this box if you want more resolution.'),
+        '#prefix' => '<br/>',
+      );
       foreach (lib4ridora_citation_display_subtypes() as $type => $type_info) {
         $form['settings'][$variable][$type] = $base_select + array(
           '#title' => filter_xss(format_string($info['strings']['mapping_title'], array(
