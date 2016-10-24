@@ -1048,7 +1048,8 @@ function lib4ridora_ir_citationCModel_islandora_view_object_alter(AbstractObject
       $author_list = array();
       foreach ($authors as $key => &$author) {
         $family = $author['family'];
-        $entity = $xpath->evaluate('string(//mods:name[@type="personal"][php:functionString("strtolower", mods:namePart[@type="family"]) = "' . strtolower($family) . '" and php:functionString("strtolower", mods:namePart[@type="family"]) = "' . strtolower($family) . '"]/mods:nameIdentifier[@type="authorId"])');
+        $given = $author['given'];
+        $entity = $xpath->evaluate('string(//mods:name[@type="personal"][php:functionString("strtolower", mods:namePart[@type="family"]) = "' . strtolower($family) . '" and php:functionString("strtolower", mods:namePart[@type="given"]) = "' . strtolower($given) . '"]/mods:nameIdentifier[@type="authorId"])');
         // Grab from our parsed CSL style string.
         $author_string = $csled_authors[$key];
         if (!empty($entity)) {
@@ -1100,6 +1101,26 @@ function lib4ridora_ir_citationCModel_islandora_view_object_alter(AbstractObject
       'citation' => $rendered['citation.tab']['citation'],
     );
     unset($rendered['citation.tab']['citation']);
+  }
+}
+
+/**
+ * Implements hook_CMODEL_PID_islandora_view_object().
+ */
+function lib4ridora_islandora_personCModel_islandora_view_object_alter(AbstractObject $object, &$rendered) {
+  if (!empty($rendered) && isset($rendered[NULL]['#markup'])) {
+    $markup =& $rendered[NULL]['#markup'];
+    $re = '/href="[^"]*\/search\?type=dismax&amp;f\[0\]=PID%3A' . urlencode(preg_replace('/(:|-)/', '\\\\\1', $object->id)) . '"/';
+    $markup = preg_replace($re, 'href="' . preg_replace('/.*href="([^"]*)".*/', '\1', l($object->id, 'islandora/search', array(
+      'query' => array(
+        'f' => array(
+          format_string('!field:"!value"', array(
+            '!field' => islandora_solr_lesser_escape(variable_get('lib4ridora_author_solr_field', 'mods_name_personal_author_authority_marcrelator_nameIdentifier_authorID_ms')),
+            '!value' => $object->id,
+          )),
+        ),
+      ),
+    ))) . '"', $markup);
   }
 }
 
