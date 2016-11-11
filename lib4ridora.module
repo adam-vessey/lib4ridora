@@ -1468,6 +1468,7 @@ function lib4ridora_islandora_datastream_modified($object, $datastream) {
       $values = lib4ridora_multi_pdf_defaults_properties();
       lib4ridora_update_datastream_relationships($datastream, $values);
     }
+    lib4ridora_pathauto_create_alias($object, $datastream, 'update');
     lib4ridora_update_full_text($object);
   }
 }
@@ -1484,6 +1485,7 @@ function lib4ridora_islandora_datastream_ingested($object, $datastream) {
       lib4ridora_update_datastream_relationships($datastream, $values);
     }
     lib4ridora_update_full_text($object);
+    lib4ridora_pathauto_create_alias($object, $datastream, 'insert');
   }
 }
 
@@ -1500,7 +1502,201 @@ function lib4ridora_islandora_datastream_purged($object, $dsid) {
       foreach (lib4ridora_multi_pdf_defaults_properties() as $pred => $default) {
         $datastream->relationships->remove(LIB4RIDORA_RELS_URI, lib4ridora_multi_embargo_build_predicate($pred));
       }
+      if (module_exists('pathauto')) {
+        module_load_include('inc', 'pathauto');
+        pathauto_path_delete_all('islandora/object/' . $object->id . '/datastream/' . $dsid . '/view');
+      }
       lib4ridora_update_full_text($object);
     }
   }
 }
+
+/**
+ * Implements hook_pathauto().
+ */
+function lib4ridora_pathauto($op) {
+  if (!module_exists('islandora_pathauto')) {
+    return NULL;
+  }
+  module_load_include('inc', 'islandora', 'includes/utilities');
+  $all_cmodels = islandora_get_content_models();
+//  $settings = islandora_pathauto_pathauto($op);
+//
+  $settings = new stdClass();
+  $settings->module = 'lib4ridora';
+  $settings->groupheader = t('Islandora object paths - Addendum by Lib4RI');
+  $settings->patterndescr = '';
+  $settings->patterndefault = '';
+  $settings->token_type = 'fedora_datastream';
+//
+  $settings->batch_update_callback = 'lib4ridora_pathauto_bulkupdate';
+  $pathauto_cmodels = variable_get('islandora_pathauto_selected_cmodels', array());
+  $cmodels = array();
+  foreach ($all_cmodels as $key => $value) {
+    if (in_array($key, $pathauto_cmodels)) {
+      $cmodels[$key] = $value;
+    }
+  }
+  foreach ($cmodels as $cmodel) {
+    if ($cmodel['pid'] === 'ir:citationCModel') { // we only deal with this one content model
+//      $settings->patternitems[$cmodel['pid'] . '-PDFs'] = t('Custom pattern for PDF datastreams for @cmodel objects', array("@cmodel" => $cmodel['label']));
+      $settings->patterndescr = t('Custom pattern for PDF datastreams for @cmodel objects', array("@cmodel" => $cmodel['label']));
+    }
+  }
+//
+  if ($settings->patterndescr === '') {
+    return NULL;
+  }
+//
+  return $settings;
+}
+
+/**
+ * Wrapper to pathauto_create_alias().
+ *
+ * @param string $op
+ *   The operation to perform: 'insert' or 'update'
+ * @return int
+ *   Returns the number of aliases generated from this object;
+ *   may be >1 if the object has multiple content models.
+ */
+function lib4ridora_pathauto_create_alias($object, $datastream, $op) {
+  if ((!module_exists('pathauto')) || (!module_exists('islandora_pathauto'))) {
+    return 0;
+  }
+  module_load_include('inc', 'pathauto');
+  $path = 'islandora/object/' . $object->id . '/datastream/' . $datastream->id . '/view';
+  $count = 0;
+  // Give priority to any cmodels that are enabled for pathauto.
+  $all_enabled = variable_get('islandora_pathauto_selected_cmodels', array());
+  $models = array_intersect($object->models, $all_enabled);
+  if (!$models) {
+    $models = $object->models;
+  }
+  foreach ($models as $cmodel) {
+//    $result = pathauto_create_alias('islandora', $op, $path, array('fedora' =>  $datastream), $cmodel);
+    if ($cmodel === 'ir:citationCModel') { // we only deal with this one content model
+      $result = pathauto_create_alias('lib4ridora', $op, $path, array('fedora_datastream' =>  $datastream), $cmodel);
+      if ($result != '') {
+        $count++;
+      }
+    }
+  }
+  return $count;
+}
+
+/**
+ * Implements hook_token_info().
+ */
+function lib4ridora_token_info() {
+  $info['types']['fedora_datastream'] = array(
+    'name' => 'Fedora object datastream tokens',
+    'description' => t('Tokens for islandora relating to datastreams of fedora objects'),
+    'needs-data' => 'fedora_datastream',
+  );
+  $info['tokens']['fedora_datastream']['id'] = array(
+    'name' => t('Datastream ID'),
+    'description' => t('The identifier of the datastream.'),
+  );
+  $info['tokens']['fedora_datastream']['label'] = array(
+    'name' => t('Datastream label'),
+    'description' => t('The label of the datastream.'),
+  );
+  $info['tokens']['fedora_datastream']['instance'] = array(
+    'name' => t('Datastream instance'),
+    'description' => t('The instance of the datastream (e.g., "1","2","3",... for "PDF", "PDF2", "PDF3", ...).'),
+  );
+  $info['tokens']['fedora_datastream']['parentid'] = array(
+    'name' => t('Parent object PID'),
+    'description' => t('The identifier of the Tuque object on which this datastream exists.'),
+  );
+  return $info;
+}
+
+/**
+ * Implements hook_tokens().
+ */
+function lib4ridora_tokens($type, $tokens, array $data = array(), array $options = array()) {
+  if ($type == 'fedora_datastream' & !empty($data['fedora_datastream'])) {
+    $datastream = $data['fedora_datastream'];
+    $object = $datastream->parent;
+    $replacements = array();
+    foreach ($tokens as $name => $original) {
+      if ($name == 'id') {
+        $replacements[$original] = $datastream->id;
+      }
+      if ($name == 'label') {
+        $replacements[$original] = $object->label;
+      }
+      if ($name == 'instance') {
+        $temp = preg_replace('/[^0-9]*([0-9]*)$/', '\1', $datastream->id);
+        if ($temp == '') {
+          $temp = '1';
+        }
+        $replacements[$original] = $temp;
+      }
+      if ($name == 'parentid') {
+        $replacements[$original] = $object->id;
+      }
+    }
+    return $replacements;
+  }
+  return array();
+}
+
+/**
+ * Implements hook_pathauto_bulkupdate().
+ */
+function lib4ridora_pathauto_bulkupdate() {
+  module_load_include('inc', 'islandora', 'includes/utilities');
+  $query = 'SELECT $object $title $cmodel
+        FROM <#ri>
+        WHERE {
+            $object <fedora-model:label> $title ;
+            <fedora-model:hasModel> $cmodel ;
+            <fedora-model:state> <fedora-model:Active> .
+            FILTER(!sameTerm($cmodel, <info:fedora/fedora-system:FedoraObject-3.0>))
+            }
+            ORDER BY $title';
+  $tuque = islandora_get_tuque_connection();
+  if ($tuque) {
+    try {
+      $results = $tuque->repository->ri->query($query, 'sparql');
+      $count = 0;
+//$tmp = '';
+      foreach ($results as $result) {
+        $pid = $result['object']['value'];
+        $object = islandora_object_load($pid);
+//$tmp .= $object->id . " (";
+//foreach ($object as $dsid => $datastream) {
+//$tmp .= $dsid . ", ";
+//}
+//$tmp .= "), ";
+        foreach ($object as $dsid => $datastream) {
+          if (strpos($dsid, 'PDF') !== FALSE) {
+            $result = lib4ridora_pathauto_create_alias($object, $datastream, 'bulkupdate');
+            if ($result != '') {
+              $count += $result;
+            }
+          }
+        }
+      }
+//watchdog('lib4ridora', $tmp);
+      drupal_set_message($count . ' islandora aliases were updated.');
+    }
+    catch (Exception $e) {
+      if ($e->getCode() == '404') {
+        return FALSE;
+      }
+      else {
+        return NULL;
+      }
+    }
+  }
+  else {
+    IslandoraTuque::getError();
+  }
+  // Assuming access denied in all other cases for now.
+  return NULL;
+}
+
