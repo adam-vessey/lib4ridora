@@ -349,6 +349,8 @@ function lib4ridora_check_ip($ip_address = NULL) {
 function lib4ridora_menu_alter(&$items) {
   // Nuke old "Document" tab.
   unset($items['islandora/object/%islandora_object/islandora_scholar_upload']);
+  // Nuke default "Embargo" submenu.
+  unset($items['islandora/object/%islandora_object/manage/embargo']);
   $items['islandora/object/%islandora_object/islandora_scholar_romeo']['access callback']
     = 'lib4ridora_romeo_access';
 }
