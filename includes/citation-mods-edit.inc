@@ -93,6 +93,7 @@ function lib4ridora_citation_select_mods_edit_form_submit($form, &$form_state) {
     $document = $xml_form->submit($form, $form_state);
     // Update the label.
     xml_form_builder_update_object($object, $form_state['association'], $document, $label);
+    usleep(500000); // give solr some time to update...
     $form_state['redirect'] = "islandora/object/{$object->id}";
   }
 }
