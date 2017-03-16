@@ -6,7 +6,7 @@
  */
 
 /**
- * Retrieve the journal identified via an ISSSN or EISSN.
+ * Retrieve the journal identified via an ISSN or EISSN.
  *
  * @param string $identifier
  *   An ISSN or EISSN.
@@ -17,7 +17,7 @@
 function lib4ridora_get_journal($identifier) {
   $journal = FALSE;
   $issn_field = variable_get('lib4ridora_issn_solr_field', 'mods_identifier_issn_s');
-  $e_issn_field = variable_get('lib4ridora_issn_solr_field', 'mods_identifier_e-issn_s');
+  $e_issn_field = variable_get('lib4ridora_e_issn_solr_field', 'mods_identifier_e-issn_s');
   $solr = new IslandoraSolrQueryProcessor();
   $solr->buildQuery("$issn_field:\"$identifier\" OR $e_issn_field:\"$identifier\"");
   $solr->solrLimit = 1;
