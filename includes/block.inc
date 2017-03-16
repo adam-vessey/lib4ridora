@@ -96,7 +96,7 @@ function lib4ridora_organizational_block_configuration_form() {
     'field' => array(
       '#type' => 'textfield',
       '#title' => t('Organization Solr Fields'),
-      '#description' => t('Comma-and-space-separated names of Solr fields to use to search for organizations.'),
+      '#description' => t('Comma-separated names of Solr fields to use to search for organizations.'),
       '#default_value' => variable_get('lib4ridora_organization_block_organization_field', 'mods_name_personal_affiliation_ms, mods_name_corporate_affiliation_ms'),
     ),
     'results_to_omit' => array(
@@ -137,12 +137,12 @@ function lib4ridora_recent_additions_block_configuration_form() {
 function lib4ridora_get_organization_facets() {
   // Let us build an index of search fields and see if we need to replace the pid with the label:
   $myrecords = islandora_solr_get_fields("facet_fields", FALSE, FALSE); // get all facet fields...
-  $org_fields = explode(', ', variable_get('lib4ridora_organization_block_organization_field', 'mods_name_personal_affiliation_ms, mods_name_corporate_affiliation_ms'));
+  $org_fields = array_map("trim", explode(',', variable_get('lib4ridora_organization_block_organization_field', 'mods_name_personal_affiliation_ms, mods_name_corporate_affiliation_ms')));
   $facets = array();
   $omitted_facets = array_map('trim', explode(PHP_EOL, variable_get('lib4ridora_organization_block_results_to_omit', '')));
   $qp = new IslandoraSolrQueryProcessor();
   $qp->buildQuery('*:*');
-  $qp->solrParams['fl'] = "PID, {$org_fields}";
+  $qp->solrParams['fl'] = "PID, " . implode(', ', $org_fields);
   $qp->solrParams['facet.limit'] = 100000;
   $qp->solrParams['facet.mincount'] = 1;
   $qp->solrParams['facet.field'] = $org_fields;
