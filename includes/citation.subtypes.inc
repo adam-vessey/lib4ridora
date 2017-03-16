@@ -28,6 +28,10 @@ function lib4ridora_get_citation_mapping_info($metadata_display = FALSE) {
       'name' => t('Book'),
       'description' => t('A monograph, edited volume or textbook.'),
     ),
+    'brochure' => array(
+      'name' => t('Brochure'),
+      'description' => t('A brochure (a book with fewer than 42 pages?).'),
+    ),
     'edited_book' => array(
       'name' => t('Edited Book'),
       'description' => t('An edited book.'),
@@ -43,6 +47,10 @@ function lib4ridora_get_citation_mapping_info($metadata_display = FALSE) {
     'proceedings_paper' => array(
       'name' => t('Proceedings Paper'),
       'description' => t('A proceedings paper.'),
+    ),
+    'conference_proceedings' => array(
+      'name' => t('Conference Proceedings'),
+      'description' => t('A conference proceedings volume.'),
     ),
     ) + ($metadata_display ? array(
       'thesis' => array(
@@ -88,10 +96,12 @@ function lib4ridora_citation_get_genre_map($metadata_display = FALSE) {
     'Journal Article' => 'journal_article',
     'Book Chapter' => 'book_chapter',
     'Book' => 'book',
+    'Brochure' => $metadata_display ? 'book' : 'brochure',
     'Edited Book' => $metadata_display ? 'book' : 'edited_book',
     'Newspaper or Magazine Article' => $metadata_display ? 'journal_article' : 'newspaper_or_magazine_article',
     'Conference Item' => 'conference_object',
     'Proceedings Paper' => $metadata_display ? 'conference_object' : 'proceedings_paper',
+    'Conference Proceedings' => $metadata_display ? 'conference_object' : 'conference_proceedings',
     'Report' => 'report',
     'Dissertation' => $metadata_display ? 'thesis' : 'dissertation',
     'Master Thesis' => $metadata_display ? 'thesis' : 'master_thesis',
@@ -104,16 +114,20 @@ function lib4ridora_citation_get_genre_map($metadata_display = FALSE) {
  * Helper functions to get the mapping of genre machine names to genre semantics.
  */
 function lib4ridora_citation_get_genre_semantics_map() {
+  // see http://vocabularies.coar-repositories.org/documentation/resource_types/
   $head = 'info:eu-repo/semantics/';
   return array(
     'journal_article' => $head . 'article',
     'book_chapter' => $head . 'bookPart',
     'book' => $head . 'book',
+    'brochure' => $head . 'book',
     'edited_book' => $head . 'book',
     'newspaper_or_magazine_article' => $head . 'contributionToPeriodical',
     'conference_object' => $head . 'conferenceObject',
     'proceedings_paper' => $head . 'conferenceObject',
+    'conference_proceedings' => $head . 'conferenceObject',
     'report' => $head . 'report',
+    'thesis' => $head . 'thesis', // this line is possibly unnecessary...
     'dissertation' => $head . 'doctoralThesis',
     'master_thesis' => $head . 'masterThesis',
     'bachelor_thesis' => $head . 'bachelorThesis',
