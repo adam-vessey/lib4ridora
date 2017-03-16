@@ -1034,7 +1034,10 @@ function lib4ridora_ir_citationCModel_islandora_view_object_alter(AbstractObject
     $xpath = new DOMXPath($dom);
     $xpath->registerNamespace('mods', 'http://loc.gov/mods/v3');
     $xpath->registerNamespace('php', 'http://php.net/xpath');
-    $xpath->registerPhpFunctions('strtolower');
+    function tolowernotrailingdot($str) { // preprocess names for comparison
+      return strtolower(trim($str, '.'));
+    };
+    $xpath->registerPhpFunctions('tolowernotrailingdot');
     $simple = simplexml_load_string($mods_content);
     $author_json = convert_mods_to_citeproc_json_names($simple);
     // Structure our custom style into a form that citeproc likes.
@@ -1044,16 +1047,19 @@ function lib4ridora_ir_citationCModel_islandora_view_object_alter(AbstractObject
       'data' => file_get_contents("$path/xml/csl/lib4ri_author.csl"),
     );
     $authors = citeproc_bibliography_from_mods($style, $object['MODS']->content);
-    $csled_authors = explode(',', strip_tags($authors));
+    $csled_authors = array_map("trim", explode(',', strip_tags($authors)));
     if (isset($author_json['author'])) {
       $authors = $author_json['author'];
       $author_list = array();
+      $commaoffset = 0; // commas so far in the list of names
       foreach ($authors as $key => &$author) {
-        $family = $author['family'];
-        $given = $author['given'];
-        $entity = $xpath->evaluate('string(//mods:name[@type="personal"][php:functionString("strtolower", mods:namePart[@type="family"]) = "' . strtolower($family) . '" and php:functionString("strtolower", mods:namePart[@type="given"]) = "' . strtolower($given) . '"]/mods:nameIdentifier[@type="authorId"])');
-        // Grab from our parsed CSL style string.
-        $author_string = $csled_authors[$key];
+        $family = (isset($author['family']) ? $author['family'] : "");
+        $given = (isset($author['given']) ? $author['given'] : "");
+        $commacnt = substr_count($family, ',') + substr_count($given, ','); // commas in family and given names
+        $entity = $xpath->evaluate('string(//mods:name[@type="personal"][php:functionString("tolowernotrailingdot", mods:namePart[@type="family"]) = "' . tolowernotrailingdot($family) . '" and php:functionString("tolowernotrailingdot", mods:namePart[@type="given"]) = "' . tolowernotrailingdot($given) . '"]/mods:nameIdentifier[@type="authorId"])');
+        // Grab from our parsed CSL style string; account for possible commas in name fields
+        $author_string = implode(', ', array_slice($csled_authors, $key + $commaoffset, $commacnt+1));
+        $commaoffset += $commacnt;
         if (!empty($entity)) {
           $author_string = l($author_string, 'islandora/search', array(
             'query' => array(
