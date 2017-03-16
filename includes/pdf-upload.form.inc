@@ -145,6 +145,7 @@ function lib4ridora_single_pdf_upload_form_submit(&$form, &$form_state) {
   $object->ingestDatastream($new);
   lib4ridora_update_datastream_relationships($new, $info[$new_token]);
   drupal_set_message(t('The PDF file has been added.'));
+  $form_state['redirect'] = "islandora/object/{$object->id}";
 }
 
 /**
