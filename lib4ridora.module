@@ -1526,15 +1526,14 @@ function lib4ridora_pathauto($op) {
   }
   module_load_include('inc', 'islandora', 'includes/utilities');
   $all_cmodels = islandora_get_content_models();
-//  $settings = islandora_pathauto_pathauto($op);
-//
+
   $settings = new stdClass();
   $settings->module = 'lib4ridora';
   $settings->groupheader = t('Islandora object paths - Addendum by Lib4RI');
   $settings->patterndescr = '';
   $settings->patterndefault = '';
   $settings->token_type = 'fedora_datastream';
-//
+
   $settings->batch_update_callback = 'lib4ridora_pathauto_bulkupdate';
   $pathauto_cmodels = variable_get('islandora_pathauto_selected_cmodels', array());
   $cmodels = array();
@@ -1545,15 +1544,14 @@ function lib4ridora_pathauto($op) {
   }
   foreach ($cmodels as $cmodel) {
     if ($cmodel['pid'] === 'ir:citationCModel') { // we only deal with this one content model
-//      $settings->patternitems[$cmodel['pid'] . '-PDFs'] = t('Custom pattern for PDF datastreams for @cmodel objects', array("@cmodel" => $cmodel['label']));
       $settings->patterndescr = t('Custom pattern for PDF datastreams for @cmodel objects', array("@cmodel" => $cmodel['label']));
     }
   }
-//
+
   if ($settings->patterndescr === '') {
     return NULL;
   }
-//
+
   return $settings;
 }
 
@@ -1580,7 +1578,6 @@ function lib4ridora_pathauto_create_alias($object, $datastream, $op) {
     $models = $object->models;
   }
   foreach ($models as $cmodel) {
-//    $result = pathauto_create_alias('islandora', $op, $path, array('fedora' =>  $datastream), $cmodel);
     if ($cmodel === 'ir:citationCModel') { // we only deal with this one content model
       $result = pathauto_create_alias('lib4ridora', $op, $path, array('fedora_datastream' =>  $datastream), $cmodel);
       if ($result != '') {
@@ -1669,15 +1666,9 @@ function lib4ridora_pathauto_bulkupdate() {
     try {
       $results = $tuque->repository->ri->query($query, 'sparql');
       $count = 0;
-//$tmp = '';
       foreach ($results as $result) {
         $pid = $result['object']['value'];
         $object = islandora_object_load($pid);
-//$tmp .= $object->id . " (";
-//foreach ($object as $dsid => $datastream) {
-//$tmp .= $dsid . ", ";
-//}
-//$tmp .= "), ";
         foreach ($object as $dsid => $datastream) {
           if (strpos($dsid, 'PDF') !== FALSE) {
             $result = lib4ridora_pathauto_create_alias($object, $datastream, 'bulkupdate');
@@ -1687,7 +1678,6 @@ function lib4ridora_pathauto_bulkupdate() {
           }
         }
       }
-//watchdog('lib4ridora', $tmp);
       drupal_set_message($count . ' islandora aliases were updated.');
     }
     catch (Exception $e) {
@@ -1706,3 +1696,50 @@ function lib4ridora_pathauto_bulkupdate() {
   return NULL;
 }
 
+/**
+ * Implements hook_element_info_alter()
+ */
+function lib4ridora_element_info_alter(&$type) {
+  if (module_exists('islandora_authority') && isset($type['islandora_authority_textfield'])) {
+    $type['islandora_authority_textfield']['#attached']['js'][] = drupal_get_path('module', 'lib4ridora') . '/js/lib4ridora_authority.js';
+  }
+  if (module_exists('islandora_authority') && isset($type['islandora_authority_hidden'])) {
+    $type['islandora_authority_hidden']['#element_validate'][] = 'lib4ridora_authority_hidden_validate';
+  }
+}
+
+/**
+ * Validates islandora_authority_hidden form elements
+ */
+function lib4ridora_authority_hidden_validate($element, &$form_state, $form) {
+  if ($element['#value'] != "") {
+    $el = array_slice($element['#parents'], -1, NULL, FALSE);
+    $el = $el[0];
+    $parent_array = array_slice($element['#parents'], 0, -1, TRUE);
+    $elptr = $form;
+    foreach ($parent_array as $p) {
+      $elptr = $elptr[$p];
+    }
+    $valptr = $form_state['values'];
+    foreach ($parent_array as $p) {
+      $valptr = $valptr[$p];
+    }
+    $siblings = $valptr;
+    unset($siblings[$el]);
+    $all_empty = TRUE;
+    foreach($siblings as $s => $v) {
+      if (trim($v) != "" && $elptr[$s]['#type'] == 'islandora_authority_textfield') {
+        $all_empty = FALSE;
+      }
+    }
+    if ($all_empty){
+      foreach($siblings as $s => $v) {
+        if (trim($v) == "" && $elptr[$s]['#type'] == 'islandora_authority_textfield') {
+          form_set_error(implode("][", $parent_array) . "][" . $s, t('@title has no content while a related hidden autocomplete field is non-empty. Try to redo the autocomplete.', array(
+            '@title' => $elptr[$s]['#title'],
+          )));
+        }
+      }
+    }
+  }
+}
