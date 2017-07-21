@@ -284,3 +284,204 @@ function lib4ridora_metadata_display_elements(&$elements) {
     $elements['associations'][] = array('configuration_id' => $config_id);
   }
 }
+
+/**
+ * DOI-validation helper function
+ *
+ * @param string $doi
+ *   The DOI to check
+ *
+ * @return bool|array
+ *   FALSE if no existing object with DOI=$doi is found, or an associative 
+ *   array containing information on the existing objects with that DOI:
+ *   - count: The number of objects found
+ *   - objects: An associative array for each key=PID containing:
+ *     - namespace: The namespace of the object
+ *     - incollections: An array of collections the object is a member of
+ *     - #markup: A link to the object followed by the list of collections
+ *   - collections: An associative array for each key=collection containing:
+ *     - namespace: The namespace of the collection
+ */
+
+function lib4ridora_get_objects_by_doi($doi) {
+  module_load_include('inc', 'islandora_solr', 'includes/utilities');
+  module_load_include('inc', 'islandora', 'includes/utilities');
+  $doisolrfield = variable_get('lib4ridora_solr_field_doi', 'mods_identifier_doi_mt');
+  $collectionsolrfield = variable_get('islandora_solr_member_of_collection_field', 'RELS_EXT_isMemberOfCollection_uri_ms');
+  $query = $doisolrfield . ":\"" . islandora_solr_lesser_escape(trim($doi)) . "\"";
+  $qp = new IslandoraSolrQueryProcessor();
+  $qp->buildQuery($query);
+  $qp->solrParams['fl'] = "PID, $doisolrfield, $collectionsolrfield";
+  $qp->solrParams['sort'] = "PID asc";
+  $qp->executeQuery(FALSE);
+  $result = array();
+  $result['objects'] = array();
+  $result['collections'] = array();
+  $result['count'] = 0;
+  if (!empty($qp->islandoraSolrResult) && !empty($qp->islandoraSolrResult['response']) && isset($qp->islandoraSolrResult['response']['numFound']) && $qp->islandoraSolrResult['response']['numFound'] > 0){
+    foreach ($qp->islandoraSolrResult['response']['objects'] as $curobj) {
+      $r = array();
+      $pid = $curobj['PID'];
+      $r['namespace'] = preg_replace('/:.*$/', '', $pid);
+      $r['incollections'] = (array) preg_replace('/^.*\//', '', $curobj['solr_doc'][$collectionsolrfield]);
+      foreach ($r['incollections'] as $c) {
+        if (!in_array($c, $result['collections'])) {
+          $collectionobject = islandora_object_load($c);
+          $policy = new CollectionPolicy($collectionobject['COLLECTION_POLICY']->content);
+          $models = $policy->getContentModels();
+          $model = 'ir:citationCModel';
+          $namespace = 'islandora';
+          if (isset($models[$model])) {
+            $model = $models[$model];
+            $namespace = islandora_get_namespace($model['namespace']);
+          }
+          $result['collections'][$c] = array(
+            'namespace' => $namespace,
+          );
+        }
+      }
+      $r['#markup'] = t('<a href="@url">@pid</a> (@collections)', array(
+        '@url' => url($curobj['object_url']),
+        '@pid' => $pid,
+        '@collections' => implode(', ', $r['incollections']),
+      ));
+      $result['objects'][$pid] = $r;
+      $result['count'] += 1;
+    }
+  }
+  if ($result['count'] == 0) {
+    return FALSE;
+  }
+  return $result;
+}
+
+/**
+ * DOI-validator callback
+ *
+ * @param bool $ingesting
+ *   To specify whether we are ingesting or editing
+ *
+ * @return bool|SimpleXMLElement
+ *   FALSE if error or not found, a MODS document otherwise
+ */
+
+function lib4ridora_doi_validate($element, &$form_state, $form, $ingesting=FALSE) {
+  if ((!$ingesting || $element['#id'] != "edit-doi") && $element['#value'] == "") {
+    return FALSE; // do nothing if element is empty and we are not importing via doi
+  }
+  module_load_include('inc', 'islandora_doi', 'includes/utilities');
+  // Check for duplicate DOIs whithin the same collection or namespace
+  module_load_include('inc', 'islandora', 'includes/utilities');
+  $samedoiobjs = lib4ridora_get_objects_by_doi($element['#value']);
+  if ($samedoiobjs !== FALSE) {
+    $thispid = FALSE;
+    $thisnamespace = FALSE;
+    if (!$ingesting && isset($form_state['pid'])) {
+      $thispid = $form_state['pid'];
+      $thisnamespace = preg_replace('/:.*$/', '', $thispid);
+      if (array_key_exists($thispid, $samedoiobjs['objects'])) {
+        unset($samedoiobjs['objects'][$thispid]);
+        $samedoiobjs['count'] -= 1;
+        if ($samedoiobjs['count'] == 0) {
+          $samedoiobjs = FALSE;
+        }
+      }
+    }
+  }
+  if ($samedoiobjs !== FALSE) {
+    $targetcollections = array();
+    if (!$ingesting) {
+      if ($thispid !== FALSE) {
+        $thisobj = islandora_object_load($thispid);
+        $targetcollections = $thisobj->getParents();
+      }
+    }
+    else {
+      $storage = islandora_ingest_form_get_shared_storage($form_state);
+      $targetcollections = (array) $storage['parent'];
+    }
+    foreach ($samedoiobjs['collections'] as $cname => $c) {
+      $samedoiobjs['collections'][$cname]['issibling'] = FALSE;
+      $samedoiobjs['collections'][$cname]['istarget'] = FALSE;
+    }
+    foreach ($targetcollections as $targetcollection) {
+      $collectionobject = islandora_object_load($targetcollection);
+      $policy = new CollectionPolicy($collectionobject['COLLECTION_POLICY']->content);
+      $models = $policy->getContentModels();
+      $model = 'ir:citationCModel';
+      $namespace = 'islandora';
+      if (isset($models[$model])) {
+        $model = $models[$model];
+        $namespace = islandora_get_namespace($model['namespace']);
+      }
+      foreach ($samedoiobjs['collections'] as $cname => $c) {
+        if ($c['namespace'] == $namespace || $c['namespace'] == 'islandora' || ($thisnamespace && ($c['namespace'] == $thisnamespace) || $thisnamespace == 'islandora')) {
+          $samedoiobjs['collections'][$cname]['issibling'] = TRUE;
+        }
+        if ($cname == $targetcollection) {
+          $samedoiobjs['collections'][$cname]['istarget'] = TRUE;
+        }
+      }
+    }
+    if ($thisnamespace === FALSE && count($targetcollections) == 1) {
+      $thisnamespace = $namespace; // if ingesting, we set the current namespace to the collection's namespace
+    }
+    foreach ($samedoiobjs['objects'] as $pid => $obj) {
+      $samedoiobjs['objects'][$pid]['issibling'] = ($obj['namespace'] == 'islandora' ? TRUE : FALSE);
+      if ($thisnamespace && $obj['namespace'] == $thisnamespace) {
+        $samedoiobjs['objects'][$pid]['issibling'] = TRUE;
+      }
+      $samedoiobjs['objects'][$pid]['sametarget'] = FALSE;
+      foreach ($obj['incollections'] as $c) {
+        if ($samedoiobjs['collections'][$c]['issibling']) {
+          $samedoiobjs['objects'][$pid]['issibling'] = TRUE;
+        }
+        if ($samedoiobjs['collections'][$c]['istarget']) {
+          $samedoiobjs['objects'][$pid]['sametarget'] = TRUE;
+        }
+      }
+    }
+    foreach ($samedoiobjs['objects'] as $pid => $obj) {
+      if (!$obj['issibling']) {
+        unset($samedoiobjs['objects'][$pid]);
+        $samedoiobjs['count'] -= 1;
+      }
+    }
+    $many = ($samedoiobjs['count'] > 1);
+    $allinothercollection = TRUE;
+    $objlinklist = array();
+    foreach ($samedoiobjs['objects'] as $obj) {
+      array_push($objlinklist, $obj['#markup']);
+      if ($obj['sametarget']) {
+        $allinothercollection = FALSE;
+      }
+    }
+    if ($samedoiobjs['count'] > 0) {
+      form_error($element, t(($many ? 'Several' : 'An') . ' object' . ($many ? 's' : '') . ' with DOI "@value" already exist' . ($many ? '' : 's') . ': ' . implode(', ', $objlinklist) . '.' . ($allinothercollection ? ' Perhaps you could share ' . ($many ? 'an appropriate object' : 'it') . ' with the current collection' . (count($targetcollections) > 1 ? 's' : '') . ' "@collection"' : ''), array(
+        '@value' => trim($element['#value']),
+        '@collection' => implode('", "', $targetcollections),
+      )));
+    }
+  }
+  // check for valid doi
+  $mods = islandora_doi_get_mods(trim($element['#value']));
+  if ($mods === FALSE) {
+    if ($element['#value'] == "") {
+      form_error($element, t('@title is required.', array(
+        '@title' => $element['#title'],
+      )));
+    }
+    elseif (trim($element['#value']) == "") {
+      form_error($element, t('"@value" is not a DOI.', array(
+        '@value' => $element['#value'],
+      )));
+    }
+    else {
+      form_error($element, t('"@value" does not appear to be a valid DOI, or there could be an issue with the DOI configuration.', array(
+        '@value' => $element['#value'],
+      )));
+    }
+    return FALSE;
+  }
+  return $mods;
+}

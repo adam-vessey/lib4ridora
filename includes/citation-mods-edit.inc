@@ -40,6 +40,9 @@ function lib4ridora_citation_select_mods_edit_form($form, &$form_state, Abstract
         '#value' => t('Update'),
       );
       $form_state['association'] = $association;
+      if (isset($metadata_form['identifiers']) && isset($metadata_form['identifiers']['doi'])) {
+        $metadata_form['identifiers']['doi']['#element_validate'][] = 'lib4ridora_doi_validate';
+      }
       return $metadata_form;
     }
     drupal_set_message(t('The XML form could not be loaded. Verify that the %form_name form has an association.', array(

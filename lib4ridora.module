@@ -479,6 +479,14 @@ function lib4ridora_menu() {
     'access arguments' => array(ISLANDORA_METADATA_EDIT, 2),
     'access callback' => 'lib4ridora_citation_model_access',
   );
+  $items['doi_finder'] = array(
+    'title' => 'Find DOIs',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('lib4ridora_doi_finder_form', 2),
+    'type' => MENU_NORMAL_ITEM,
+    'file' => 'includes/doi-finder.form.inc',
+    'access arguments' => array(ISLANDORA_METADATA_EDIT),
+  );
   $items['lib4ri-access-denied'] = array(
     'title' => 'Access Denied',
     'page callback' => 'lib4ri_access_denied',
@@ -556,8 +564,16 @@ function lib4ridora_citation_model_access($op, $object) {
 }
 
 /**
+ * DOI-validation wrapper.
+ */
+function lib4ridora_doi_validate_ingest($element, &$form_state, $form) {
+  form_load_include($form_state, 'inc', 'lib4ridora', 'includes/utilities');
+  return lib4ridora_doi_validate($element, $form_state, $form, TRUE);
+}
+
+/**
  * Alter ingest form to change ingest button label for citations.
- * In addition, pre-select appropriate subtype.
+ * In addition, pre-select appropriate subtype and add doi-validation.
  */
 function lib4ridora_form_islandora_ingest_form_alter(&$form, &$form_state) {
   if ($form['form_step_id']['#value'] == 'xml_form_builder_metadata_step') {
@@ -575,6 +591,9 @@ function lib4ridora_form_islandora_ingest_form_alter(&$form, &$form_state) {
       $default_subtype_semantics = lib4ridora_citation_get_genre_semantics_map();
       $this_subtype_semantics = variable_get('lib4ridora_citation_subtype_semantics', $default_subtype_semantics);
       $form['subtype_semantics']['#value'] = $this_subtype_semantics[$this_genre];
+    }
+    if (in_array('identifiers', $form) && in_array('doi', $form['identifiers'])) {
+      $form['identifiers']['doi']['#element_validate'][] = 'lib4ridora_doi_validate_ingest';
     }
   }
   if ($form['form_step_id']['#value'] == 'lib4ridora_license') {

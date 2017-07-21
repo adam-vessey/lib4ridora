@@ -106,14 +106,9 @@ function lib4ridora_ingest_selector_form(array $form, array &$form_state, $editi
  */
 function lib4ridora_doi_validate_id($element, &$form_state, $form) {
   if (isset($element['#value']) && $form_state['values']['journal_import_method'] == 'doi') {
-    module_load_include('inc', 'islandora_doi', 'includes/utilities');
-    $mods = islandora_doi_get_mods($element['#value']);
-    if ($mods === FALSE) {
-      form_error($element, t('"@value" does not appear to be a valid DOI, or there could be an issue with the DOI configuration.', array(
-        '@value' => $element['#value'],
-      )));
-    }
-    else {
+    module_load_include('inc', 'lib4ridora', 'includes/utilities');
+    $mods = lib4ridora_doi_validate($element, $form_state, $form, TRUE);
+    if ($mods !== FALSE) {
       $object = islandora_ingest_form_get_object($form_state);
       if (isset($object["MODS"])) {
         $datastream = $object["MODS"];

@@ -38,6 +38,7 @@ function lib4ridora_uninstall() {
     'lib4ridora_solr_field_peer_review',
     'lib4ridora_solr_field_document_version',
     'lib4ridora_solr_field_document_availability',
+    'lib4ridora_solr_field_document_doi',
     'lib4ridora_recent_additions_block_sort_parameter',
     'lib4ridora_organization_block_organization_field',
     'lib4ridora_organization_block_results_to_omit',
