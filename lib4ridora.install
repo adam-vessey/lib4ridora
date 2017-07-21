@@ -33,6 +33,7 @@ function lib4ridora_uninstall() {
     'lib4ridora_pseudo_solr_field_year',
     'lib4ridora_solr_field_publication_year',
     'lib4ridora_solr_field_reporting_year',
+    'lib4ridora_solr_field_publication_type',
     'lib4ridora_solr_field_affiliations',
     'lib4ridora_solr_field_peer_review',
     'lib4ridora_solr_field_document_version',
@@ -43,6 +44,8 @@ function lib4ridora_uninstall() {
     'lib4ridora_citation_subtype_form_associations',
     'lib4ridora_islandora_solr_metadata_mappings',
     'lib4ridora_citation_subtype_semantics',
+    'lib4ridora_extra_pdf_datastream_prefix',
+    'lib4ridora_uploadable_extensions',
   );
   array_walk($variables, 'variable_del');
 }
