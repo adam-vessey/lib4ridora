@@ -356,13 +356,45 @@ function lib4ridora_get_objects_by_doi($doi) {
 }
 
 /**
+ * DOI-validator helper function
+ *
+ * @param string $doi
+ *   A string containing the DOI of which to check the existence
+ *
+ * @return bool|string
+ *   FALSE if DOI does not exist, the document url otherwise
+ *
+ * @TODO: make DOI lookup-url customisable
+ */
+
+function lib4ridora_doi_get_document_url($doi) {
+  $url = 'https://doi.org'; // no trailing slash!
+
+  $options = array('max_redirect' => 0);
+
+  $response = drupal_http_request($url . '/' . $doi, $options);
+
+  if (!in_array($response->code, array(200,302))) {
+    return FALSE;
+  }
+
+  if (property_exists($response, 'redirect_url')) {
+    return $response->redirect_url;
+  }
+
+  return FALSE;
+}
+
+/**
  * DOI-validator callback
  *
  * @param bool $ingesting
  *   To specify whether we are ingesting or editing
  *
- * @return bool|SimpleXMLElement
- *   FALSE if error or not found, a MODS document otherwise
+ * @return bool|SimpleXMLElement|string
+ *   FALSE if error or not found, otherwise a MODS document - if it can be
+ *   retrieved - or a string containing the document url (but only if we
+ *   are not ingesting)
  */
 
 function lib4ridora_doi_validate($element, &$form_state, $form, $ingesting=FALSE) {
@@ -464,6 +496,7 @@ function lib4ridora_doi_validate($element, &$form_state, $form, $ingesting=FALSE
     }
   }
   // check for valid doi
+  $doc_url = lib4ridora_doi_get_document_url(trim($element['#value']));
   $mods = islandora_doi_get_mods(trim($element['#value']));
   if ($mods === FALSE) {
     if ($element['#value'] == "") {
@@ -476,12 +509,19 @@ function lib4ridora_doi_validate($element, &$form_state, $form, $ingesting=FALSE
         '@value' => $element['#value'],
       )));
     }
+    elseif ($doc_url !== FALSE) {
+      if ($element['#id'] == "edit-doi") {
+        form_error($element, t('"@value" does appear to be a valid DOI, but no MODS could be retrieved, so there could be an issue with the DOI configuration.', array(
+          '@value' => $element['#value'],
+        )));
+      }
+    }
     else {
-      form_error($element, t('"@value" does not appear to be a valid DOI, or there could be an issue with the DOI configuration.', array(
+      form_error($element, t('"@value" does not appear to be a valid DOI.', array(
         '@value' => $element['#value'],
       )));
     }
-    return FALSE;
+    return (!$ingesting) ? $doc_url : FALSE;
   }
   return $mods;
 }

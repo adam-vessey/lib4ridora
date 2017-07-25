@@ -32,17 +32,19 @@ function lib4ridora_doi_finder_form(array $form, array &$form_state) {
   }
 
   foreach ($doilist as $doi => $val) {
-    $doilist[$doi]['isvalid'] = (islandora_doi_get_mods($doi) !== FALSE);
+    $doilist[$doi]['isvalid'] = (lib4ridora_doi_get_document_url($doi) !== FALSE);
+    $doilist[$doi]['hasmods'] = (islandora_doi_get_mods($doi) !== FALSE);
   }
   
   $result = '';
   $colok = '#009000';
   $colinvalid = '#b7a000';
+  $colnomods = '#207020';
   $colindora = '#c70000';
   $colboth = '#ff5050';
   foreach ($doilist as $doi => $val) {
     $siblings = lib4ridora_get_objects_by_doi($doi);
-    $col = $colok;
+    $col = ($val['hasmods']) ? $colok : $colnomods;
     if ($siblings !== FALSE) {
       $col = $colindora;
       if (!$val['isvalid']) {
@@ -57,17 +59,23 @@ function lib4ridora_doi_finder_form(array $form, array &$form_state) {
     if (!$val['isvalid']) {
       $result .= " not valid";
     }
+    elseif (!$val['hasmods']) {
+      $result .= " without MODS";
+    }
     if ($siblings !== FALSE) {
       $sibsmarkup = array();
       foreach ($siblings['objects'] as $obj) {
         $sibsmarkup[] = $obj['#markup'];
       }
-      if (!$val['isvalid']) {
+      if (!$val['isvalid'] || !$val['hasmods']) {
         $result .= " and";
       }
       $result .= " already in the system: " . implode(', ', $sibsmarkup);
     }
     elseif ($val['isvalid']) {
+      if (!$val['hasmods']) {
+        $result .= " but";
+      }
       $result .= " ok to ingest";
     }
     $result .= ".<br/>";
