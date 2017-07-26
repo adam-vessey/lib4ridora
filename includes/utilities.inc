@@ -306,7 +306,7 @@ function lib4ridora_metadata_display_elements(&$elements) {
 function lib4ridora_get_objects_by_doi($doi) {
   module_load_include('inc', 'islandora_solr', 'includes/utilities');
   module_load_include('inc', 'islandora', 'includes/utilities');
-  $doisolrfield = variable_get('lib4ridora_solr_field_doi', 'mods_identifier_doi_mt');
+  $doisolrfield = variable_get('lib4ridora_solr_field_doi', 'mods_identifier_doi_ms');
   $collectionsolrfield = variable_get('islandora_solr_member_of_collection_field', 'RELS_EXT_isMemberOfCollection_uri_ms');
   $query = $doisolrfield . ":\"" . islandora_solr_lesser_escape(trim($doi)) . "\"";
   $qp = new IslandoraSolrQueryProcessor();
@@ -370,7 +370,7 @@ function lib4ridora_get_objects_by_doi($doi) {
 function lib4ridora_doi_get_document_url($doi) {
   $url = 'https://doi.org'; // no trailing slash!
 
-  $options = array('max_redirect' => 0);
+  $options = array('max_redirects' => 0);
 
   $response = drupal_http_request($url . '/' . $doi, $options);
 
@@ -400,6 +400,10 @@ function lib4ridora_doi_get_document_url($doi) {
 function lib4ridora_doi_validate($element, &$form_state, $form, $ingesting=FALSE) {
   if ((!$ingesting || $element['#id'] != "edit-doi") && $element['#value'] == "") {
     return FALSE; // do nothing if element is empty and we are not importing via doi
+  }
+  if ((!$ingesting || $element['#id'] != "edit-doi") && preg_match('/^!/', $element['#value'])) {
+    $form_state['values']['identifiers']['doi'] = preg_replace('/^!/', '', $element['#value']); // remove leading '!'
+    return FALSE; // do nothing if user wants to override with leading '!'
   }
   module_load_include('inc', 'islandora_doi', 'includes/utilities');
   // Check for duplicate DOIs whithin the same collection or namespace
