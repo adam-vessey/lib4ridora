@@ -136,7 +136,7 @@ function lib4ridora_admin(array $form, array &$form_state) {
     '#type' => 'textfield',
     '#title' => t('DOI Solr Field'),
     '#description' => t('A field we use to determine DOI in Solr.  Is used for duplicity check during ingest via DOI.'),
-    '#default_value' => variable_get('lib4ridora_solr_field_document_doi', 'mods_identifier_doi_ms'),
+    '#default_value' => variable_get('lib4ridora_solr_field_document_doi', 'mods_identifier_doi_mlt'),
     '#required' => TRUE,
   );
   return system_settings_form($form);

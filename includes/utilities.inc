@@ -306,7 +306,7 @@ function lib4ridora_metadata_display_elements(&$elements) {
 function lib4ridora_get_objects_by_doi($doi) {
   module_load_include('inc', 'islandora_solr', 'includes/utilities');
   module_load_include('inc', 'islandora', 'includes/utilities');
-  $doisolrfield = variable_get('lib4ridora_solr_field_document_doi', 'mods_identifier_doi_ms');
+  $doisolrfield = variable_get('lib4ridora_solr_field_document_doi', 'mods_identifier_doi_mlt');
   $collectionsolrfield = variable_get('islandora_solr_member_of_collection_field', 'RELS_EXT_isMemberOfCollection_uri_ms');
   $query = $doisolrfield . ":\"" . islandora_solr_lesser_escape(trim($doi)) . "\"";
   $qp = new IslandoraSolrQueryProcessor();
