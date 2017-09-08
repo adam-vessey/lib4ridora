@@ -329,6 +329,7 @@ function lib4ridora_multi_pdf_get_options($sort = FALSE) {
       'published version' => t('Published Version'),
       'accepted version' => t('Accepted Version'),
       'updated version' => t('Updated Version'),
+      'erratum' => t('Erratum'),
       'supplemental material' => t('Supplemental Material'),
       'unspecified' => t('Unspecified PDF'),
     );
@@ -338,6 +339,7 @@ function lib4ridora_multi_pdf_get_options($sort = FALSE) {
       'accepted version' => t('Accepted Version'),
       'published version' => t('Published Version'),
       'updated version' => t('Updated Version'),
+      'erratum' => t('Erratum'),
       'supplemental material' => t('Supplemental Material'),
       'unspecified' => t('Unspecified PDF'),
     );
