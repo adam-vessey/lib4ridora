@@ -48,7 +48,7 @@ function lib4ridora_drush_command() {
         ),
         'ignore_multiple_pdf' => array(
           'description' => 'Flag to ignore objects with multiple PDFs.',
-          'required;' => TRUE,
+          'required;' => FALSE,
         ),
       ),
       'bootstrap' => DRUSH_BOOTSTRAP_DRUPAL_LOGIN,
