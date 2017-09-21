@@ -27,27 +27,27 @@ function lib4ridora_drush_command() {
       ),
       'options' => array(
         'namespace' => array(
-          'description' => '',
+          'description' => 'The namespace of PIDs you wish to purge.',
           'required' => TRUE,
         ),
         'genre' => array(
-          'description' => '',
+          'description' => 'The MODS/genre of the objects you wish to purge.',
           'required' => TRUE,
         ),
-        'percentage_keep' => array(
-          'description' => '',
+        'percentage_purge' => array(
+          'description' => 'The percentage of the collection you wish to purge.',
           'required' => TRUE,
         ),
         'content_model' => array(
-          'description' => '',
+          'description' => 'The content model of the objects you wish to purge.',
           'required' => TRUE,
         ),
         'collection_pid' => array(
-          'description' => '',
+          'description' => 'The PID of the coolection you wish to purge objects from.',
           'required' => TRUE,
         ),
         'ignore_multiple_pdf' => array(
-          'description' => '',
+          'description' => 'Flag to ignore objects with multiple PDFs.',
           'required;' => TRUE,
         ),
       ),
@@ -97,7 +97,7 @@ EOT;
 /**
  * Partially purge objects, leaving a small subset.
  */
-function drush_lib4ridora_partial_purge($namespace, $genre, $content_model, $percentage_keep, $collection_pid, $ignore_multiple_pdf = FALSE) {
+function drush_lib4ridora_partial_purge($namespace, $genre, $content_model, $percentage_purge, $collection_pid, $ignore_multiple_pdf = FALSE) {
   $qp = new IslandoraSolrQueryProcessor();
   $qp->buildQuery('PID:' . $namespace . '*');
   $qp->solrParams['fl'] = 'PID';
@@ -144,11 +144,11 @@ function drush_lib4ridora_partial_purge($namespace, $genre, $content_model, $per
     $object = islandora_object_load($result);
     if ($object) {
       echo($result . "\r\n");
-      // $object->repository->purgeObject($result);
+      $object->repository->purgeObject($result);
     }
 
     // Break when we've hit the percentage to keep.
-    if (($index / (count($results)) * 100) > $percentage_keep) {
+    if (($index / (count($results)) * 100) > $percentage_purge) {
       break;
     }
     $index++;
