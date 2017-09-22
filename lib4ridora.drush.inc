@@ -104,7 +104,7 @@ function drush_lib4ridora_partial_purge($namespace, $genre, $percentage_purge, $
   $qp->solrParams['fq'] = array(
     'RELS_EXT_hasModel_uri_ms:"info:fedora/' . $content_model . '"',
     'RELS_EXT_isMemberOfCollection_uri_ms:"info:fedora/' . $collection_pid . '"',
-    //'mods_genre_ms:"' . $genre . '"',
+    'mods_genre_ms:"' . $genre . '"',
   );
   if ($ignore_multiple_pdf) {
 
@@ -144,7 +144,7 @@ function drush_lib4ridora_partial_purge($namespace, $genre, $percentage_purge, $
     $object = islandora_object_load($result);
     if ($object) {
       echo($result . "\r\n");
-      //$object->repository->purgeObject($result);
+      $object->repository->purgeObject($result);
     }
 
     // Break when we've hit the percentage to keep.
