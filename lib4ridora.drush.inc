@@ -97,21 +97,21 @@ EOT;
 /**
  * Partially purge objects, leaving a small subset.
  */
-function drush_lib4ridora_partial_purge($namespace, $genre, $content_model, $percentage_purge, $collection_pid, $ignore_multiple_pdf = FALSE) {
+function drush_lib4ridora_partial_purge($namespace, $genre, $percentage_purge, $content_model, $collection_pid, $ignore_multiple_pdf = FALSE) {
   $qp = new IslandoraSolrQueryProcessor();
-  $qp->buildQuery('PID:' . $namespace . '*');
+  $qp->buildQuery('PID:' . $namespace . '\:*');
   $qp->solrParams['fl'] = 'PID';
   $qp->solrParams['fq'] = array(
     'RELS_EXT_hasModel_uri_ms:"info:fedora/' . $content_model . '"',
     'RELS_EXT_isMemberOfCollection_uri_ms:"info:fedora/' . $collection_pid . '"',
-    'mods_genre:"' . $genre . '"',
+    //'mods_genre_ms:"' . $genre . '"',
   );
   if ($ignore_multiple_pdf) {
 
     // Lib4ri appends a number to the id of PDF datastreams beyond the first.
     // look for a datastream with the pattern PDF + any other character to
     // determine multiple PDFs.
-    array_push($qp->solrParams['fq'], 'fedora_datastreams_ms:"PDF/[0-9A-Za-z]+/"');
+    array_push($qp->solrParams['fq'], 'fedora_datastreams_ms:"' . variable_get('lib4ridora_extra_pdf_datastream_prefix', 'PDF') . '/[0-9A-Za-z]+/"');
   }
   $qp->solrParams['facet'] = 'false';
   $qp->executeQuery(TRUE, FALSE);
@@ -144,11 +144,11 @@ function drush_lib4ridora_partial_purge($namespace, $genre, $content_model, $per
     $object = islandora_object_load($result);
     if ($object) {
       echo($result . "\r\n");
-      $object->repository->purgeObject($result);
+      //$object->repository->purgeObject($result);
     }
 
     // Break when we've hit the percentage to keep.
-    if (($index / (count($results)) * 100) > $percentage_purge) {
+    if (($index / (count($results)) * 100) >= $percentage_purge) {
       break;
     }
     $index++;
