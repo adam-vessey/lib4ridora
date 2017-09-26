@@ -106,15 +106,15 @@ function drush_lib4ridora_partial_purge($namespace, $genre, $percentage_purge, $
   $qp->solrParams['fq'] = array(
     'RELS_EXT_hasModel_uri_ms:"info:fedora/' . $content_model . '"',
     'RELS_EXT_isMemberOfCollection_uri_ms:"info:fedora/' . $collection_pid . '"',
-    //'mods_genre_ms:"' . $genre . '"',
+    'mods_genre_ms:"' . $genre . '"',
   );
   if ($ignore_multiple_pdf) {
 
     // Lib4ri appends a number to the id of PDF datastreams beyond the first.
     // look for a datastream with the pattern PDF + any other character to
     // determine multiple PDFs.
-    $qp->solrParams['fq'][] =  format_string('-!field:/!prefix[0-9A-Za-z]+/', array(
-      '!field' => 'fedora_datastreams_ms:',
+    $qp->solrParams['fq'][] = format_string('-!field:/!prefix[0-9A-Za-z]+/', array(
+      '!field' => 'fedora_datastreams_ms',
       '!prefix' => variable_get('lib4ridora_extra_pdf_datastream_prefix', 'PDF'),
     ));
   }
@@ -149,9 +149,6 @@ EOQ;
       );
       $cqp->solrParams['facet'] = FALSE;
       $cqp->executeQuery(TRUE, FALSE);
-      if ($cqp->islandoraSolrResult['response']['numFound'] > 0) {
-        continue;
-      }
     }
     try {
       $tuque->repository->purgeObject($pid);
