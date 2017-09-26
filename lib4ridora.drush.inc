@@ -19,7 +19,7 @@ function lib4ridora_drush_command() {
       'bootstrap' => DRUSH_BOOTSTRAP_DRUPAL_LOGIN,
     ),
     'lib4ridora_partial_purge' => array(
-      'aliases' => 'lpp',
+      'aliases' => array('lpp'),
       'description' => 'Purges objects leaving a smaller subset for dev purposes.',
       'drupal dependencies' => array(
         'islandora',
