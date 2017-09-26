@@ -100,7 +100,7 @@ EOT;
 function drush_lib4ridora_partial_purge() {
   $namespace = drush_get_option('namespace');
   $genre = drush_get_option('genre');
-  $percentage_purge = drush_get_option('precentage_purge');
+  $percentage_purge = drush_get_option('percentage_purge');
   $content_model = drush_get_option('content_model');
   $collection_pid = drush_get_option('collection_pid');
   $ignore_multiple_pdf = drush_get_option('ignore_multiple_pdf', FALSE);
