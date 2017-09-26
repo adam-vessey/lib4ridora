@@ -121,8 +121,7 @@ function drush_lib4ridora_partial_purge($namespace, $genre, $percentage_purge, $
   $qp->solrParams['facet'] = 'false';
   $qp->executeQuery(TRUE, FALSE);
   $results = $qp->islandoraSolrResult['response']['objects'];
-  
-  $has_children = function($pid) use ($tuque) {
+  $has_children = function ($pid) use ($tuque) {
     $query = <<<EOQ
 ASK {
   ?subject <fedora-model:hasModel> <info:fedora/fedora-system:FedoraObject-3.0> ;
@@ -142,13 +141,7 @@ EOQ;
     // If we are dealing with a content model which could have children,
     // check to make sure there are no children of this object.
     if ($has_children($pid)) {
-      $cqp = new IslandoraSolrQueryProcessor();
-      $cqp->buildQuery('*:*');
-      $cqp->solrParams['fq'] = array(
-        '(RELS_EXT_isMemberOfCollection_uri_ms:"info:fedora/' . $pid . '" OR RELS_EXT_isConstituentOf_uri_ms:"info:fedora/' . $pid . '")',
-      );
-      $cqp->solrParams['facet'] = FALSE;
-      $cqp->executeQuery(TRUE, FALSE);
+      continue;
     }
     try {
       $tuque->repository->purgeObject($pid);
