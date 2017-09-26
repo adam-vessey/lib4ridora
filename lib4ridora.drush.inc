@@ -20,7 +20,7 @@ function lib4ridora_drush_command() {
     ),
     'lib4ridora_partial_purge' => array(
       'aliases' => 'lpp',
-      'description' => 'Purges objects leaving a small subset for dev purposes.',
+      'description' => 'Purges objects leaving a smaller subset for dev purposes.',
       'drupal dependencies' => array(
         'islandora',
         'lib4ridora',
@@ -43,12 +43,12 @@ function lib4ridora_drush_command() {
           'required' => TRUE,
         ),
         'collection_pid' => array(
-          'description' => 'The PID of the coolection you wish to purge objects from.',
+          'description' => 'The PID of the collection you wish to purge objects from.',
           'required' => TRUE,
         ),
         'ignore_multiple_pdf' => array(
           'description' => 'Flag to ignore objects with multiple PDFs.',
-          'required;' => FALSE,
+          'required' => FALSE,
         ),
       ),
       'bootstrap' => DRUSH_BOOTSTRAP_DRUPAL_LOGIN,
@@ -98,59 +98,74 @@ EOT;
  * Partially purge objects, leaving a small subset.
  */
 function drush_lib4ridora_partial_purge($namespace, $genre, $percentage_purge, $content_model, $collection_pid, $ignore_multiple_pdf = FALSE) {
+  $user = user_load(1);
+  $tuque = islandora_get_tuque_connection($user);
   $qp = new IslandoraSolrQueryProcessor();
   $qp->buildQuery('PID:' . $namespace . '\:*');
   $qp->solrParams['fl'] = 'PID';
   $qp->solrParams['fq'] = array(
     'RELS_EXT_hasModel_uri_ms:"info:fedora/' . $content_model . '"',
     'RELS_EXT_isMemberOfCollection_uri_ms:"info:fedora/' . $collection_pid . '"',
-    'mods_genre_ms:"' . $genre . '"',
+    //'mods_genre_ms:"' . $genre . '"',
   );
   if ($ignore_multiple_pdf) {
 
     // Lib4ri appends a number to the id of PDF datastreams beyond the first.
     // look for a datastream with the pattern PDF + any other character to
     // determine multiple PDFs.
-    array_push($qp->solrParams['fq'], 'fedora_datastreams_ms:"' . variable_get('lib4ridora_extra_pdf_datastream_prefix', 'PDF') . '/[0-9A-Za-z]+/"');
+    $qp->solrParams['fq'][] =  format_string('-!field:/!prefix[0-9A-Za-z]+/', array(
+      '!field' => 'fedora_datastreams_ms:',
+      '!prefix' => variable_get('lib4ridora_extra_pdf_datastream_prefix', 'PDF'),
+    ));
   }
   $qp->solrParams['facet'] = 'false';
   $qp->executeQuery(TRUE, FALSE);
   $results = $qp->islandoraSolrResult['response']['objects'];
+  
+  $has_children = function($pid) use ($tuque) {
+    $query = <<<EOQ
+ASK {
+  ?subject <fedora-model:hasModel> <info:fedora/fedora-system:FedoraObject-3.0> ;
+           ?pred <info:fedora/$pid> .
+}
+EOQ;
+
+    $child_results = $tuque->repository->ri->sparqlQuery($query);
+    return $child_results[0]['k0']['value'] == 'true';
+  };
 
   // Randomize the order of returned pids.
   shuffle($results);
   $index = 1;
-  foreach ($results as $pid) {
-    $result = $pid['solr_doc']['PID'];
+  foreach ($results as $result) {
+    $pid = $result['solr_doc']['PID'];
     // If we are dealing with a content model which could have children,
     // check to make sure there are no children of this object.
-    if (in_array($content_model, [
-      "islandora:collectionCModel",
-      "islandora:compoundCModel",
-      "islandora:book",
-    ])
-    ) {
+    if ($has_children($pid)) {
       $cqp = new IslandoraSolrQueryProcessor();
       $cqp->buildQuery('*:*');
       $cqp->solrParams['fq'] = array(
-        '(RELS_EXT_isMemberOfCollection_uri_ms:"info:fedora/' . $result . '" OR RELS_EXT_isConstituentOf_uri_ms:"info:fedora/' . $result . '")',
+        '(RELS_EXT_isMemberOfCollection_uri_ms:"info:fedora/' . $pid . '" OR RELS_EXT_isConstituentOf_uri_ms:"info:fedora/' . $pid . '")',
       );
       $cqp->solrParams['facet'] = FALSE;
       $cqp->executeQuery(TRUE, FALSE);
-      if (count($cqp->islandoraSolrResult['response']['objects']) > 0) {
+      if ($cqp->islandoraSolrResult['response']['numFound'] > 0) {
         continue;
       }
     }
-    $object = islandora_object_load($result);
-    if ($object) {
-      echo($result . "\r\n");
-      $object->repository->purgeObject($result);
+    try {
+      $tuque->repository->purgeObject($pid);
+      echo($pid . "\r\n");
+      $index++;
+    }
+    catch (RepositoryException $e) {
+      watchdog_exception('lib4ridora_partial_purge', $e);
+      continue;
     }
 
     // Break when we've hit the percentage to keep.
     if (($index / (count($results)) * 100) >= $percentage_purge) {
       break;
     }
-    $index++;
   }
 }
