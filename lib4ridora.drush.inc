@@ -161,7 +161,7 @@ EOQ;
     }
 
     // Break when we've hit the percentage to keep.
-    if (($index / (count($results)) * 100) >= $percentage_purge) {
+    if (($index / ($qp->islandoraSolrResult['response']['numFound']) * 100) >= $percentage_purge) {
       break;
     }
   }
