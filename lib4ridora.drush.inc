@@ -126,6 +126,7 @@ function drush_lib4ridora_partial_purge() {
     ));
   }
   $qp->solrParams['facet'] = 'false';
+  $qp->solrLimit = 100000000;
   $qp->executeQuery(TRUE, FALSE);
   $results = $qp->islandoraSolrResult['response']['objects'];
   $has_children = function ($pid) use ($tuque) {
