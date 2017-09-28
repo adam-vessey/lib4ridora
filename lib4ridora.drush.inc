@@ -126,6 +126,7 @@ function drush_lib4ridora_partial_purge() {
     ));
   }
   $qp->solrParams['facet'] = 'false';
+  $qp->solrLimit = 100000000;
   $qp->executeQuery(TRUE, FALSE);
   $results = $qp->islandoraSolrResult['response']['objects'];
   $has_children = function ($pid) use ($tuque) {
@@ -161,7 +162,7 @@ EOQ;
     }
 
     // Break when we've hit the percentage to keep.
-    if (($index / (count($results)) * 100) >= $percentage_purge) {
+    if (($index / ($qp->islandoraSolrResult['response']['numFound']) * 100) >= $percentage_purge) {
       break;
     }
   }
