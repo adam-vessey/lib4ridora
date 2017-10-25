@@ -18,41 +18,6 @@ function lib4ridora_drush_command() {
       ),
       'bootstrap' => DRUSH_BOOTSTRAP_DRUPAL_LOGIN,
     ),
-    'lib4ridora_partial_purge' => array(
-      'aliases' => array('lpp'),
-      'description' => 'Purges objects leaving a smaller subset for dev purposes.',
-      'drupal dependencies' => array(
-        'islandora',
-        'lib4ridora',
-      ),
-      'options' => array(
-        'namespace' => array(
-          'description' => 'The namespace of PIDs you wish to purge.',
-          'required' => TRUE,
-        ),
-        'genre' => array(
-          'description' => 'The MODS/genre of the objects you wish to purge.',
-          'required' => TRUE,
-        ),
-        'percentage_purge' => array(
-          'description' => 'The percentage of the collection you wish to purge.',
-          'required' => TRUE,
-        ),
-        'content_model' => array(
-          'description' => 'The content model of the objects you wish to purge.',
-          'required' => TRUE,
-        ),
-        'collection_pid' => array(
-          'description' => 'The PID of the collection you wish to purge objects from.',
-          'required' => TRUE,
-        ),
-        'ignore_multiple_pdf' => array(
-          'description' => 'Flag to ignore objects with multiple PDFs.',
-          'required' => FALSE,
-        ),
-      ),
-      'bootstrap' => DRUSH_BOOTSTRAP_DRUPAL_LOGIN,
-    ),
   );
 }
 
@@ -90,80 +55,6 @@ EOT;
     $object = islandora_object_load($result['object']['value']);
     if ($object) {
       lib4ridora_update_full_text($object);
-    }
-  }
-}
-
-/**
- * Partially purge objects, leaving a smaller subset.
- */
-function drush_lib4ridora_partial_purge() {
-  $namespace = drush_get_option('namespace');
-  $genre = drush_get_option('genre');
-  $percentage_purge = drush_get_option('percentage_purge');
-  $content_model = drush_get_option('content_model');
-  $collection_pid = drush_get_option('collection_pid');
-  $ignore_multiple_pdf = drush_get_option('ignore_multiple_pdf', FALSE);
-
-  $user = user_load(1);
-  $tuque = islandora_get_tuque_connection($user);
-  $qp = new IslandoraSolrQueryProcessor();
-  $qp->buildQuery('PID:' . $namespace . '\:*');
-  $qp->solrParams['fl'] = 'PID';
-  $qp->solrParams['fq'] = array(
-    'RELS_EXT_hasModel_uri_ms:"info:fedora/' . $content_model . '"',
-    'RELS_EXT_isMemberOfCollection_uri_ms:"info:fedora/' . $collection_pid . '"',
-    'mods_genre_ms:"' . $genre . '"',
-  );
-  if ($ignore_multiple_pdf) {
-
-    // Lib4ri appends a number to the id of PDF datastreams beyond the first.
-    // look for a datastream with the pattern PDF + any other character to
-    // determine multiple PDFs.
-    $qp->solrParams['fq'][] = format_string('-!field:/!prefix[0-9A-Za-z]+/', array(
-      '!field' => 'fedora_datastreams_ms',
-      '!prefix' => variable_get('lib4ridora_extra_pdf_datastream_prefix', 'PDF'),
-    ));
-  }
-  $qp->solrParams['facet'] = 'false';
-  $qp->solrLimit = 100000000;
-  $qp->executeQuery(TRUE, FALSE);
-  $results = $qp->islandoraSolrResult['response']['objects'];
-  $has_children = function ($pid) use ($tuque) {
-    $query = <<<EOQ
-ASK {
-  ?subject <fedora-model:hasModel> <info:fedora/fedora-system:FedoraObject-3.0> ;
-           ?pred <info:fedora/$pid> .
-}
-EOQ;
-
-    $child_results = $tuque->repository->ri->sparqlQuery($query);
-    return $child_results[0]['k0']['value'] == 'true';
-  };
-
-  // Randomize the order of returned pids.
-  shuffle($results);
-  $index = 1;
-  foreach ($results as $result) {
-    $pid = $result['solr_doc']['PID'];
-    // If we are dealing with a content model which could have children,
-    // check to make sure there are no children of this object.
-    if ($has_children($pid)) {
-      continue;
-    }
-    try {
-      $tuque->repository->purgeObject($pid);
-      echo($pid . "\r\n");
-      $index++;
-    }
-    catch (RepositoryException $e) {
-      watchdog_exception('lib4ridora_partial_purge', $e);
-      continue;
-    }
-
-    // Break when we've hit the percentage to keep.
-    if (($index / ($qp->islandoraSolrResult['response']['numFound']) * 100) >= $percentage_purge) {
-      break;
     }
   }
 }
