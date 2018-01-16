@@ -6,6 +6,25 @@
  */
 
 /**
+ * Replacement for ucwords to manage exceptions
+ *
+ * @return string
+ *   string with the first character of each word capitalized if not 
+ *   in the array $exceptions
+ */
+function ucwordss($str) {
+    $exceptions = ['or', 'and', 'for'];
+    $out = "";
+    $words = explode(" ", $str);
+
+    foreach ($words as $word) {
+	$word = strtolower($word);
+	(in_array($word, $exceptions)) ? $out .= $word." " : $out .= ucfirst($word)." ";
+    }
+    return rtrim($out);
+}
+
+/**
  * Queries solr to get all publication types.
  *
  * @return array
@@ -19,7 +38,7 @@ function lib4ridora_get_all_publication_types() {
   // If there's results, construct an array where the keys are the genres
   // as in Solr, and the values are formatted to be labels.
   if (isset($facets[$field]) && $facets[$field]) {
-    return drupal_map_assoc(array_keys($facets[$field]), 'ucwords');
+    return drupal_map_assoc(array_keys($facets[$field]), 'ucwordss');
   }
 
   // Default to returning an empty array.
