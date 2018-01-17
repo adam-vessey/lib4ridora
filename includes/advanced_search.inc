@@ -13,12 +13,12 @@
  *   in the array $exceptions
  */
 function ucwordss($str) {
-    $exceptions = ['or', 'and', 'for'];
+    $exceptions = ['or', 'and', 'for', 'of', 'in', 'at'];
     $out = "";
     $words = explode(" ", $str);
 
     foreach ($words as $word) {
-	$word = strtolower($word);
+//	$word = strtolower($word);
 	(in_array($word, $exceptions)) ? $out .= $word." " : $out .= ucfirst($word)." ";
     }
     return rtrim($out);
@@ -64,7 +64,7 @@ function lib4ridora_get_all_organizational_units() {
       continue;
     }
     $keys = array_keys($facet);
-    $org_units = array_merge($org_units, drupal_map_assoc($keys, 'ucwords'));
+    $org_units = array_merge($org_units, drupal_map_assoc($keys, 'ucwordss'));
   }
 
   // Return 'all' alongside whatever else.
