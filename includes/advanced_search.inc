@@ -67,11 +67,8 @@ function lib4ridora_get_all_organizational_units() {
     $org_units = array_merge($org_units, drupal_map_assoc($keys, 'ucwordss'));
   }
 
-  // Sort the array alphanumerically (expected to have numbers or 'UC-first words' only):
-  // asort($org_units);
-  // Sort the array alphanumerically (lower-/uppercase won't matter):
-  $sortAryTmp = array_map('strtolower', $org_units);
-  array_multisort($sortAryTmp, SORT_ASC, SORT_STRING, $org_units);
+  // Sort the array alphanumerically (expected to have numbers or 'UC-first words' only).
+  asort($org_units);
 
   // Return 'all' alongside whatever else.
   return array("*" => t("All")) + $org_units;
