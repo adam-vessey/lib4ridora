@@ -9,7 +9,7 @@
  * Replacement for ucwords to manage exceptions
  *
  * @return string
- *   string with the first character of each word capitalized if not 
+ *   string with the first character of each word capitalized if not
  *   in the array $exceptions
  */
 function ucwordss($str) {
@@ -18,8 +18,8 @@ function ucwordss($str) {
     $words = explode(" ", $str);
 
     foreach ($words as $word) {
-//	$word = strtolower($word);
-	(in_array($word, $exceptions)) ? $out .= $word." " : $out .= ucfirst($word)." ";
+//        $word = strtolower($word);
+        (in_array($word, $exceptions)) ? $out .= $word." " : $out .= ucfirst($word)." ";
     }
     return rtrim($out);
 }
@@ -67,8 +67,9 @@ function lib4ridora_get_all_organizational_units() {
     $org_units = array_merge($org_units, drupal_map_assoc($keys, 'ucwordss'));
   }
 
-  // Sort the array alphanumerically (expected to have numbers or 'UC-first words' only).
-  // sort($org_units);
+  // Sort the array alphanumerically (lower-/uppercase won't matter).
+  $ary_sort_tmp = array_map('strtolower', $org_units );
+  array_multisort( $ary_sort_tmp, SORT_ASC, SORT_STRING, $org_units );
 
   // Return 'all' alongside whatever else.
   return array("*" => t("All")) + $org_units;
