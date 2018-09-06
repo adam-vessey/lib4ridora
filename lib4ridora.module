@@ -720,6 +720,8 @@ function lib4ridora_ir_citationcmodel_islandora_solr_object_result_alter(&$resul
     // a batch.
     return;
   }
+  
+  $term_failure = trim( variable_get('lib4ridora_pseudo_solr_field_factor_failed', '') );		// empty default by intention (and not N/A)
 
   $id_field = variable_get('lib4ridora_solr_field_article_host_journal', 'mods_relatedItem_host_identifier_ms');
   $date_issued_field = variable_get('lib4ridora_solr_field_article_date_issued', 'mods_originInfo_dateIssued_ms');
@@ -728,8 +730,8 @@ function lib4ridora_ir_citationcmodel_islandora_solr_object_result_alter(&$resul
 
   $solr_doc =& $result['solr_doc'];
   if (!isset($solr_doc[$date_issued_field]) || !isset($solr_doc[$id_field])) {
-    $solr_doc[$factor_pseudo_field] = t('N/A');
-    $solr_doc[$year_pseudo_field] = t('N/A');
+    $solr_doc[$factor_pseudo_field] = t($term_failure);
+    $solr_doc[$year_pseudo_field] = t($term_failure);
     return;
   }
 
@@ -738,8 +740,8 @@ function lib4ridora_ir_citationcmodel_islandora_solr_object_result_alter(&$resul
   // XXX: Since things could be in wacky encodings, try to use all values.
   $issued_years = preg_filter('/^.*(?<!\d)(\d{4})(?!\d).*$/', '\1', (array) $solr_doc[$date_issued_field]);
   if (empty($issued_years)) {
-    $solr_doc[$factor_pseudo_field] = t('N/A');
-    $solr_doc[$year_pseudo_field] = t('N/A');
+    $solr_doc[$factor_pseudo_field] = t($term_failure);
+    $solr_doc[$year_pseudo_field] = t($term_failure);
     return;
   }
 
@@ -760,8 +762,8 @@ function lib4ridora_ir_citationcmodel_islandora_solr_object_result_alter(&$resul
   }
 
   // Didn't find one... Set "N/A" as the default.
-  $solr_doc[$factor_pseudo_field] = t('N/A');
-  $solr_doc[$year_pseudo_field] = t('N/A');
+  $solr_doc[$factor_pseudo_field] = t($term_failure);
+  $solr_doc[$year_pseudo_field] = t($term_failure);
 }
 
 /**

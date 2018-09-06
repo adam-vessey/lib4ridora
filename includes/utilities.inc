@@ -121,7 +121,22 @@ function lib4ridora_get_factor_with_fallback(AbstractObject $object, $issued_yea
     }
   }
 
-  return $factor !== FALSE ? array($factor, $factor_year) : FALSE;
+//  return $factor !== FALSE ? array($factor, $factor_year) : FALSE;
+
+    if ( $factor === FALSE ) {
+    	return FALSE;
+    }
+
+    // try to replace the term for 'not available (yet)' in the CSV by a custom term:
+    $termTmp = variable_get('lib4ridora_pseudo_solr_field_factor_none_yet', 'Not available = not available');
+    if ( strchr($termTmp,"=") ) {
+	$termAry = explode("=",$termTmp,2);
+	$termTmp = @trim($termAry[1]);
+	if ( !empty($termTmp) && stristr(strval($factor),trim($termAry[0])) ) {
+		$factor = $termTmp;
+  	}
+    }
+    return array($factor, $factor_year);
 }
 
 /**

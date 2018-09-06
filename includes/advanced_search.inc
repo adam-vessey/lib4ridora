@@ -12,14 +12,17 @@
  *   string with the first character of each word capitalized if not 
  *   in the array $exceptions
  */
-function ucwordss($str) {
-    $exceptions = ['or', 'and', 'for', 'of', 'in', 'at'];
-    $out = "";
-    $words = explode(" ", $str);
+function lib4ridora_org_unit_ucwordss($str) {
+    $exceptList = variable_get('lib4ridora_solr_field_org_terms_1on1', 'or, and, for, of, in, at');
+    $exceptions = explode( ",", $exceptList );
+    foreach ($exceptions as $idx => $term) {
+        $exceptions[$idx] = trim($term);
+    }
 
+    $words = explode(" ", $str);
+    $out = "";
     foreach ($words as $word) {
-//	$word = strtolower($word);
-	(in_array($word, $exceptions)) ? $out .= $word." " : $out .= ucfirst($word)." ";
+        (in_array($word, $exceptions)) ? $out .= $word." " : $out .= ucfirst($word)." ";
     }
     return rtrim($out);
 }
@@ -38,7 +41,7 @@ function lib4ridora_get_all_publication_types() {
   // If there's results, construct an array where the keys are the genres
   // as in Solr, and the values are formatted to be labels.
   if (isset($facets[$field]) && $facets[$field]) {
-    return drupal_map_assoc(array_keys($facets[$field]), 'ucwordss');
+    return drupal_map_assoc(array_keys($facets[$field]), 'lib4ridora_org_unit_ucwordss');
   }
 
   // Default to returning an empty array.
@@ -64,11 +67,12 @@ function lib4ridora_get_all_organizational_units() {
       continue;
     }
     $keys = array_keys($facet);
-    $org_units = array_merge($org_units, drupal_map_assoc($keys, 'ucwordss'));
+    $org_units = array_merge($org_units, drupal_map_assoc($keys, 'lib4ridora_org_unit_ucwordss'));
   }
 
-  // Sort the array alphanumerically (expected to have numbers or 'UC-first words' only).
-  asort($org_units);
+  // Sort the array alphanumerically (ignoring lower/upper case):
+  $sortAryTmp = array_map( 'strtolower', $org_units );
+  array_multisort( $sortAryTmp, SORT_ASC, SORT_STRING, $org_units );
 
   // Return 'all' alongside whatever else.
   return array("*" => t("All")) + $org_units;

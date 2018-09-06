@@ -83,6 +83,20 @@ function lib4ridora_admin(array $form, array &$form_state) {
     '#default_value' => variable_get('lib4ridora_pseudo_solr_field_year', 'journal_impact_factor_year'),
     '#required' => TRUE,
   );
+  $form['lib4ridora_pseudo_solr_field_factor_failed'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Export label for technical Impact Factor failure'),
+    '#description' => t('Term in search export if no Journal Impact Factor evaluation failed.'),
+    '#default_value' => variable_get('lib4ridora_pseudo_solr_field_factor_failed', 'N/A'),
+    '#required' => FALSE,
+  );
+  $form['lib4ridora_pseudo_solr_field_factor_none_yet'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Export label replacement when no Impact Factor (yet)'),
+    '#description' => t('You may replace the given term for \'no impact factor yet\' by a custom one (old = new).'),
+    '#default_value' => variable_get('lib4ridora_pseudo_solr_field_factor_none_yet', 'Not available = not available'),
+    '#required' => FALSE,
+  );
   $form['lib4ridora_solr_field_publication_year'] = array(
     '#type' => 'textfield',
     '#title' => t('Publication Year Solr Field'),
@@ -109,6 +123,13 @@ function lib4ridora_admin(array $form, array &$form_state) {
     '#title' => t('Affiliations Solr Fields'),
     '#description' => t('A comma seperated list of fields we use to determine affilitations in Solr.  Is used by the advanced search block.'),
     '#default_value' => variable_get('lib4ridora_solr_field_affiliations', 'mods_name_personal_affiliation_ms,mods_name_corporate_affiliation_ms,mods_name_conference_affiliation_ms'),
+    '#required' => TRUE,
+  );
+  $form['lib4ridora_solr_field_org_terms_1on1'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Organizational unit name parts untouched'),
+    '#description' => t('A comma seperated list of name parts where the fist letter shall not be upper-cased.'),
+    '#default_value' => variable_get('lib4ridora_solr_field_org_terms_1on1', 'or, and, for, of, in, at'),
     '#required' => TRUE,
   );
   $form['lib4ridora_solr_field_peer_review'] = array(
