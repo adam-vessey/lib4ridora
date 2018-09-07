@@ -123,20 +123,26 @@ function lib4ridora_get_factor_with_fallback(AbstractObject $object, $issued_yea
 
 //  return $factor !== FALSE ? array($factor, $factor_year) : FALSE;
 
-    if ( $factor === FALSE ) {
+  if ( $factor === FALSE ) {
     	return FALSE;
-    }
+  }
 
-    // try to replace the term for 'not available (yet)' in the CSV by a custom term:
-    $termTmp = variable_get('lib4ridora_pseudo_solr_field_factor_none_yet', 'Not available = not available');
-    if ( strchr($termTmp,"=") ) {
-	$termAry = explode("=",$termTmp,2);
-	$termTmp = @trim($termAry[1]);
-	if ( !empty($termTmp) && stristr(strval($factor),trim($termAry[0])) ) {
-		$factor = $termTmp;
-  	}
-    }
-    return array($factor, $factor_year);
+  // Try to replace the term for 'not available (yet)' from the CSV (or since imported from the datastream now) by a custom term:
+  // Let's also consider the (future) possibility that this field remains empty or carries another value, but we still want a/our custom term.
+  $termRepList = explode( ",", variable_get('lib4ridora_pseudo_solr_field_factor_none_yet', 'Not available = not available') );
+  foreach( $termRepList as $termTmp ) {
+	if ( strchr($termTmp,"=") ) {
+		$termAry = explode("=",$termTmp,2);
+		$termTmp = trim($termAry[1]);
+		if ( !empty( trim($factor) ) ) {
+		  	if ( stristr(strval($factor),trim($termAry[0])) ) {
+				$factor = $termTmp;
+		  	}
+		} elseif ( !empty($termTmp) ) { $factor = $termTmp; }
+	}
+  }
+
+  return array($factor, $factor_year);
 }
 
 /**

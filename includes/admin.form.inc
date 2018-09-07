@@ -85,15 +85,15 @@ function lib4ridora_admin(array $form, array &$form_state) {
   );
   $form['lib4ridora_pseudo_solr_field_factor_failed'] = array(
     '#type' => 'textfield',
-    '#title' => t('Export label for technical Impact Factor failure'),
-    '#description' => t('Term in search export if no Journal Impact Factor evaluation failed.'),
-    '#default_value' => variable_get('lib4ridora_pseudo_solr_field_factor_failed', 'N/A'),
+    '#title' => t('Journal Impact Factor failure term for export'),
+    '#description' => t('Term in CSV export if Journal Impact Factor evaluation failed (originally \'N/A\').'),
+    '#default_value' => variable_get('lib4ridora_pseudo_solr_field_factor_failed', ''),
     '#required' => FALSE,
   );
   $form['lib4ridora_pseudo_solr_field_factor_none_yet'] = array(
     '#type' => 'textfield',
-    '#title' => t('Export label replacement when no Impact Factor (yet)'),
-    '#description' => t('You may replace the given term for \'no impact factor yet\' by a custom one (old = new).'),
+    '#title' => t('Journal Impact Factor term replacement for export'),
+    '#description' => t('You may replace given terms from the corresponding datastream resp. from the imported data file by a custom one (syntax: old1 = new1, old2 = new2, ...).'),
     '#default_value' => variable_get('lib4ridora_pseudo_solr_field_factor_none_yet', 'Not available = not available'),
     '#required' => FALSE,
   );
@@ -128,7 +128,7 @@ function lib4ridora_admin(array $form, array &$form_state) {
   $form['lib4ridora_solr_field_org_terms_1on1'] = array(
     '#type' => 'textfield',
     '#title' => t('Organizational unit name parts untouched'),
-    '#description' => t('A comma seperated list of name parts where the fist letter shall not be upper-cased.'),
+    '#description' => t('A comma seperated list of name parts where the first letter shall not be upper-cased.'),
     '#default_value' => variable_get('lib4ridora_solr_field_org_terms_1on1', 'or, and, for, of, in, at'),
     '#required' => TRUE,
   );
