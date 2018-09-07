@@ -86,7 +86,7 @@ function lib4ridora_admin(array $form, array &$form_state) {
   $form['lib4ridora_pseudo_solr_field_factor_failed'] = array(
     '#type' => 'textfield',
     '#title' => t('Journal Impact Factor failure term for export'),
-    '#description' => t('Term in CSV export if Journal Impact Factor evaluation failed (originally \'N/A\').'),
+    '#description' => t('Terms in CSV export if Journal Impact Factor evaluation failed (originally \'N/A\'). May be comma-separated to have different terms for factor and year field.'),
     '#default_value' => variable_get('lib4ridora_pseudo_solr_field_factor_failed', ''),
     '#required' => FALSE,
   );
