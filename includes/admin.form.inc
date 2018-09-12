@@ -83,20 +83,22 @@ function lib4ridora_admin(array $form, array &$form_state) {
     '#default_value' => variable_get('lib4ridora_pseudo_solr_field_year', 'journal_impact_factor_year'),
     '#required' => TRUE,
   );
-  $form['lib4ridora_pseudo_solr_field_factor_failed'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Journal Impact Factor failure term for export'),
-    '#description' => t('Terms in CSV export if Journal Impact Factor evaluation failed (originally \'N/A\'). May be comma-separated to have different terms for factor and year field.'),
-    '#default_value' => variable_get('lib4ridora_pseudo_solr_field_factor_failed', ''),
-    '#required' => FALSE,
-  );
-  $form['lib4ridora_pseudo_solr_field_factor_none_yet'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Journal Impact Factor term replacement for export'),
-    '#description' => t('You may replace given terms from the corresponding datastream resp. from the imported data file by a custom one (syntax: old1 = new1, old2 = new2, ...).'),
-    '#default_value' => variable_get('lib4ridora_pseudo_solr_field_factor_none_yet', 'Not available = not available'),
-    '#required' => FALSE,
-  );
+  if ( @isset($_GET['impact-factor']) || @isset($_GET['impact_factor']) ) {		// even if we skip this usually, the variable defaults will do what we need - until we reconfigure it.
+	  $form['lib4ridora_pseudo_solr_field_factor_failed'] = array(
+	    '#type' => 'textfield',
+	    '#title' => t('Journal Impact Factor failure term for export'),
+	    '#description' => t('Terms in CSV export if Journal Impact Factor evaluation failed (originally \'N/A\'). May be comma-separated to have different terms for factor and year field.'),
+	    '#default_value' => variable_get('lib4ridora_pseudo_solr_field_factor_failed', ''),
+	    '#required' => FALSE,
+	  );
+	  $form['lib4ridora_pseudo_solr_field_factor_none_yet'] = array(
+	    '#type' => 'textfield',
+	    '#title' => t('Journal Impact Factor term replacement for export'),
+	    '#description' => t('You may replace given terms from the corresponding datastream resp. from the imported data file by a custom one (syntax: old1 = new1, old2 = new2, ...).'),
+	    '#default_value' => variable_get('lib4ridora_pseudo_solr_field_factor_none_yet', 'Not available = not available'),
+	    '#required' => FALSE,
+	  );
+  }
   $form['lib4ridora_solr_field_publication_year'] = array(
     '#type' => 'textfield',
     '#title' => t('Publication Year Solr Field'),
@@ -123,13 +125,6 @@ function lib4ridora_admin(array $form, array &$form_state) {
     '#title' => t('Affiliations Solr Fields'),
     '#description' => t('A comma seperated list of fields we use to determine affilitations in Solr.  Is used by the advanced search block.'),
     '#default_value' => variable_get('lib4ridora_solr_field_affiliations', 'mods_name_personal_affiliation_ms,mods_name_corporate_affiliation_ms,mods_name_conference_affiliation_ms'),
-    '#required' => TRUE,
-  );
-  $form['lib4ridora_solr_field_org_terms_1on1'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Organizational unit name parts untouched'),
-    '#description' => t('A comma seperated list of name parts where the first letter shall not be upper-cased.'),
-    '#default_value' => variable_get('lib4ridora_solr_field_org_terms_1on1', 'or, and, for, of, in, at'),
     '#required' => TRUE,
   );
   $form['lib4ridora_solr_field_peer_review'] = array(
@@ -159,6 +154,13 @@ function lib4ridora_admin(array $form, array &$form_state) {
     '#description' => t('A field we use to determine DOI in Solr.  Is used for duplicity check during ingest via DOI.'),
     '#default_value' => variable_get('lib4ridora_solr_field_document_doi', 'mods_identifier_doi_mlt'),
     '#required' => TRUE,
+  );
+  $form['lib4ridora_solr_field_org_terms_1on1'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Organizational unit name parts untouched'),
+    '#description' => t('A comma seperated list of name parts where the first letter shall not be upper-cased.'),
+    '#default_value' => variable_get('lib4ridora_solr_field_org_terms_1on1', 'or, and, for, of, in, at'),
+    '#required' => FALSE,
   );
   return system_settings_form($form);
 }
