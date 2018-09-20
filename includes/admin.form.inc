@@ -29,6 +29,16 @@ function lib4ridora_admin(array $form, array &$form_state) {
     '#description' => t("Comma separated list of datastream-IDs that should not be viewable for anonymous users. Default is: \"RELS-INT,RELS-EXT,POLICY\"."),
     '#required' => FALSE,
   );
+  if ( @isset($_GET['all']) || @isset($_GET['ip']) ) {		// Added by Frank. IP assignments configurable now, see lib4ridora.module, function lib4ridora_check_ip(), ...but no idea who originally assigned this IP ranges.
+	  $form['lib4ridora_ip_range_list'] = array(
+	    '#type' => 'textfield',
+	    '#title' => t('Intranet IP restriction'),
+	    '#description' => t('If the publication is available on the intranet only, user\'s IP must be in one of the specified ranges (a comma-seperated list, slash allowed on the last IP part to indicate min/max).'),
+	    '#default_value' => variable_get( 'lib4ridora_ip_range_list', "129.129.0.0/16, 152.88.0.0/16, 192.33.118.0/24, 193.134.200.0/21, 195.176.244.0/23" ),
+	    '#required' => TRUE,
+	    '#size' => 128,
+	  );
+  }
   $form['lib4ridora_author_solr_field'] = array(
     '#type' => 'textfield',
     '#title' => t('Author PID Solr Field'),
@@ -83,13 +93,14 @@ function lib4ridora_admin(array $form, array &$form_state) {
     '#default_value' => variable_get('lib4ridora_pseudo_solr_field_year', 'journal_impact_factor_year'),
     '#required' => TRUE,
   );
-  if ( @isset($_GET['impact-factor']) || @isset($_GET['impact_factor']) ) {		// even if we skip this usually, the variable defaults will do what we need - until we reconfigure it.
+  if ( @isset($_GET['all']) || @isset($_GET['impact']) ) {		// Added by Frank. Even if we skip this configuration, the variable defaults will do what we need - until we reconfigure it.
 	  $form['lib4ridora_pseudo_solr_field_factor_failed'] = array(
 	    '#type' => 'textfield',
 	    '#title' => t('Journal Impact Factor failure term for export'),
 	    '#description' => t('Terms in CSV export if Journal Impact Factor evaluation failed (originally \'N/A\'). May be comma-separated to have different terms for factor and year field.'),
 	    '#default_value' => variable_get('lib4ridora_pseudo_solr_field_factor_failed', ''),
 	    '#required' => FALSE,
+	    '#size' => 128,
 	  );
 	  $form['lib4ridora_pseudo_solr_field_factor_none_yet'] = array(
 	    '#type' => 'textfield',
@@ -97,6 +108,7 @@ function lib4ridora_admin(array $form, array &$form_state) {
 	    '#description' => t('You may replace given terms from the corresponding datastream resp. from the imported data file by a custom one (syntax: old1 = new1, old2 = new2, ...).'),
 	    '#default_value' => variable_get('lib4ridora_pseudo_solr_field_factor_none_yet', 'Not available = not available'),
 	    '#required' => FALSE,
+	    '#size' => 128,
 	  );
   }
   $form['lib4ridora_solr_field_publication_year'] = array(
@@ -155,12 +167,15 @@ function lib4ridora_admin(array $form, array &$form_state) {
     '#default_value' => variable_get('lib4ridora_solr_field_document_doi', 'mods_identifier_doi_mlt'),
     '#required' => TRUE,
   );
-  $form['lib4ridora_solr_field_org_terms_1on1'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Organizational unit name parts untouched'),
-    '#description' => t('A comma seperated list of name parts where the first letter shall not be upper-cased.'),
-    '#default_value' => variable_get('lib4ridora_solr_field_org_terms_1on1', 'or, and, for, of, in, at'),
-    '#required' => FALSE,
-  );
+  if ( @isset($_GET['all']) || @isset($_GET['prepo']) ) {		// Added by Frank. prepo ~= label prepositions
+	  $form['lib4ridora_solr_field_org_terms_1on1'] = array(
+	    '#type' => 'textfield',
+	    '#title' => t('Organizational unit name parts untouched'),
+	    '#description' => t('A comma seperated list of name parts where the first letter shall not be upper-cased (affects ingest form and adv. search).'),
+	    '#default_value' => variable_get('lib4ridora_solr_field_org_terms_1on1', 'or, and, for, of, in, at'),
+	    '#required' => FALSE,
+	    '#size' => ( ( @isset($_GET['all']) || @isset($_GET['prepo']) ) ? 128 : 60 ),
+	  );
+  }
   return system_settings_form($form);
 }
