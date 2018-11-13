@@ -112,7 +112,7 @@ function lib4ridora_doi_validate_id($element, &$form_state, $form) {
       $object = islandora_ingest_form_get_object($form_state);
       if (isset($object["MODS"])) {
         $datastream = $object["MODS"];
-        $datastream->setContentFromString(trim($mods->asXML()));
+        $datastream->setContentFromString(trim($mods->saveXML()));
         if ($datastream->label != "MODS Record") {
           $datastream->label = "MODS Record";
         }
@@ -122,7 +122,7 @@ function lib4ridora_doi_validate_id($element, &$form_state, $form) {
       }
       else {
         $datastream = $object->constructDatastream("MODS", 'M');
-        $datastream->setContentFromString(trim($mods->asXML()));
+        $datastream->setContentFromString(trim($mods->saveXML()));
         $datastream->label = "MODS Record";
         $datastream->mimetype = 'text/xml';
         $object->ingestDatastream($datastream);

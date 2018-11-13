@@ -314,6 +314,7 @@ function lib4ridora_check_ip($ip_address = NULL) {
   if (!$ip_address) {
     $ip_address = ip_address();
   }
+  /*
   $cidr_ranges = array(
     '129.129.0.0/16',
     '152.88.0.0/16',
@@ -321,6 +322,9 @@ function lib4ridora_check_ip($ip_address = NULL) {
     '193.134.200.0/21',
     '195.176.244.0/23',
   );
+  */
+  $cidr_list = variable_get( 'lib4ridora_ip_range_list', "129.129.0.0/16, 152.88.0.0/16, 192.33.118.0/24, 193.134.200.0/21, 195.176.244.0/23" );
+  $cidr_ranges = explode( ",", str_replace( " ", "", strtr( $cidr_list, ";-\t", ",/ " ) ) );	// so tab considered as space, while semi-colon as separator, and minus (like slash) as min-max indicator
 
   // Transform an IPv4 CIDR block to an array containing the first and last IPs
   // in the block.
@@ -341,6 +345,24 @@ function lib4ridora_check_ip($ip_address = NULL) {
     }
   }
   return $ip_result;
+}
+
+/**
+ *	hook_page_alter
+ *	Matter: it may be that deleting the RELS-INT datastream *plus* its derivatives will also delete RELS-EXT, which however is required to re-edit the object/publication.
+ *	Work-around: Let's show a red warning.
+ *	Example/test: https://www.dora-dev.lib4ri.ch/eawag/islandora/object/eawag%3A9334/manage/datastreams
+ */ 
+function lib4ridora_page_alter(&$page) {
+	if ( user_is_logged_in() && substr(strtok($_SERVER['REQUEST_URI']."?","?"),-16) == "/RELS-INT/delete" ) {
+	//	dpm(var_dump($page['content']['system_main']));
+		if ( $content = @$page['content']['system_main']['derivative_info']['#markup'] ) {
+			$page['content']['system_main']['derivative_info']['#markup'] = str_replace( ", RELS-EXT", " &plus; <font color='#e70707'><b>RELS-EXT</b> &nbsp; &nbsp; &nbsp; (warning: also the <a href='../../manage/datastreams'>RELS-EXT datastream</a> will be deleted, causing future editing problems)</font>", $content );
+			if ( $content = @$page['content']['system_main']['derivative_info']['#title'] ) {
+				$page['content']['system_main']['derivative_info']['#title'] = str_replace( "Datastream(s) to be purged", "Datastreams to be purged:", $content );
+			}
+		}
+	}
 }
 
 /**
@@ -720,6 +742,10 @@ function lib4ridora_ir_citationcmodel_islandora_solr_object_result_alter(&$resul
     // a batch.
     return;
   }
+  
+  $term_failed_ary = explode( ",", variable_get('lib4ridora_pseudo_solr_field_factor_failed', '') );		// empty default by intention (and not N/A)
+  $term_failed_factor = trim( $term_failed_ary[0] );
+  $term_failed_year = ( @!isset($term_failed_ary[1]) ) ? $term_failed_factor : trim( $term_failed_ary[1] );
 
   $id_field = variable_get('lib4ridora_solr_field_article_host_journal', 'mods_relatedItem_host_identifier_ms');
   $date_issued_field = variable_get('lib4ridora_solr_field_article_date_issued', 'mods_originInfo_dateIssued_ms');
@@ -728,8 +754,8 @@ function lib4ridora_ir_citationcmodel_islandora_solr_object_result_alter(&$resul
 
   $solr_doc =& $result['solr_doc'];
   if (!isset($solr_doc[$date_issued_field]) || !isset($solr_doc[$id_field])) {
-    $solr_doc[$factor_pseudo_field] = t('N/A');
-    $solr_doc[$year_pseudo_field] = t('N/A');
+    $solr_doc[$factor_pseudo_field] = t($term_failed_factor);
+    $solr_doc[$year_pseudo_field] = t($term_failed_year);
     return;
   }
 
@@ -738,8 +764,8 @@ function lib4ridora_ir_citationcmodel_islandora_solr_object_result_alter(&$resul
   // XXX: Since things could be in wacky encodings, try to use all values.
   $issued_years = preg_filter('/^.*(?<!\d)(\d{4})(?!\d).*$/', '\1', (array) $solr_doc[$date_issued_field]);
   if (empty($issued_years)) {
-    $solr_doc[$factor_pseudo_field] = t('N/A');
-    $solr_doc[$year_pseudo_field] = t('N/A');
+    $solr_doc[$factor_pseudo_field] = t($term_failed_factor);
+    $solr_doc[$year_pseudo_field] = t($term_failed_year);
     return;
   }
 
@@ -760,8 +786,8 @@ function lib4ridora_ir_citationcmodel_islandora_solr_object_result_alter(&$resul
   }
 
   // Didn't find one... Set "N/A" as the default.
-  $solr_doc[$factor_pseudo_field] = t('N/A');
-  $solr_doc[$year_pseudo_field] = t('N/A');
+  $solr_doc[$factor_pseudo_field] = t($term_failed_factor);
+  $solr_doc[$year_pseudo_field] = t($term_failed_year);
 }
 
 /**
@@ -1138,7 +1164,7 @@ function lib4ridora_ir_citationCModel_islandora_view_object_alter(AbstractObject
 function lib4ridora_islandora_personCModel_islandora_view_object_alter(AbstractObject $object, &$rendered) {
   if (!empty($rendered) && isset($rendered[NULL]['#markup'])) {
     $markup =& $rendered[NULL]['#markup'];
-    $re = '/href="[^"]*\/search\?type=dismax&amp;f\[0\]=PID%3A' . urlencode(preg_replace('/(:|-)/', '\\\\\1', $object->id)) . '"/';
+    $re = '/href="[^"]*\/search\?type=dismax&amp;f%5B0%5D=PID%3A' . urlencode(preg_replace('/(:|-)/', '\\\\\1', $object->id)) . '"/';
     $markup = preg_replace($re, 'href="' . preg_replace('/.*href="([^"]*)".*/', '\1', l($object->id, 'islandora/search', array(
       'query' => array(
         'f' => array(

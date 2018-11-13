@@ -68,7 +68,7 @@ function lib4ridora_citation_select_mods_edit_form($form, &$form_state, Abstract
 function lib4ridora_citation_select_mods_edit_form_submit($form, &$form_state) {
   if (array_key_exists('subtype_semantics', $form_state['values'])) {
     module_load_include('inc', 'lib4ridora', 'includes/citation.subtypes');
-    $genre_map = lib4ridora_citation_get_genre_map(TRUE);
+    $genre_map = lib4ridora_citation_get_genre_map(FALSE);
     $this_genre = $genre_map[$form_state['values']['publication_type']];
     $default_subtype_semantics = lib4ridora_citation_get_genre_semantics_map();
     $this_subtype_semantics = variable_get('lib4ridora_citation_subtype_semantics', $default_subtype_semantics);
