@@ -121,7 +121,28 @@ function lib4ridora_get_factor_with_fallback(AbstractObject $object, $issued_yea
     }
   }
 
-  return $factor !== FALSE ? array($factor, $factor_year) : FALSE;
+//  return $factor !== FALSE ? array($factor, $factor_year) : FALSE;
+
+  if ( $factor === FALSE ) {
+    	return FALSE;
+  }
+
+  // Try to replace the term for 'not available (yet)' from the CSV (or since imported from the datastream now) by a custom term:
+  // Let's also consider the (future) possibility that this field remains empty or carries another value, but we still want a/our custom term.
+  $termRepList = explode( ",", variable_get('lib4ridora_pseudo_solr_field_factor_none_yet', 'Not available = not available') );
+  foreach( $termRepList as $termTmp ) {
+	if ( strchr($termTmp,"=") ) {
+		$termAry = explode("=",$termTmp,2);
+		$termTmp = trim($termAry[1]);
+		if ( !empty( trim($factor) ) ) {
+		  	if ( stristr(strval($factor),trim($termAry[0])) ) {
+				$factor = $termTmp;
+		  	}
+		} elseif ( !empty($termTmp) ) { $factor = $termTmp; }
+	}
+  }
+
+  return array($factor, $factor_year);
 }
 
 /**
@@ -306,7 +327,7 @@ function lib4ridora_metadata_display_elements(&$elements) {
 function lib4ridora_get_objects_by_doi($doi) {
   module_load_include('inc', 'islandora_solr', 'includes/utilities');
   module_load_include('inc', 'islandora', 'includes/utilities');
-  $doisolrfield = variable_get('lib4ridora_solr_field_document_doi', 'mods_identifier_doi_ms');
+  $doisolrfield = variable_get('lib4ridora_solr_field_document_doi', 'mods_identifier_doi_mlt');
   $collectionsolrfield = variable_get('islandora_solr_member_of_collection_field', 'RELS_EXT_isMemberOfCollection_uri_ms');
   $query = $doisolrfield . ":\"" . islandora_solr_lesser_escape(trim($doi)) . "\"";
   $qp = new IslandoraSolrQueryProcessor();
