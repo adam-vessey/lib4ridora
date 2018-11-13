@@ -1789,3 +1789,100 @@ function lib4ridora_authority_hidden_validate($element, &$form_state, $form) {
     }
   }
 }
+
+/**
+ * Helper; fetch the target element.
+ *
+ * @param array $element
+ *   The element being processed, targetting another element.
+ * @param array $form_state
+ *   A reference to the form state.
+ * @param array $form
+ *   Complete copy of the form, as provided by element #process callbacks.
+ *
+ * @return array
+ *   The targeted text_format element.
+ *
+ * @throws InvalidArgumentException if the target element could not be
+ *   determined.
+ */
+function _lib4ridora_target_text_format_fetch_element($element, &$form_state, $form) {
+  $info = drupal_array_get_nested_value($element, array(
+    '#user_data',
+    'lib4ridora_target_text_format',
+  ));
+  $subs = array(
+    '@key' => 'lib4ridora_target_text_format',
+    '@data' => '#user_data',
+    '@type' => 'text_format',
+  );
+  if (!isset($info)) {
+    throw new InvalidArgumentException(t('Invalid argument; missing "@key" in "@data".', $subs));
+  }
+
+  $target_offset = json_decode($info, TRUE);
+  if (!isset($target_offset)) {
+    throw new InvalidArgumentException(t('Invalid argument; failed to parse JSON from "@key" in "@data".', $subs));
+  }
+
+  $item = drupal_array_get_nested_value($form, $target_offset);
+  if (!$item) {
+    throw new InvalidArgumentException(t('Invalid argument; failed to locate the element indicated by "@key" in "@data".', $subs));
+  }
+  elseif ($item['#type'] != 'text_format') {
+    throw new InvalidArgumentException(t('Invalid argument; the element indicated by "@key" in "@data" does not appear to be of the "@type" type.', $subs));
+  }
+
+  return $item;
+}
+
+/**
+ * Helper; wrap element call; but, render markup.
+ *
+ * @see _lib4ridora_target_text_format_fetch_element()
+ * @see check_markup()
+ */
+function _lib4ridora_target_text_format_fetch_markup($element, &$form_state, $form) {
+  $item = _lib4ridora_target_text_format_fetch_element($element, $form_state, $form);
+  return check_markup(
+    drupal_array_get_nested_value($item, array('value', '#value')),
+    drupal_array_get_nested_value($item, array('format', 'format', '#value'))
+  );
+}
+
+/**
+ * Element process callback; fetch target markup.
+ *
+ * @see _lib4ridora_target_text_format_fetch_markup()
+ * @see _lib4ridora_target_text_format_fetch_element()
+ */
+function _lib4ridora_target_text_format_to_fully_escaped($element, &$form_state, $form) {
+  $value = check_plain(
+    _lib4ridora_target_text_format_fetch_markup($element, $form_state, $form)
+  );
+
+  $element['#value'] = $value;
+  if (!empty($form_state['values'])) {
+    drupal_array_set_nested_value($form_state['values'], $element['#parents'], $value);
+  }
+  return $element;
+}
+
+/**
+ * Element process callback; fetch target as plain-text.
+ *
+ * @see _lib4ridora_target_text_format_fetch_markup()
+ * @see _lib4ridora_target_text_format_fetch_element()
+ */
+function _lib4ridora_target_text_format_to_plain_text($element, &$form_state, $form) {
+  $value = strip_tags(
+    _lib4ridora_target_text_format_fetch_markup($element, $form_state, $form)
+  );
+
+  $element['#value'] = $value;
+  if (!empty($form_state['values'])) {
+    drupal_array_set_nested_value($form_state['values'], $element['#parents'], $value);
+  }
+
+  return $element;
+}
