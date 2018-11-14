@@ -18,10 +18,10 @@
  * @return array
  *   The targeted text_format element.
  *
- * @throws InvalidArgumentException if the target element could not be
- *   determined.
+ * @throws InvalidArgumentException
+ *   If the target element could not be determined.
  */
-function _lib4ridora_target_text_format_fetch_element($element, &$form_state, $form) {
+function _lib4ridora_target_text_format_fetch_element(array $element, array &$form_state, array $form) {
   $info = drupal_array_get_nested_value($element, array(
     '#user_data',
     'lib4ridora_target_text_format',
@@ -70,11 +70,10 @@ function _lib4ridora_target_text_format_fetch_element($element, &$form_state, $f
  * @see _lib4ridora_target_text_format_fetch_element()
  * @see check_markup()
  */
-function _lib4ridora_target_text_format_fetch_markup($element, &$form_state, $form) {
+function _lib4ridora_target_text_format_fetch_markup(array $element, array &$form_state, array $form) {
   $item = _lib4ridora_target_text_format_fetch_element($element, $form_state, $form);
   return check_markup(
     drupal_array_get_nested_value($item, array('value', '#value')),
     drupal_array_get_nested_value($item, array('format', 'format', '#value'))
   );
 }
-
