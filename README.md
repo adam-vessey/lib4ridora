@@ -77,13 +77,13 @@ form`). Effectively, this boils down to:
   HTML in its  `read` XPath, to show the content when editing (or creating
   using template XML).
 * a `hidden` element made to contain the plain-text via the
-  `_lib4ridora_target_text_format_to_plain_text` function, with only `create`
-  and `update` XPaths (and `delete`, if relevant; no `read`), with
+  `_lib4ridora_target_text_format_to_plain_text` function, with `create`,
+  `read` and `update` XPaths (and `delete`, if relevant; no `read`), with
   `#user_data['lib4ridora_target_text_format']` specified to point at the above
   `text_format` element.
 * a `hidden` element made to contain the escaped HTML via the
-  `_lib4ridora_target_text_format_to_plain_text` function, with only `create`
-  and `update` XPaths (and `delete`, if relevant; no `read`), with
+  `_lib4ridora_target_text_format_to_plain_text` function, with `create`,
+  `read` and `update` XPaths (and `delete`, if relevant), with
   `#user_data['lib4ridora_target_text_format']` specified to point at the above
   `text_format` element.
 

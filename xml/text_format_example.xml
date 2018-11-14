@@ -113,10 +113,13 @@
                   <prefix>NULL</prefix>
                   <value>title</value>
                 </create>
-                <read>NULL</read>
-                <update>
+                <read>
                   <path>mods:title</path>
                   <context>parent</context>
+                </read>
+                <update>
+                  <path>self::node()</path>
+                  <context>self</context>
                 </update>
                 <delete>NULL</delete>
               </actions>
@@ -153,10 +156,13 @@
               <prefix>NULL</prefix>
               <value>&lt;extension displayLabel="title markup"&gt;%value%&lt;/extension&gt;</value>
             </create>
-            <read>NULL</read>
-            <update>
+            <read>
               <path>mods:extension[@displayLabel="title markup"]</path>
               <context>parent</context>
+            </read>
+            <update>
+              <path>self::node()</path>
+              <context>self</context>
             </update>
             <delete>NULL</delete>
           </actions>
@@ -295,9 +301,12 @@
                           <prefix>NULL</prefix>
                           <value>title</value>
                         </create>
-                        <read>NULL</read>
-                        <update>
+                        <read>
                           <path>mods:title</path>
+                          <context>parent</context>
+                        </read>
+                        <update>
+                          <path>self::node()</path>
                           <context>parent</context>
                         </update>
                         <delete>NULL</delete>
@@ -335,10 +344,13 @@
                       <prefix>NULL</prefix>
                       <value>&lt;extension displayLabel="title markup"&gt;%value%&lt;/extension&gt;</value>
                     </create>
-                    <read>NULL</read>
-                    <update>
+                    <read>
                       <path>mods:extension[@displayLabel="title markup"]</path>
                       <context>parent</context>
+                    </read>
+                    <update>
+                      <path>self::node()</path>
+                      <context>self</context>
                     </update>
                     <delete>NULL</delete>
                   </actions>
