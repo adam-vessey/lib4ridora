@@ -76,7 +76,7 @@
               <actions>
                 <create>NULL</create>
                 <read>
-                  <path>mods:extension[@displayLabel="title markup"]</path>
+                  <path>../mods:extension[@displayLabel="title markup"]</path>
                   <context>parent</context>
                 </read>
                 <update>NULL</update>
@@ -258,7 +258,7 @@
                       <actions>
                         <create>NULL</create>
                         <read>
-                          <path>mods:extension[@displayLabel="title markup"]</path>
+                          <path>../mods:extension[@displayLabel="title markup"]</path>
                           <context>parent</context>
                         </read>
                         <update>NULL</update>
